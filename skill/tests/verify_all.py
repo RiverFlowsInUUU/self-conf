@@ -128,6 +128,8 @@ def build_gates():
         ('自洽性', [PY, 'skill/tests/check_selfcontained.py'], {}),
         # smart 权重口径：不带权重时其余闸门全绿，低倍率优先会静默失效
         ('smart 权重口径', [PY, 'skill/tests/check_priority_weight.py'], {}),
+        # 发版规矩：三内核版本头注（格式 / Surge-Egern 同号 / .min 与完整版一致）
+        ('版本头注', [PY, 'skill/tests/clash/check_version_header.py'], {}),
         ('clash 规则集内容', [PY, 'skill/scripts/clash/audit_ruleset_content.py',
                               'clash/profiles/routing.yaml', 'clash/profiles/lazy.yaml'], {}),
         ('clash 静态 profile 新鲜度', [PY, 'skill/scripts/clash/build_profiles.py', '--check'], {}),

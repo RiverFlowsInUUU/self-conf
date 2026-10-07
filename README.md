@@ -19,20 +19,22 @@
 
 > 🤖 **AI agent 请从这里开始** → [`skill/SKILL.md`](skill/SKILL.md)：动手前的顺序，和三内核各自的判据。
 
+一套配置，覆盖 Surge、Egern、mihomo（Clash Meta）三款内核。
+它们语法不同、机制不同，但在这里**组结构一致、规则次序一致、防泄露底线一致** ——
+你换客户端不用重新学一遍。
+
 ## 📥 取用
 
 | <div align="center">内核</div> | 🪶 懒人版 · 至简 · 省心 | 🧭 分流版 · 可控 · 随心 |
 |:--|:--|:--|
-| <img src="https://raw.githubusercontent.com/RiverFlowsInUUU/self-conf/main/icons/Surge-Icon.png" height="20" alt=""> **Surge** | [`lazy.min.conf`](https://raw.githubusercontent.com/RiverFlowsInUUU/self-conf/main/surge/profiles/lazy.min.conf) | [`routing.min.conf`](https://raw.githubusercontent.com/RiverFlowsInUUU/self-conf/main/surge/profiles/routing.min.conf) |
-| <img src="https://raw.githubusercontent.com/RiverFlowsInUUU/self-conf/main/icons/Egern-Icon.png" height="20" alt=""> **Egern** | [`lazy.min.yaml`](https://raw.githubusercontent.com/RiverFlowsInUUU/self-conf/main/egern/profiles/lazy.min.yaml) | [`routing.min.yaml`](https://raw.githubusercontent.com/RiverFlowsInUUU/self-conf/main/egern/profiles/routing.min.yaml) |
-| **mihomo**<br><sub>静态</sub> | [`lazy.min.yaml`](https://raw.githubusercontent.com/RiverFlowsInUUU/self-conf/main/clash/profiles/lazy.min.yaml) | [`routing.min.yaml`](https://raw.githubusercontent.com/RiverFlowsInUUU/self-conf/main/clash/profiles/routing.min.yaml) |
-| **mihomo**<br><sub>覆写脚本</sub> | [`my_clash_lazy.js`](https://raw.githubusercontent.com/RiverFlowsInUUU/self-conf/main/clash/override/my_clash_lazy.js) | [`my_clash.js`](https://raw.githubusercontent.com/RiverFlowsInUUU/self-conf/main/clash/override/my_clash.js) |
+| <img src="https://raw.githubusercontent.com/RiverFlowsInUUU/self-conf/main/icons/Surge-Icon.png" height="20" alt=""> **Surge** | [`surge-lazy.min.conf`](https://raw.githubusercontent.com/RiverFlowsInUUU/self-conf/main/surge/profiles/lazy.min.conf) | [`surge-routing.min.conf`](https://raw.githubusercontent.com/RiverFlowsInUUU/self-conf/main/surge/profiles/routing.min.conf) |
+| <img src="https://raw.githubusercontent.com/RiverFlowsInUUU/self-conf/main/icons/Egern-Icon.png" height="20" alt=""> **Egern** | [`egern-lazy.min.yaml`](https://raw.githubusercontent.com/RiverFlowsInUUU/self-conf/main/egern/profiles/lazy.min.yaml) | [`egern-routing.min.yaml`](https://raw.githubusercontent.com/RiverFlowsInUUU/self-conf/main/egern/profiles/routing.min.yaml) |
+| <img src="https://raw.githubusercontent.com/RiverFlowsInUUU/self-conf/main/icons/Proxy.png" height="20" alt=""> **mihomo**<br><sub>静态</sub> | [`clash-lazy.min.yaml`](https://raw.githubusercontent.com/RiverFlowsInUUU/self-conf/main/clash/profiles/lazy.min.yaml) | [`clash-routing.min.yaml`](https://raw.githubusercontent.com/RiverFlowsInUUU/self-conf/main/clash/profiles/routing.min.yaml) |
+| <img src="https://raw.githubusercontent.com/RiverFlowsInUUU/self-conf/main/icons/Auto.png" height="20" alt=""> **mihomo**<br><sub>覆写脚本</sub> | [`my_clash_lazy.js`](https://raw.githubusercontent.com/RiverFlowsInUUU/self-conf/main/clash/override/my_clash_lazy.js) | [`my_clash.js`](https://raw.githubusercontent.com/RiverFlowsInUUU/self-conf/main/clash/override/my_clash.js) |
 
-mihomo 多一种形态：覆写脚本可挂到任意订阅上，输出与静态文件的**结构逐位一致**。
-唯一差异是 `Smart` 三档子组 —— 模板专属（脚本运行时看不到 provider 节点名，分不了档），
-判据已把它列为已知差异而非漂移，见 [`check_script_sync.py`](skill/tests/clash/check_script_sync.py)。
-
----
+- **懒人版**：一个总出口，只做防泄露 + 广告拦截 + AI 分流。想省心就用它。
+- **分流版**：按应用 + 按地区细分，每个应用可单独指定走哪个地区。想可控就用它。
+- **mihomo 覆写脚本**：不用下载配置 —— 把它挂到你自己的订阅上，订阅会被改造成同样的结构。
 
 ## 🧭 井然有序
 
@@ -48,64 +50,28 @@ mihomo 多一种形态：覆写脚本可挂到任意订阅上，输出与静态�
 | 🛑 `AD` | ✅ | ✅ |
 | 🇭🇰 `Hong Kong` · 🇨🇳 `Taiwan` · 🇯🇵 `Japan`<br>🇸🇬 `Singapore` · 🇺🇸 `United States`<br>🇦🇶 `Other Regions` | - | ✅ |
 
-分流版：**Surge / Egern 23 组 · 26 条规则**，**mihomo 25 组 · 27 条规则**（差异在 mihomo 另有 `Smart` 的三档子组，见下）。
-
----
-
-## 🔗 共享与分歧
-
-三个内核各占一个顶层目录，互不干扰：
-
-```
-surge/    egern/    clash/       各内核配置（clash 另有 override/ 覆写脚本）
-icons/    rules/                 共享资产
-skill/                           手册 · 判据 · 文档
-```
-
-**共享的是内容，不是文件** —— `icons/` 三内核引用同一份（38 个）；
-`rules/` 以 `.list` 为唯一真源，mihomo 用的 `.yaml` 由 `build_rules.py` 生成。
-
-**分歧由内核机制决定**，不是失误：
-
-| | Surge | Egern | mihomo |
-|:--|:--|:--|:--|
-| 订阅源载体 | `Airport` external 组 | `Airport` external 组 | `proxy-providers`（provider） |
-| 地区组择优 | `smart` + filter | `smart` + filter | `url-test` + filter |
-| 倍率机制 | `policy-priority` 权重 | `priorities` | 无权重键，用 `fallback` + `filter` 分档 |
-| 规则集格式 | `.list` / `.txt` | `.list` / `.txt` | `.mrs`（+ 少量 `.yaml`） |
-| `no-resolve` 落点 | 规则行尾 | 仅 `geoip`/`ip_cidr`/`asn` 类 | `RULE-SET` 行尾 |
-| 独有机制 | `pre-matching` / `extended-matching` | `flatten: true` | `tun` 段 / 覆写脚本 |
-
-哪些能互相照搬、哪些照搬就是错的，见
-[`cross-kernel-diff.md`](skill/reference/shared/cross-kernel-diff.md)。
-
-mihomo 有一个独有设计：`Smart` 是 fallback，按**倍率**分三档回落
-（`Low Mult.` → `Auto` → `High Mult.`）。
-
----
+分流版：**Surge / Egern 23 组 · 26 条规则**，**mihomo 25 组 · 27 条规则**。
 
 ## 🌐 隐私至上 · 无 DNS 泄露
 
 | | <div align="center"><img src="https://raw.githubusercontent.com/RiverFlowsInUUU/self-conf/main/icons/Surge-Icon.png" height="22" alt=""> Surge</div> | <div align="center"><img src="https://raw.githubusercontent.com/RiverFlowsInUUU/self-conf/main/icons/Egern-Icon.png" height="22" alt=""> Egern</div> | <div align="center"><img src="https://raw.githubusercontent.com/RiverFlowsInUUU/self-conf/main/icons/Proxy.png" height="22" alt=""> mihomo</div> |
 |:--|:--|:--|:--|
-| 🚫 旁路设备 | `hijack-dns` 接管明文 `:53`（六个知名解析器） | `hijack_dns` 接管明文 `:53`（全量） | `tun.dns-hijack: any:53` + `strict-route`（锁死绕行） |
-| 🔐 加密通道 | 主解析走 DoH，主机名端点经裸 IP 受控引导 | 主解析走 DoH/DoT，四条端点全是 IP 字面量 | 主解析走 DoH，端点一律写 **IP 字面量**（`1.1.1.1` / `8.8.8.8`） |
+| 🚫 旁路设备 | `hijack-dns` 接管明文 `:53`（六个知名解析器） | `hijack_dns` 接管明文 `:53`（全量） | 由客户端 TUN 或透明代理重定向接管 |
+| 🔐 加密通道 | 主解析走 DoH，主机名端点经裸 IP 受控引导 | 主解析走 DoH/DoT，四条端点全是 IP 字面量 | 主解析走 DoH，端点一律写 IP 字面量 |
 | 🛡️ 明文回退 | `dns-server` 全裸 IP，绝不写 `system` | `forward` 兜底只指加密组，绝不落明文 | `default-nameserver` 裸 IP（仅引导）+ `proxy-server-nameserver` 专用通道 |
 | 🧭 规则克制 | IP 类规则一律 `no-resolve`；零 IP 的规则集不写 | IP 类规则一律 `no_resolve`；该键对 `rule_set` 不生效 | IP 类规则一律 `no-resolve`；纯域名规则集不写 |
-| ✂️ 远端解析 | 代理域名交节点解析，本地不留答案 | 代理域名交节点解析（`proxy_nameservers` 专用通道） | `enhanced-mode: fake-ip` 只回假 IP，真实解析在落地侧 |
-| 🔎 IPv6 | `ipv6 = false` | `ipv6: false` | 顶层 `ipv6` + `dns.ipv6` **两处**都要 false |
-| 🛑 广告拦截 | `pre-matching REJECT` | `forward` → `reject` | DNS 层双条件（`rcode://success` + `fake-ip-filter` 成对） |
-| 📦 数据库依赖 | 依赖内置系统集 | 引用共享 `.list` | **零 dat 依赖**，用 `.mrs` 远程集 |
-| 📋 自检读数 | 5 个审计脚本 · 19 断言 | 10 个审计脚本 · 24 断言 | `check_clash_dns` 14 项 + `check_structure` 8 项 |
+| ✂️ 远端解析 | 代理域名交节点解析，本地不留答案 | 代理域名交节点解析（`proxy_nameservers` 专用通道） | `fake-ip` 只回假 IP，真实解析在落地侧 |
+| 🔎 IPv6 | `ipv6 = false` | `ipv6: false` | 顶层 + `dns.ipv6` 两处都关 |
+| 🛑 广告拦截 | `pre-matching REJECT` | `forward` → `reject` | DNS 层双条件（`rcode://success` 与 `fake-ip-filter` 成对） |
+| 📦 数据库依赖 | 内置系统集 | 引用共享 `.list` | 零 dat 依赖，用 `.mrs` 远程集 |
 
-三内核共通的底线：**解析器全加密 · 明文入口收口 · 代理域名不给真答案 ·
-IPv6 显式关闭 · 广告拦截前移**。每一条都有判据守着（21 道门禁 + CI）。
+三内核共通的底线：**解析器全加密 · 明文入口收口 · 代理域名不给真答案 · IPv6 显式关闭 · 广告拦截前移**。
 
----
+每一条都有判据守着 —— 23 道门禁 + CI，不是文档里的一句话。
 
 ## 📖 按需查阅
 
-操作手册、逐键语义与审计判据都在 [`skill/SKILL.md`](skill/SKILL.md)。
+操作手册、逐键语义、审计判据与发版规矩都在 [`skill/SKILL.md`](skill/SKILL.md)。
 
 ---
 

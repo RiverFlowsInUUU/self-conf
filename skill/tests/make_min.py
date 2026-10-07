@@ -156,6 +156,11 @@ def run_once(root, fam):
             raise SystemExit("❌ 缺文件：" + (full if not os.path.isfile(fp) else mn)
                              + "（固定名是永久订阅地址，不能被改名或挪走）")
         ft, mt = read(fp), read(mp)
+        # `.min` 首行是 `#! version=` 头注（元数据，不是正文）。比对正文时剥掉，
+        # 否则加了版本头反而被判「含正文差异」。
+        _mtl = mt.split(NL)
+        if _mtl and _mtl[0].startswith("#! version="):
+            mt = NL.join(_mtl[1:])
         side = full.split("/")[0]
         gen, lost = make_min(ft, mt, side)
         # 自查：生成的精简版与完整版去注释后必须逐字相同 —— 与 all.sh 第 3 项同一条判据，
@@ -290,9 +295,17 @@ def main():
         if mt == gen:
             print("未动 " + rel(mp) + "（已是规则的输出）")
             continue
+        # 保留 `#! version=` 头注：`.min` 必须带与完整版**同一行**头注
+        # （check_version_header 的 V3 判据）。生成器只产出正文，头注在此补回。
+        _hv = ""
+        if os.path.isfile(fp):
+            with io.open(fp, encoding="utf-8") as _fh:
+                _first = _fh.readline()
+            if _first.startswith("#! version="):
+                _hv = _first.rstrip(chr(10)) + NL
         # `with` 收口（A-8）：写完必须确定性关闭，不依赖引用计数。
         with io.open(mp, "w", encoding="utf-8", newline="") as f:
-            f.write(gen)
+            f.write(_hv + gen)
         print("已写 " + rel(mp))
     print(NL + "验收：python skill/tests/check_min_pair.py（拿完整版逐字对拍这几份）")
     return 0
