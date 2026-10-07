@@ -28,7 +28,9 @@
 | **mihomo**<br><sub>静态</sub> | [`lazy.min.yaml`](clash/profiles/lazy.min.yaml) | [`routing.min.yaml`](clash/profiles/routing.min.yaml) |
 | **mihomo**<br><sub>覆写脚本</sub> | [`my_clash_lazy.js`](clash/override/my_clash_lazy.js) | [`my_clash.js`](clash/override/my_clash.js) |
 
-mihomo 多一种形态：覆写脚本可挂到任意订阅上，输出与静态文件逐位一致。
+mihomo 多一种形态：覆写脚本可挂到任意订阅上，输出与静态文件的**结构逐位一致**。
+唯一差异是 `Smart` 三档子组 —— 模板专属（脚本运行时看不到 provider 节点名，分不了档），
+判据已把它列为已知差异而非漂移，见 [`check_script_sync.py`](skill/tests/clash/check_script_sync.py)。
 
 ---
 

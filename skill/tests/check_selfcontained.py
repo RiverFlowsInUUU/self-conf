@@ -38,7 +38,7 @@ FORBIDDEN_REPOS = ("Self-Configuration", "RiverFlowsInUUU/Clash")
 # 排除：说明性文字（注释里提及来源不算引用）
 COMMENT_PREFIX = ("#", "//", ";")
 
-EXTS = (".yaml", ".conf", ".js", ".list", ".txt", ".json", ".yml")
+EXTS = (".yaml", ".conf", ".js", ".list", ".txt", ".json", ".yml", ".py")
 SKIP_DIRS = {".git", "__pycache__", "icons", "config_old"}
 
 URL_RE = re.compile(r"https?://[^\s\"'`,)\]]+")

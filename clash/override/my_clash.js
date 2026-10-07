@@ -3,7 +3,7 @@
 // ============================================================================
 //
 //  作用
-//    对任意 mihomo 订阅配置做整体覆写，使其与本仓库 profiles/my_clash.yaml 一致：
+//    对任意 mihomo 订阅配置做整体覆写，使其与 clash/profiles/routing.yaml 一致：
 //      · 22 个策略组（Proxy + Smart + 4 个 AI 组 + AI + 8 个应用组 + Apple Update + AD + 6 地区组）
 //      · 25 份规则集（20 份 MRS + 5 份 yaml）+ 27 条规则
 //        ⚠️ 这些数字由 skill/tests/clash/check_header_numbers.py 与脚本实际输出对拍，

@@ -206,8 +206,17 @@ def main():
         ng = len(groups)
         nr = len(out.get("rule-providers") or {})
         nrl = len(out.get("rules") or [])
+        # 保留 `#! version=` 头：本仓三内核口径一致（surge / egern 已有），
+        # 若生成时丢掉，重生成一次就没了（与 tun 那次同类的覆盖丢失）。
+        _ver = ""
+        if os.path.exists(fp):
+            with open(fp, encoding="utf-8") as _fh:
+                _first = _fh.readline()
+            if _first.startswith("#! version="):
+                _ver = _first.strip() + chr(10)
+
         header = (HEADER_ROUTING if "routing" in full_rel else HEADER_LAZY) % (ng, nr, nrl)
-        want = header + "\n" + body
+        want = _ver + header + chr(10) + body
 
         have = open(fp, encoding="utf-8").read() if os.path.exists(fp) else None
         if have == want:
@@ -222,8 +231,8 @@ def main():
             print("  ++ %s（已重新生成：%d 组 / %d 集 / %d 条）" % (full_rel, ng, nr, nrl))
 
         # .min 版：同一份数据去掉注释
-        min_txt = yaml.dump(final, Dumper=Dumper, allow_unicode=True,
-                            default_flow_style=False, sort_keys=False, width=250, indent=2)
+        min_txt = _ver + yaml.dump(final, Dumper=Dumper, allow_unicode=True,
+                                   default_flow_style=False, sort_keys=False, width=250, indent=2)
         have_m = open(mp, encoding="utf-8").read() if os.path.exists(mp) else None
         if have_m != min_txt:
             if check:
