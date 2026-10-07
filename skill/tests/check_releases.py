@@ -37,7 +37,9 @@ for _stream in (sys.stdout, sys.stderr):
     except Exception:
         pass
 
-REPO = os.environ.get('GITHUB_REPO', 'RiverFlowsInUUU/Self-Configuration')
+# ⚠️ 2026-10-08 零信任自查修正：默认值原为姊妹仓 `Self-Configuration`，
+#    在 self-conf 里跑会去查错仓库（读到的是 SC 的 Release，判据全错）。
+REPO = os.environ.get('GITHUB_REPO', 'RiverFlowsInUUU/self-conf')
 API = f'https://api.github.com/repos/{REPO}'
 TAG_RE = re.compile(r'^v(\d{4}-\d{2}-\d{2})$')
 VER_STYLE = re.compile(r'(?i)_?v\d+(\.\d+)?')          # 资产文件名里任何版本号样式都算违规

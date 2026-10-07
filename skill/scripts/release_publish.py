@@ -36,7 +36,9 @@ for _stream in (sys.stdout, sys.stderr):
     except Exception:
         pass
 
-REPO = os.environ.get('GITHUB_REPO', 'RiverFlowsInUUU/Self-Configuration')
+# ⚠️ 2026-10-08 修正：默认仓库原为姊妹仓 Self-Configuration，
+#    在 self-conf 里跑会把下载链接指向旧仓（发布出去的按钮全是死链）。
+REPO = os.environ.get('GITHUB_REPO', 'RiverFlowsInUUU/self-conf')
 API = f'https://api.github.com/repos/{REPO}'
 UPLOAD = f'https://uploads.github.com/repos/{REPO}/releases'
 FAMS = ('lazy', 'routing')
@@ -44,8 +46,11 @@ RAW = f'https://raw.githubusercontent.com/{REPO}/main'
 DL = f'https://github.com/{REPO}/releases/download'
 # 下载按钮 = shields.io 在线徽章（for-the-badge 风格）：颜色编码内核，文字编码分工
 FAM_CN = {'lazy': '懒人版', 'routing': '分流版'}
-KERN_LABEL = {'surge': 'Surge', 'egern': 'Egern'}
-KERN_COLOR = {'surge': '0A84FF', 'egern': '10B981'}
+# ⚠️ 2026-10-08 修正：本仓是**三内核**（Surge · Egern · mihomo），
+#    这里原只有 surge / egern ⇒ ASSET_NAMES 派生不出 clash-* 四种资产名，
+#    首次发布时 R2 判据把 4 个 clash 资产全判「不在固定名集合」。
+KERN_LABEL = {'surge': 'Surge', 'egern': 'Egern', 'clash': 'mihomo'}
+KERN_COLOR = {'surge': '0A84FF', 'egern': '10B981', 'clash': '8250DF'}
 
 def badge_url(kern, fam):
     return (f"https://img.shields.io/badge/{KERN_LABEL[kern]}-{FAM_CN[fam]}_下载-"
@@ -476,6 +481,13 @@ def _day_items(day):
 
 
 def _vers_range(vers):
+    # ⚠️ 2026-10-08 修正：本仓由两仓**复制**整合而来，不继承原仓 git 历史，
+    #    build_days() 算不出版本诞生日期 ⇒ fam_vers[fam] 可能是空列表 ⇒ 这里
+    #    原先直接 vers[0] 抛 IndexError（整个脚本 traceback 崩掉，看不出真实原因）。
+    #    现在退化成占位并让上层给出可读说明 —— 崩溃比错误结论更糟，
+    #    但**静默编造一个版本号**更糟，所以用显式占位 + 提示。
+    if not vers:
+        return '(版本信息缺失：git 历史不完整)'
     return vers[0] + (f' → {vers[-1]}' if len(vers) > 1 else '')
 
 
