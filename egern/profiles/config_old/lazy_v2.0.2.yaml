@@ -1,0 +1,248 @@
+#! version=lazy_v2.0.2
+# ============================================================================
+# lazy · 懒人版
+#
+# 只保留 3 个分流组（Proxy / AI / AD）+ 1 个隐藏的订阅槽位 `Airport`，与 6 类规则
+# （白名单 / 广告拦截 / 内网直连 / 国内直连 / AI 分流 / 兜底）。
+# 全部流量走一个出口。
+#
+# ⚠️ 它与「分流版」routing 的关系：**不是"精简"，是"裁剪"**
+#     砍的是地区组、各类 App 分组及其规则（订阅槽位两边都有）。
+#     保留部分的防泄露结构与分流版**同构**：dns 段去掉行尾注释后与分流版 routing 的 dns 段逐字相同
+#     （四层 Forward · bootstrap / upstreams / proxy_nameservers / block_ips 全部一致），
+#     规则段同样带 Lan + Private 两条内网。
+#
+# 📌 本文件是长期沿用的「懒人版」入口，文件名不带版本号（`lazy.yaml`），
+#     版本号写在首行 `#! version=lazy_v…`。分流版是另一条线（`routing.yaml`），
+#     历代版本各自保留以备对照，演变过程看 git 历史与 profiles/config_old/ 归档。
+#
+# ⚠️ 导入前必读：本文件带 2 条**占位节点**（`Node-A` → `Proxy`、`Node-B` → `AI`）
+#     和 1 个**占位订阅**（`Airport` 的 `urls`）。两个组都是「自己那条节点 + 订阅节点」，
+#     所以两者至少填一项；都不填时兜底那一跳（`Proxy` 组本身）是断的，
+#     也就是**所有走代理的流量都不通**。
+#     ⚠️ 懒人版的 `AI` **不引用 `Proxy`**，它和 `Proxy` 各自直接吃订阅池（与分流版同取向）。
+# ============================================================================
+# IPv6 显式关闭：与 Surge 内核对齐（两边都是显式关闭，行为一致）
+ipv6: false
+vif_only: true
+hijack_dns:
+- '*'
+geoip_db_url: https://raw.githubusercontent.com/Loyalsoldier/geoip/release/Country.mmdb
+asn_db_url: https://raw.githubusercontent.com/Loyalsoldier/geoip/release/GeoLite2-ASN.mmdb
+proxy_latency_test_url: http://cp.cloudflare.com/generate_204
+direct_latency_test_url: http://connectivitycheck.platform.hicloud.com/generate_204
+real_ip_domains:
+- '*.lan'
+- '*.local'
+- '*.push.apple.com'
+# ============================================================================
+# dns 段 —— 去掉行尾注释后与分流版 routing 的 dns 段逐字相同（防泄露结构完整保留）
+#
+# 判据：删掉某一项，会不会多出一条明文 UDP:53 的通路？不会 → 冗余。
+# 明文通路只有 bootstrap 一条，官方规定它只有两个用途：① 解析 upstreams 中
+# 加密 DNS 的主机名；② 作为最终回退。本段让两者都无事可做：
+#   ① 端点全写 IP 字面量 ⇒ 没有主机名需要解析；
+#   ② forward 有一条 catch-all 兜底，且兜底组不依赖代理也活着 ⇒ 永不触发。
+#      它前面还有三层（白名单 → 两条广告清单 reject），都不新增解析器。
+# 完整推导见 skill/reference/egern/profile-anatomy.md。
+# ============================================================================
+dns:
+  # 启动 DNS：唯一无法消除的明文通路，只能约束它。
+  # 不能删（不写会退到「系统 DNS」= 运营商），也绝不能写 system。
+  # 2 个端点、跨机构：任一机构故障时还有另一个。
+  bootstrap:
+  - 223.5.5.5      # 阿里 AliDNS
+  - 119.29.29.29   # 腾讯 DNSPod
+  # 上游组：端点必须是 IP 字面量，否则就得先解析它的主机名（那只能用 bootstrap 明文）。
+  # 2 机构 × 2 协议（DoH 443 / DoT 853）是两条独立通路，某些网络会拦其一。
+  upstreams:
+    Domestic-DNS:
+    - https://223.5.5.5/dns-query
+    - tls://223.5.5.5
+    - https://120.53.53.53/dns-query
+    - tls://1.12.12.12
+  # 四层 Forward（与分流版同构，first-match-wins）：
+  #   ① 白名单 → Domestic-DNS：广告清单会误杀的那些功能域，必须抢在拒答之前拿到解析，
+  #      否则流量层的白名单救不了一个解析都失败的域名。
+  #   ②③ 两条广告清单 → reject：官方语义「refuse the query and return an empty
+  #      response」—— 解析阶段直接拒答，连接根本不发起，等价 Surge 的 pre-matching REJECT。
+  #   ④ catch-all 兜底：任何域名都不会「未命中 Forward」⇒ 永不回退 bootstrap。
+  # 防泄露面不变：①④ 的去向都是 Domestic-DNS（同一个加密组，无新解析器），
+  # ②③ 是终止动作不是转发；proxy_nameservers 配置在，代理 DNS 完全绕过 Forward。
+  forward:
+  - proxy_rule_set:
+      match: https://raw.githubusercontent.com/RiverFlowsInUUU/Jinx/main/surge-direct.list
+      value: Domestic-DNS
+  - proxy_rule_set:
+      match: https://raw.githubusercontent.com/RiverFlowsInUUU/Jinx/main/surge-ads.list
+      value: reject
+  - proxy_rule_set:
+      match: https://raw.githubusercontent.com/TG-Twilight/AWAvenue-Ads-Rule/main/Filters/AWAvenue-Ads-Rule-Surge-RULE-SET.list
+      value: reject
+  - domain_wildcard:
+      match: '*'
+      value: Domestic-DNS
+  # 代理 DNS 显式钉住（跳过 Forward）。删掉它功能上等价，但结构上
+  # 「代理 DNS 未命中 → bootstrap」这条分支就还在。
+  proxy_nameservers:
+  - https://223.5.5.5/dns-query
+  - tls://223.5.5.5
+  - https://120.53.53.53/dns-query
+  - tls://1.12.12.12
+  # 抗污染：丢弃空路由式应答。
+  block_ips:
+  - 0.0.0.0
+  - 127.0.0.1
+# ============================================================================
+# 节点：2 条占位，Node-A 归 Proxy、Node-B 归 AI
+# ============================================================================
+# ⚠️ 占位节点，请替换为你的真实信息。203.0.113.0/24 是 RFC 5737 保留的文档用地址段，
+#    不会指向任何真实主机。server 写成 IP 字面量：节点不产生"解析节点域名"这次查询。
+#    协议 / 字段名与 Surge 懒人版那两条 hysteria2 一一对应（`auth` ≙ Surge 的 `password`）。
+proxies:
+- hysteria2:
+    name: Node-A
+    server: 203.0.113.10
+    port: 52341
+    auth: REPLACE_WITH_YOUR_PASSWORD
+    sni: REPLACE_WITH_YOUR_SNI
+- hysteria2:
+    name: Node-B
+    server: 203.0.113.11
+    port: 52341
+    auth: REPLACE_WITH_YOUR_PASSWORD
+    sni: REPLACE_WITH_YOUR_SNI
+# ============================================================================
+# 策略组：3 个分流组 + 1 个订阅槽位
+# ============================================================================
+policy_groups:
+# 订阅槽位（隐藏）。只做一个入口：把订阅链接里的节点拉进来。
+# `hidden: true` 让它不在面板里显示 —— 它本来就不该被手动选中，
+# 引用它的永远是下面两组里的 `- Airport`（配 `flatten: true` 摊成具体节点）。
+#
+# ⚠️ 把 URL 换成你自己的订阅。token 已用占位符，不含任何真实机场地址。
+- external:
+    name: Airport
+    type: select
+    urls:
+    - https://sub.example.com/api/v1/client/subscribe?token=REPLACE_WITH_YOUR_TOKEN
+    hidden: true
+    icon: https://raw.githubusercontent.com/RiverFlowsInUUU/Self-Configuration/main/icons/Airport.png
+# 自动选优出口：smart 按真实连接的首字节延迟、TCP 重传丢包、UDP 响应延迟给成员
+# 打分（5 分钟一轮重测），自动择优。成员 = 自己那条占位节点在前 + 订阅里的节点；
+# `flatten: true` 把 Airport 的成员摊进本组逐个打分，而不是把整组当一个成员
+# —— 少了它，smart 的候选只剩「Airport」这一个组单位，自动选优直接退化。
+- smart:
+    name: Proxy
+    policies:
+    - Node-A
+    - Airport
+    flatten: true
+    icon: https://raw.githubusercontent.com/RiverFlowsInUUU/Self-Configuration/main/icons/Proxy.png
+# AI 流量出口：另一条占位节点 + 订阅里的节点。
+# 本配置只保留这一个总入口，分流版的 ChatGPT / Gemini / Claude 等专用组全部并入此处。
+# ⚠️ 本组**不引用 Proxy**（刻意与分流版一样的分工：两条节点各归一组，订阅节点两组共用）。
+# flatten: true —— 把 Airport 的**成员**摊进本组逐个打分，而不是把整组当一个成员；
+# 少了它，面板候选只剩「Airport」这一个组单位。2026-09-28 smart → select：AI 出口必须
+# 手动钉死 —— 自动打分会让出口 IP 在订阅池里漂移，而 Google/OpenAI 的账号风控对
+# 出口频繁跳变极敏感（社区共识：AI 流量用手动选择，不用自动测速）。
+- select:
+    name: AI
+    policies:
+    - Node-B
+    - Airport
+    flatten: true
+    icon: https://raw.githubusercontent.com/RiverFlowsInUUU/Self-Configuration/main/icons/openai.png
+# 广告拦截。只有一个子策略：REJECT（拦截）。
+# 本配置不再提供 DIRECT 兜底 —— 想临时放行某个广告域名，在 rules 里加一条更靠前的
+# domain / domain_suffix 规则指向 DIRECT 即可（别整组切走，那等于关掉全部拦截）。
+- select:
+    name: AD
+    policies:
+    - REJECT
+    icon: https://raw.githubusercontent.com/RiverFlowsInUUU/Self-Configuration/main/icons/AdBlock.png
+# ============================================================================
+# 规则：顺序就是一切（自上而下第一条命中即决定去向）
+#   ① 白名单   ② 广告拦截   ③ 内网直连   ④ Apple 系统服务
+#   ⑤ AI 分流  ⑥ 直连集合（国内域名 / geoip CN）   ⑦ 兜底
+# ============================================================================
+rules:
+# ① 白名单 —— **必须放最前面**：这些域名要抢在广告规则之前放行，
+#    否则会被下面的广告规则误杀。（白名单内容随上游更新，条数不写死）
+- rule_set:
+    name: Jinx-CN
+    match: https://raw.githubusercontent.com/RiverFlowsInUUU/Jinx/main/surge-direct.list
+    policy: DIRECT
+    update_interval: 604800
+# ② 广告拦截 —— 两条并列（先 Jinx，后 AWAvenue），都指向 AD。
+- rule_set:
+    name: Jinx-Ads
+    match: https://raw.githubusercontent.com/RiverFlowsInUUU/Jinx/main/surge-ads.list
+    policy: AD
+    update_interval: 604800
+- rule_set:
+    name: AWAvenue-Ads
+    match: https://raw.githubusercontent.com/TG-Twilight/AWAvenue-Ads-Rule/main/Filters/AWAvenue-Ads-Rule-Surge-RULE-SET.list
+    policy: AD
+    update_interval: 604800
+# ③ 内网 / 局域网 —— 必须直连。两条互补（与 Surge 懒人版的 LAN + private.txt 同源同策略）：
+#    Lan.list 管 IP 段与路由管理域，private.txt 管 .lan / .local 等特殊 TLD 与 miwifi.com。
+- rule_set:
+    name: Lan
+    match: https://raw.githubusercontent.com/blackmatrix7/ios_rule_script/master/rule/Surge/Lan/Lan.list
+    policy: DIRECT
+    update_interval: 604800
+- rule_set:
+    name: Private
+    match: https://raw.githubusercontent.com/Loyalsoldier/surge-rules/release/ruleset/private.txt
+    policy: DIRECT
+    update_interval: 604800
+# ④ Apple 系统服务直连 —— 对齐 Surge 懒人版的内置 `SYSTEM`。Egern 没有内置系统集，
+#    这里引用本仓自托管的时点快照 `rules/apple_system.list`（= Surge 官方内置 `SYSTEM`
+#    的清单，删掉了 Egern 不支持的两条 `PROCESS-NAME`：`trustd` / `netbiosd`）。
+#    ⚠️ 本仓自己维护 ⇒ 没有第三方刷新审计，Surge 大版本更新时人工比对一次。
+#    它与下方 direct.txt 部分重叠（重复无害 —— 两条规则同为 DIRECT），独有的部分是
+#    APNs 推送 / 定位 / CDN 定位那几类。
+- rule_set:
+    name: System
+    match: https://raw.githubusercontent.com/RiverFlowsInUUU/Self-Configuration/main/rules/apple_system.list
+    policy: DIRECT
+    update_interval: 604800
+# ⑤ AI 分流 —— 命中即走 AI 组（→ Proxy）。集源 Repcz/Tool，滚动维护，
+#    覆盖 gemini / bard / aistudio / notebooklm / antigravity / sora / grok 全家，零 IP 条目。
+#    之后并排一条本仓自托管 AI_Domains（main/rules/AI.list，静态整合快照 · 条数与来源见该文件头部档案）：
+#    管 Repcz 没有的伴生域与宽后缀 —— googleapis.com / googleusercontent.com 整域收编
+#    （play.googleapis.com 等 GMS 网关不再漏到 Final）、ChatGPT 认证/遥测/风控基础设施域。
+#    零 IP 条目。分工：新 AI 域靠 Repcz 滚动，伴生域/宽后缀靠本集（结构稳定不常变）。
+- rule_set:
+    name: AI
+    match: https://raw.githubusercontent.com/Repcz/Tool/X/Surge/Rules/AI.list
+    policy: AI
+    update_interval: 604800
+# 伴生域/宽后缀整合集（本仓自托管静态快照，与上行 Repcz 同指 AI 组；分工见上）
+- rule_set:
+    name: AI_Domains
+    match: https://raw.githubusercontent.com/RiverFlowsInUUU/Self-Configuration/main/rules/AI.list
+    policy: AI
+    update_interval: 604800
+# ⑥ 直连集合 —— 以下 2 条共同承担「国内流量直连」。
+#    Loyalsoldier direct.txt：国内域名主承重墙（纯域名集、零 IP 条目；条数随上游更新，不写死）。
+- rule_set:
+    name: CN-Domains
+    match: https://raw.githubusercontent.com/Loyalsoldier/surge-rules/release/ruleset/direct.txt
+    policy: DIRECT
+    update_interval: 604800
+#    geoip CN 是 IP 类规则，**必须带 no_resolve** —— 否则每个走到它的域名
+#    都会被强制本地解析一次，那正是泄露来源。
+- geoip:
+    match: CN
+    policy: DIRECT
+    no_resolve: true
+# ⑦ 兜底 —— 所有未命中规则的流量直接走 `Proxy`（没有 `Final` 中间组，
+#     与 Surge 懒人版 `FINAL,Proxy,dns-failed` 一跳对一跳）。
+#     `name` 只是日志标签（官方：用于日志和调试），保留 `Final` 这个名字
+#     是为了历代日志读得通；真正决定去向的只有 `policy`。
+- default:
+    name: Final
+    policy: Proxy
+default_proxy_group: Proxy

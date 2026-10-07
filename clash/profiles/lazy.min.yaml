@@ -1,0 +1,171 @@
+ipv6: false
+proxies: []
+proxy-providers:
+  Airport:
+    type: http
+    url: https://sub.example.com/api/v1/client/subscribe?token=REPLACE_WITH_YOUR_TOKEN
+    path: ./proxy_provider/Airport.yaml
+    interval: 86400
+    health-check:
+      enable: true
+      url: https://www.gstatic.com/generate_204
+      interval: 300
+proxy-groups:
+  - name: Proxy
+    type: url-test
+    proxies: []
+    use:
+      - Airport
+    icon: https://raw.githubusercontent.com/RiverFlowsInUUU/Clash/main/icons/Proxy.png
+    url: https://www.gstatic.com/generate_204
+    interval: 300
+    tolerance: 50
+  - name: AI
+    type: select
+    proxies:
+      - Proxy
+    use:
+      - Airport
+    icon: https://raw.githubusercontent.com/RiverFlowsInUUU/Clash/main/icons/grok.png
+  - name: AD
+    type: select
+    proxies:
+      - REJECT
+    icon: https://raw.githubusercontent.com/RiverFlowsInUUU/Clash/main/icons/AdBlock.png
+rule-providers:
+  AWAvenue-Ads:
+    type: http
+    behavior: domain
+    format: mrs
+    url: https://raw.githubusercontent.com/TG-Twilight/AWAvenue-Ads-Rule/main/Filters/AWAvenue-Ads-Rule-Clash.mrs
+    path: ./rule_provider/AWAvenue-Ads-Rule-Clash.mrs
+    interval: 86400
+  Jinx-Ads:
+    type: http
+    behavior: classical
+    format: yaml
+    url: https://raw.githubusercontent.com/RiverFlowsInUUU/Jinx/main/mihomo-ads.yaml
+    path: ./rule_provider/Jinx-Ads.yaml
+    interval: 86400
+  Jinx-CN:
+    type: http
+    behavior: classical
+    format: yaml
+    url: https://raw.githubusercontent.com/RiverFlowsInUUU/Jinx/main/mihomo-direct.yaml
+    path: ./rule_provider/Jinx-CN.yaml
+    interval: 86400
+  AI_Domains:
+    type: http
+    behavior: classical
+    format: yaml
+    url: https://raw.githubusercontent.com/RiverFlowsInUUU/Clash/main/rules/AI_Domains.yaml
+    path: ./rule_provider/AI_Domains.yaml
+    interval: 86400
+  apple-system:
+    type: http
+    behavior: classical
+    format: yaml
+    url: https://raw.githubusercontent.com/RiverFlowsInUUU/Clash/main/rules/apple_system.yaml
+    path: ./rule_provider/apple_system.yaml
+    interval: 86400
+  private:
+    type: http
+    behavior: domain
+    format: mrs
+    url: https://cdn.jsdelivr.net/gh/MetaCubeX/meta-rules-dat@meta/geo/geosite/private.mrs
+    path: ./rule_provider/private.mrs
+    interval: 86400
+  cn:
+    type: http
+    behavior: domain
+    format: mrs
+    url: https://cdn.jsdelivr.net/gh/MetaCubeX/meta-rules-dat@meta/geo/geosite/cn.mrs
+    path: ./rule_provider/cn.mrs
+    interval: 86400
+  category-ai-chat-!cn:
+    type: http
+    behavior: domain
+    format: mrs
+    url: https://cdn.jsdelivr.net/gh/MetaCubeX/meta-rules-dat@meta/geo/geosite/category-ai-chat-!cn.mrs
+    path: ./rule_provider/category-ai-chat-!cn.mrs
+    interval: 86400
+  geoip-private:
+    type: http
+    behavior: ipcidr
+    format: mrs
+    url: https://cdn.jsdelivr.net/gh/MetaCubeX/meta-rules-dat@meta/geo/geoip/private.mrs
+    path: ./rule_provider/geoip-private.mrs
+    interval: 86400
+  geoip-cn:
+    type: http
+    behavior: ipcidr
+    format: mrs
+    url: https://cdn.jsdelivr.net/gh/MetaCubeX/meta-rules-dat@meta/geo/geoip/cn.mrs
+    path: ./rule_provider/geoip-cn.mrs
+    interval: 86400
+rules:
+  - RULE-SET,Jinx-CN,DIRECT
+  - RULE-SET,Jinx-Ads,AD
+  - RULE-SET,AWAvenue-Ads,AD
+  - RULE-SET,geoip-private,DIRECT,no-resolve
+  - RULE-SET,private,DIRECT
+  - RULE-SET,apple-system,DIRECT
+  - RULE-SET,category-ai-chat-!cn,AI
+  - RULE-SET,AI_Domains,AI
+  - RULE-SET,cn,DIRECT
+  - RULE-SET,geoip-cn,DIRECT,no-resolve
+  - MATCH,Proxy
+dns:
+  enable: true
+  ipv6: false
+  listen: 0.0.0.0:7874
+  enhanced-mode: fake-ip
+  fake-ip-range: 198.18.0.1/16
+  prefer-h3: false
+  respect-rules: true
+  use-hosts: true
+  use-system-hosts: false
+  fake-ip-filter:
+    - '*.lan'
+    - '*.local'
+    - '*.localdomain'
+    - '*.home.arpa'
+    - +.msftconnecttest.com
+    - +.msftncsi.com
+    - localhost.ptlogin2.qq.com
+    - +.srv.nintendo.net
+    - +.stun.playstation.net
+    - +.xboxlive.com
+    - 'stun.*'
+    - 'time.*.com'
+    - 'ntp.*.com'
+    - +.pool.ntp.org
+    - +.market.xiaomi.com
+    - rule-set:AWAvenue-Ads
+    - rule-set:Jinx-Ads
+  default-nameserver:
+    - 223.5.5.5
+    - 119.29.29.29
+  proxy-server-nameserver:
+    - https://223.5.5.5/dns-query
+    - https://120.53.53.53/dns-query
+  direct-nameserver:
+    - https://223.5.5.5/dns-query
+    - https://120.53.53.53/dns-query
+  nameserver:
+    - https://dns.cloudflare.com/dns-query
+    - https://dns.google/dns-query
+  nameserver-policy:
+    rule-set:AWAvenue-Ads: rcode://success
+    rule-set:Jinx-Ads: rcode://success
+    geosite:private,cn:
+      - https://223.5.5.5/dns-query
+      - https://120.53.53.53/dns-query
+tun:
+  enable: true
+  stack: mips
+  dns-hijack:
+    - any:53
+  auto-route: true
+  auto-detect-interface: true
+  strict-route: true

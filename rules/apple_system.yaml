@@ -1,0 +1,32 @@
+# apple_system.yaml
+# ⚠️ 本文件由 build_rules.py **自动生成**，请勿手工编辑。
+#    真源是同目录的 `apple_system.list`（共享于三内核），改内容请改真源后重跑：
+#      python skill/scripts/clash/build_rules.py
+#
+# Apple 系统域 → DIRECT
+#
+# 条数：18
+# 格式：mihomo rule-provider（format: yaml / behavior: classical）
+#
+# ⚠️ 纯域名集、零 IP 条目 ⇒ 引用方**不写**规则级 no-resolve。
+#########################################
+
+payload:
+  - 'DOMAIN,mesu.apple.com'
+  - 'DOMAIN,captive.apple.com'
+  - 'DOMAIN,xp.apple.com'
+  - 'DOMAIN,api.smoot.apple.com'
+  - 'DOMAIN,api.smoot.apple.cn'
+  - 'DOMAIN,configuration.apple.com'
+  - 'DOMAIN,smp-device-content.apple.com'
+  - 'DOMAIN,guzzoni.apple.com'
+  - 'DOMAIN,gs-loc.apple.com'
+  - 'DOMAIN-SUFFIX,ls.apple.com'
+  - 'DOMAIN-SUFFIX,push.apple.com'
+  - 'DOMAIN-SUFFIX,push-apple.com.akadns.net'
+  - 'DOMAIN,aod.itunes.apple.com'
+  - 'DOMAIN,mvod.itunes.apple.com'
+  - 'DOMAIN,streamingaudio.itunes.apple.com'
+  - 'DOMAIN-SUFFIX,ess.apple.com'
+  - 'DOMAIN-SUFFIX,lcdn-locator.apple.com'
+  - 'DOMAIN-SUFFIX,lcdn-registration.apple.com'

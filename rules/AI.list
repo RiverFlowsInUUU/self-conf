@@ -1,0 +1,362 @@
+# NAME: AI_Domains (AI 全量整合集 · Surge ruleset)
+# 生成: 2026-10-01（dler-io 源 + 归并器补全：同值 + 父域）· 本仓自托管静态整合快照
+# 生成脚本: skill/scripts/ai_domains_build.py（源目录: skill/scripts/ai_sources/）
+# 合计: 272 条规则 —— 本行为条数唯一真源（自动统计，勿手抄到别处）
+#
+# ============ 上游来源详细信息 ============
+#
+# 1. Repcz/Tool (Surge) —— 主参考集，滚动维护
+#    https://github.com/Repcz/Tool  (X 分支 · Surge/Rules/AI.list)
+#    2026-09-28 仍在提交。贡献：Gemini 专属后端(-pa 系精确枚举) + 主流 AI 域。
+#    另以独立订阅在本仓四 profile 中并排引用(滚动承接新 AI 域)。
+#
+# 2. ddgksf2013.top (墨鱼) —— 滚动更新，本集伴生域基线
+#    https://ddgksf2013.top/filter/Ai.yaml  (Ai.yaml, Clash payload 形态)
+#    旧 gist 地址已停更并于 2026-09-30 迁至该域名（旧地址最后实质提交 2025-11-26）。
+#    贡献：ChatGPT / Meta AI 网页伴生的第三方基础设施域
+#    (auth0/statsig/datadoghq/arkoselabs/intercom/launchdarkly 等认证/遥测/风控域)。
+#
+# 3. ACL4SSR/ACL4SSR —— AI.list 长期停更，本仓已弃用其作 AI 源
+#    https://github.com/ACL4SSR/ACL4SSR  (曾钉 commit 75f01010)
+#    贡献：早期基线(main 与锁版同内容，无增量)。
+#
+# 4. blackmatrix7/ios_rule_script —— 每日更新，本集取 5 个分集
+#    https://github.com/blackmatrix7/ios_rule_script  (master · rule/Surge/{OpenAI,Gemini,Claude,Copilot,BardAI})
+#    贡献：各家专属域名细分(其 IP 条目已按零 IP 纪律丢弃)。分流版另有其 4 条专属集独立在役。
+#
+# 5. MetaCubeX/meta-rules-dat —— 每日构建，本集最大覆盖源
+#    https://github.com/MetaCubeX/meta-rules-dat  (meta 分支 · geo/geosite/category-ai-!cn.list)
+#    v2fly domain-list-community 的 category-ai-!cn 展开版。贡献：Gemini 后端全清单
+#    (antigravity/notebooklm/cloudcode/aicode 等) + 新兴 AI 服务全家(cohere/deepseek 等)。
+#    youtubei 等 YouTube 域天然不在该分类(已实测验证)。
+#
+# 6. 用户自有镜像 (RiverFlowsInUUU/Rule) —— 与第 2 条同源的快照 + notebooklm 补遗
+#    https://github.com/RiverFlowsInUUU/Rule  (main · AI, Clash payload 形态)
+#
+# 7. dler-io/Rules —— 滚动维护，高质量补漏源
+#    https://github.com/dler-io/Rules  (main · Surge 3/Provider/AI Suite.list)
+#    贡献：Google 新 AI 产品(Opal/Jules/antigravity/notebooklm.cloud) + AI 编程工具
+#    (zed/augment/chorus/udify) + JetBrains/Apple Intelligence + Grok 登录域。
+#    ⚠️ 该集设计前提是「置于微软/Apple/通用代理规则之前」，故意收录共享登录/token 域
+#    (js.stripe.com / login.live.com 等)以保证账号风控一致 —— 与本仓取舍不同，故用
+#    BLACKLIST_EXACT 点名剔除其中会撞本仓 GitHub/微软分流、或属通用基础设施的 9 个主机。
+#
+# ============ 整合纪律 ============
+# · 零 IP 条目：所有 IP-CIDR/IP-ASN 一律丢弃(纯域名集不触发解析，无 DNS 泄露面)
+# · googleapis.com 宽后缀已收窄：它是全 Google API 域(含 youtubei=YouTube 信令)，
+#   整域收编会误拉 YouTube/GMS 其他服务；改为 Gemini 专属后端精确枚举 + play 网关 1 条
+# · 域名形态：DOMAIN / DOMAIN-SUFFIX / DOMAIN-KEYWORD / URL-REGEX（零 IP）
+# · 冗余归并：DOMAIN 被「同值或父域」DOMAIN-SUFFIX 覆盖者删之（后缀的匹配集严格包含 DOMAIN，
+#   删之不改任何落点，纯去冗余）；KEYWORD 与 SUFFIX 同值时删 KEYWORD。三项均由生成器自动执行，
+#   新源带来的同类冗余一并消解
+#
+# ============ 分工与拍板记录 ============
+# 分工: 本集管「Gemini 专属后端 + 伴生域 + 基础设施域」(静态)；新 AI 域由 Repcz AI.list(滚动)承接，两者同指 AI 组
+# 拍板: googleapis.com 宽后缀改窄(YouTube 误伤实测)；play.googleapis.com 精确收编(GMS 主网关随 Gemini)；
+#       googleusercontent.com 宽后缀保留(静态 CDN 无账号语义)；AI 组 select 钉死出口(风控一致性)
+# 三修: 2026-09-28 实测漏网收编 —— oauth2 / oauthaccountmanager(账号 OAuth 基础设施·低频) 精确补入；
+#       DOMAIN-KEYWORD,-pa.googleapis.com 一条封死 -pa 动态命名空间(signaler/growth/notifications 等未来新后端全兜)
+# 四修: 2026-09-30 墨鱼源换址(gist → ddgksf2013.top)刷新快照，净增 11 条(Cursor/Meta AI/HuggingFace 系)；
+#       facebook.com / fbcdn.net / connect.facebook.net 三条宽域按用户拍板原样收录(Meta AI 账号与 CDN 依赖)
+# 五修: 2026-10-01 新增第 10 源 dler-io/Rules(AI Suite)；其独有 33 条中 9 条由 BLACKLIST_EXACT 点名剔除，
+#       净增 24 条(Google 新 AI / AI 编程工具 / JetBrains / Apple Intelligence / Grok 登录)
+# 六修: 2026-10-01 归并器补 DOMAIN 同类项 —— 此前仅做 KEYWORD→SUFFIX 归并，故 DOMAIN,x 与同值
+#       DOMAIN-SUFFIX,x 并存(共 32 处，其中 26 处旧集即有、6 处由 dler 源带入)。补归并后列表
+#       318 → 286 条；匹配行为零变化(SUFFIX 覆盖 DOMAIN)，属生成器级修复，往后同类冗余自动消解
+# 七修: 2026-10-01 归并扩到「父域覆盖」—— 原只认同值，故 y.x 型 DOMAIN 与父域 DOMAIN-SUFFIX,x
+#       并存(14 处，如 waa-pa.clients6.google.com <- clients6.google.com)。补后列表 286 → 272 条；
+#       匹配行为仍零变化(SUFFIX,x 本就含全部 *.x)。KEYWORD 的子串式巧合覆盖(1 处 cdn.openaimerge.com
+#       被 KEYWORD,openai 兜住)语义不同，本次不动
+#
+# ==== 00 宽后缀(伴生域收编) ====
+DOMAIN-SUFFIX,googleusercontent.com
+
+# ==== 01 Google/Gemini 系 ====
+DOMAIN,appcatalyst.pa.googleapis.com
+DOMAIN,jules.googleapis.com
+DOMAIN,oauth2.googleapis.com
+DOMAIN,oauthaccountmanager.googleapis.com
+DOMAIN,play.googleapis.com
+DOMAIN-KEYWORD,-pa.googleapis.com
+DOMAIN-SUFFIX,ai.google.dev
+DOMAIN-SUFFIX,aicode.googleapis.com
+DOMAIN-SUFFIX,aida.googleapis.com
+DOMAIN-SUFFIX,aisandbox-pa.googleapis.com
+DOMAIN-SUFFIX,aistudio.google.com
+DOMAIN-SUFFIX,alkalicore-pa.clients6.google.com
+DOMAIN-SUFFIX,alkalimakersuite-pa.clients6.google.com
+DOMAIN-SUFFIX,antigravity-pa.googleapis.com
+DOMAIN-SUFFIX,antigravity-unleash.goog
+DOMAIN-SUFFIX,antigravity.google
+DOMAIN-SUFFIX,antigravity.google.com
+DOMAIN-SUFFIX,antigravity.googleapis.com
+DOMAIN-SUFFIX,apis.google.com
+DOMAIN-SUFFIX,bard.google.com
+DOMAIN-SUFFIX,clients4.google.com
+DOMAIN-SUFFIX,clients6.google.com
+DOMAIN-SUFFIX,cloudaicompanion.googleapis.com
+DOMAIN-SUFFIX,cloudcode-pa.googleapis.com
+DOMAIN-SUFFIX,colab.google.com
+DOMAIN-SUFFIX,colab.research.google.com
+DOMAIN-SUFFIX,daily-cloudcode-pa.googleapis.com
+DOMAIN-SUFFIX,deepmind.com
+DOMAIN-SUFFIX,deepmind.google
+DOMAIN-SUFFIX,developerprofiles.google.com
+DOMAIN-SUFFIX,flow.google
+DOMAIN-SUFFIX,flow.google.com
+DOMAIN-SUFFIX,geller-pa.googleapis.com
+DOMAIN-SUFFIX,gemini.google
+DOMAIN-SUFFIX,gemini.google.com
+DOMAIN-SUFFIX,gemini.gstatic.com
+DOMAIN-SUFFIX,generativeai.google
+DOMAIN-SUFFIX,generativelanguage.googleapis.com
+DOMAIN-SUFFIX,jules.google
+DOMAIN-SUFFIX,jules.google.com
+DOMAIN-SUFFIX,labs.google
+DOMAIN-SUFFIX,labs.google.com
+DOMAIN-SUFFIX,makersuite.google.com
+DOMAIN-SUFFIX,notebook.google
+DOMAIN-SUFFIX,notebook.google.com
+DOMAIN-SUFFIX,notebooklm-pa.googleapis.com
+DOMAIN-SUFFIX,notebooklm.cloud.google.com
+DOMAIN-SUFFIX,notebooklm.google
+DOMAIN-SUFFIX,notebooklm.google.com
+DOMAIN-SUFFIX,notebooklm.googleapis.com
+DOMAIN-SUFFIX,opal.goog
+DOMAIN-SUFFIX,opal.google
+DOMAIN-SUFFIX,opal.google.com
+DOMAIN-SUFFIX,opal.withgoogle.com
+DOMAIN-SUFFIX,proactivebackend-pa.googleapis.com
+DOMAIN-SUFFIX,robinfrontend-pa.googleapis.com
+DOMAIN-SUFFIX,stitch.withgoogle.com
+DOMAIN-SUFFIX,webchannel-alkalimakersuite-pa.clients6.google.com
+URL-REGEX,https://www\.google\.com/.*continue=https://gemini\.google\.com.+
+
+# ==== 02 OpenAI/ChatGPT 系 ====
+DOMAIN,cdn.openaimerge.com
+DOMAIN-KEYWORD,openai
+DOMAIN-KEYWORD,openaicom-api
+DOMAIN-SUFFIX,ai.com
+DOMAIN-SUFFIX,chat.com
+DOMAIN-SUFFIX,chatgpt.com
+DOMAIN-SUFFIX,chatgpt.livekit.cloud
+DOMAIN-SUFFIX,chatgpt.site
+DOMAIN-SUFFIX,oaistatic.com
+DOMAIN-SUFFIX,oaistatsig.com
+DOMAIN-SUFFIX,oaiusercontent.com
+DOMAIN-SUFFIX,openai.com
+DOMAIN-SUFFIX,openai.com.cdn.cloudflare.net
+DOMAIN-SUFFIX,openai.qualtrics.com
+DOMAIN-SUFFIX,openaiapi-site.azureedge.net
+DOMAIN-SUFFIX,openaiassets.blob.core.windows.net
+DOMAIN-SUFFIX,openaicom-api-bdcpf8c6d2e9atf6.z01.azurefd.net
+DOMAIN-SUFFIX,openaicom.imgix.net
+DOMAIN-SUFFIX,openaicomproductionae4b.blob.core.windows.net
+DOMAIN-SUFFIX,production-openaicom-storage.azureedge.net
+DOMAIN-SUFFIX,sora.com
+
+# ==== 03 Claude/Anthropic 系 ====
+DOMAIN-KEYWORD,anthropic
+DOMAIN-KEYWORD,claude
+DOMAIN-SUFFIX,anthropic.com
+DOMAIN-SUFFIX,claude.ai
+DOMAIN-SUFFIX,claude.com
+DOMAIN-SUFFIX,claudemcpclient.com
+DOMAIN-SUFFIX,claudemcpcontent.com
+DOMAIN-SUFFIX,claudeusercontent.com
+DOMAIN-SUFFIX,servd-anthropic-website.b-cdn.net
+
+# ==== 04 Grok/xAI 系 ====
+DOMAIN,auth.grokusercontent.com
+DOMAIN-SUFFIX,grok.com
+DOMAIN-SUFFIX,grok.x.com
+DOMAIN-SUFFIX,grokipedia.com
+DOMAIN-SUFFIX,x.ai
+
+# ==== 05 Copilot/微软系 ====
+DOMAIN,account.jetbrains.com
+DOMAIN,api.github.com
+DOMAIN,api.jetbrains.cloud
+DOMAIN,api.msn.com
+DOMAIN,assets.msn.com
+DOMAIN,gateway.bingviz.microsoft.net
+DOMAIN,gateway.bingviz.microsoftapp.net
+DOMAIN,in.appcenter.ms
+DOMAIN,location.microsoft.com
+DOMAIN,oauth.account.jetbrains.com
+DOMAIN,odc.officeapps.live.com
+DOMAIN,r.bing.com
+DOMAIN,self.events.data.microsoft.com
+DOMAIN,services.bingapis.com
+DOMAIN,sydney.bing.com
+DOMAIN,www.bing.com
+DOMAIN-SUFFIX,api.microsoftapp.net
+DOMAIN-SUFFIX,azureedge.net
+DOMAIN-SUFFIX,bing-shopping.microsoft-falcon.io
+DOMAIN-SUFFIX,copilot-proxy.githubusercontent.com
+DOMAIN-SUFFIX,copilot-stg.com
+DOMAIN-SUFFIX,copilot-telemetry-service.githubusercontent.com
+DOMAIN-SUFFIX,copilot-telemetry.githubusercontent.com
+DOMAIN-SUFFIX,copilot-workspace.githubnext.com
+DOMAIN-SUFFIX,copilot.cloud.microsoft
+DOMAIN-SUFFIX,copilot.com
+DOMAIN-SUFFIX,copilot.microsoft.com
+DOMAIN-SUFFIX,copilotprodattachments.blob.core.windows.net
+DOMAIN-SUFFIX,edgeservices.bing.com
+DOMAIN-SUFFIX,githubcopilot.com
+DOMAIN-SUFFIX,jetbrains.ai
+
+# ==== 06 Meta 系 ====
+DOMAIN-SUFFIX,meta.ai
+
+# ==== 07 其他 AI 服务 ====
+DOMAIN,api.together.xyz
+DOMAIN,cdn.usefathom.com
+DOMAIN-SUFFIX,anythingllm.com
+DOMAIN-SUFFIX,arena.ai
+DOMAIN-SUFFIX,cerebras.ai
+DOMAIN-SUFFIX,chutes.ai
+DOMAIN-SUFFIX,cici.com
+DOMAIN-SUFFIX,ciciai.com
+DOMAIN-SUFFIX,ciciaicdn.com
+DOMAIN-SUFFIX,clau.de
+DOMAIN-SUFFIX,clawhub.ai
+DOMAIN-SUFFIX,clipdrop.co
+DOMAIN-SUFFIX,codeium.com
+DOMAIN-SUFFIX,codeiumdata.com
+DOMAIN-SUFFIX,coderabbit.ai
+DOMAIN-SUFFIX,coderabbit.gallery.vsassets.io
+DOMAIN-SUFFIX,cursor-cdn.com
+DOMAIN-SUFFIX,cursor.com
+DOMAIN-SUFFIX,cursor.sh
+DOMAIN-SUFFIX,cursorapi.com
+DOMAIN-SUFFIX,cursorvm.com
+DOMAIN-SUFFIX,dify.ai
+DOMAIN-SUFFIX,groq.com
+DOMAIN-SUFFIX,huggingface.co
+DOMAIN-SUFFIX,jasper.ai
+DOMAIN-SUFFIX,mistral.ai
+DOMAIN-SUFFIX,openart.ai
+DOMAIN-SUFFIX,openrouter.ai
+DOMAIN-SUFFIX,perplexity.ai
+DOMAIN-SUFFIX,perplexity.com
+DOMAIN-SUFFIX,poe.com
+DOMAIN-SUFFIX,pplx-res.cloudinary.com
+
+# ==== 08 基础设施/认证/遥测(伴生) ====
+DOMAIN,static.cloudflareinsights.com
+DOMAIN-SUFFIX,api.statsig.com
+DOMAIN-SUFFIX,arkoselabs.com
+DOMAIN-SUFFIX,auth0.com
+DOMAIN-SUFFIX,browser-intake-datadoghq.com
+DOMAIN-SUFFIX,challenges.cloudflare.com
+DOMAIN-SUFFIX,client-api.arkoselabs.com
+DOMAIN-SUFFIX,events.statsigapi.net
+DOMAIN-SUFFIX,featuregates.org
+DOMAIN-SUFFIX,gateway.ai.cloudflare.com
+DOMAIN-SUFFIX,identrust.com
+DOMAIN-SUFFIX,intercom.io
+DOMAIN-SUFFIX,intercomcdn.com
+DOMAIN-SUFFIX,launchdarkly.com
+DOMAIN-SUFFIX,segment.io
+DOMAIN-SUFFIX,statsigapi.net
+
+# ==== 09 其他未归类 ====
+DOMAIN,accounts.spacex.ai
+DOMAIN,apple-relay.apple.com
+DOMAIN,apple-relay.mask.apple-dns.net
+DOMAIN,cdn.workos.com
+DOMAIN,connect.facebook.net
+DOMAIN,default.exp-tas.com
+DOMAIN,forwarder.workos.com
+DOMAIN,humb.apple.com
+DOMAIN,images.workoscdn.com
+DOMAIN,meta-ohttp-config-prod.fastly-edge.com
+DOMAIN,meta-ohttp-relay-prod.fastly-edge.com
+DOMAIN,production.museai.com
+DOMAIN,setup.workos.com
+DOMAIN-KEYWORD,colab
+DOMAIN-KEYWORD,developerprofiles
+DOMAIN-KEYWORD,generativelanguage
+DOMAIN-SUFFIX,agentclientprotocol.com
+DOMAIN-SUFFIX,ai.azure.com
+DOMAIN-SUFFIX,ai.studio
+DOMAIN-SUFFIX,algolia.net
+DOMAIN-SUFFIX,atmeta.com
+DOMAIN-SUFFIX,augment.com
+DOMAIN-SUFFIX,augmentcode.com
+DOMAIN-SUFFIX,chorus.sh
+DOMAIN-SUFFIX,cohere.ai
+DOMAIN-SUFFIX,cohere.com
+DOMAIN-SUFFIX,comfy.org
+DOMAIN-SUFFIX,comfyci.org
+DOMAIN-SUFFIX,comfyregistry.org
+DOMAIN-SUFFIX,coze.com
+DOMAIN-SUFFIX,crewai.com
+DOMAIN-SUFFIX,crixet.com
+DOMAIN-SUFFIX,deepwiki.com
+DOMAIN-SUFFIX,deepwiki.org
+DOMAIN-SUFFIX,devin.ai
+DOMAIN-SUFFIX,diabrowser.com
+DOMAIN-SUFFIX,diabrowser.engineering
+DOMAIN-SUFFIX,dola.com
+DOMAIN-SUFFIX,dreamgen.com
+DOMAIN-SUFFIX,duck.ai
+DOMAIN-SUFFIX,elevenlabs.com
+DOMAIN-SUFFIX,elevenlabs.io
+DOMAIN-SUFFIX,facebook.com
+DOMAIN-SUFFIX,fbcdn.net
+DOMAIN-SUFFIX,g.ai
+DOMAIN-SUFFIX,grazie.ai
+DOMAIN-SUFFIX,grazie.aws.intellij.net
+DOMAIN-SUFFIX,h2o.ai
+DOMAIN-SUFFIX,hf.co
+DOMAIN-SUFFIX,hf.space
+DOMAIN-SUFFIX,host.livekit.cloud
+DOMAIN-SUFFIX,kimi.ai
+DOMAIN-SUFFIX,kiro.dev
+DOMAIN-SUFFIX,langchain.com
+DOMAIN-SUFFIX,livekit.cloud
+DOMAIN-SUFFIX,liveperson.net
+DOMAIN-SUFFIX,llama.com
+DOMAIN-SUFFIX,llamameta.net
+DOMAIN-SUFFIX,lmstudio.ai
+DOMAIN-SUFFIX,lovart.ai
+DOMAIN-SUFFIX,lpsnmedia.net
+DOMAIN-SUFFIX,manus.im
+DOMAIN-SUFFIX,manuscdn.com
+DOMAIN-SUFFIX,marscode.com
+DOMAIN-SUFFIX,meta.com
+DOMAIN-SUFFIX,midjourney.com
+DOMAIN-SUFFIX,minimax.io
+DOMAIN-SUFFIX,moonshot.ai
+DOMAIN-SUFFIX,mozilla.ai
+DOMAIN-SUFFIX,muse.ai
+DOMAIN-SUFFIX,notegpt.io
+DOMAIN-SUFFIX,novelai.net
+DOMAIN-SUFFIX,o33249.ingest.sentry.io
+DOMAIN-SUFFIX,observeit.net
+DOMAIN-SUFFIX,ollama.com
+DOMAIN-SUFFIX,openclaw.ai
+DOMAIN-SUFFIX,openspec.dev
+DOMAIN-SUFFIX,oystermercury.top
+DOMAIN-SUFFIX,plannotator.ai
+DOMAIN-SUFFIX,poecdn.net
+DOMAIN-SUFFIX,ppl-ai-file-upload.s3.amazonaws.com
+DOMAIN-SUFFIX,pplx.ai
+DOMAIN-SUFFIX,qoder.com
+DOMAIN-SUFFIX,sider.ai
+DOMAIN-SUFFIX,spicywriter.com
+DOMAIN-SUFFIX,talkai.info
+DOMAIN-SUFFIX,tapnow.ai
+DOMAIN-SUFFIX,trae.ai
+DOMAIN-SUFFIX,tripo3d.ai
+DOMAIN-SUFFIX,turn.livekit.cloud
+DOMAIN-SUFFIX,udify.app
+DOMAIN-SUFFIX,windsurf.build
+DOMAIN-SUFFIX,windsurf.com
+DOMAIN-SUFFIX,youmind.ai
+DOMAIN-SUFFIX,youmind.com
+DOMAIN-SUFFIX,youmind.site
+DOMAIN-SUFFIX,zed.dev
+

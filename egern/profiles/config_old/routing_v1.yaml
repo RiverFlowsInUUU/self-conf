@@ -1,0 +1,516 @@
+vif_only: true
+hijack_dns:
+- '*'
+geoip_db_url: https://raw.githubusercontent.com/Loyalsoldier/geoip/release/Country.mmdb
+asn_db_url: https://raw.githubusercontent.com/Loyalsoldier/geoip/release/GeoLite2-ASN.mmdb
+proxy_latency_test_url: http://cp.cloudflare.com/generate_204
+direct_latency_test_url: http://connectivitycheck.platform.hicloud.com/generate_204
+real_ip_domains:
+# 这几个域名不做 Fake IP 映射，交给系统解析。
+# Windows/Apple 的推送与内网发现走的是「隧道外」的链路（include_apns: false），
+# 用 Fake IP 反而会让推送异常，所以这里必须放行。
+- '*.lan'
+- '*.local'
+- '*.push.apple.com'
+dns:
+  # ================================================================ 设计前提
+  # 官方 DNS 文档逐字规定（本节所有取舍的唯一依据）：
+  #   1) 「默认 DNS：处理用户流量的域名解析，按 Forward 规则匹配上游，未命中回退到
+  #       Bootstrap；连接上游时遵循代理规则。」
+  #   2) 「Bootstrap……仅支持传统 UDP 协议（端口 53），且不遵循代理规则——流量直连。
+  #       它有两个用途：① 解析 upstreams 中加密 DNS 服务器的主机名；② 作为最终的 DNS 回退。」
+  #   3) 「未配置或解析失败时，自动使用系统 DNS 服务器。」（system = Wi-Fi/蜂窝下发的 DNS）
+  #
+  # ⇒ 本文件里唯一可能把查询暴露给「中国电信」的，就是 bootstrap 这条明文 UDP:53 路径：
+  #      电信蜂窝上它要么被运营商透明重定向到电信自己的解析器，要么直接失败；
+  #      失败后按第 3 条掉到「系统 DNS」——而系统 DNS 就是电信下发的那个。
+  #    dnsleaktest 显示的 59.37.178.86 / 219.128.128.90（AS4134 广东电信）就出自这里，
+  #    与 forward 里挂的是阿里还是 Google 无关。
+  #
+  # ⇒ 所以本节的目标不是「给 bootstrap 换个更安全的服务器」（国内不存在可达的境外
+  #    UDP:53 解析器），而是让 bootstrap 的两条用途都无事可做：
+  #      用途① 用 IP 字面量端点消灭（见 upstreams）；
+  #      用途② 让 forward 兜底指向一个「不依赖代理也永远活着」的组（见 forward 的两条兜底）。
+  # ================================================================ 启动 DNS
+  # 剩下的作用：极端情况下（所有加密上游同时不可用）的最后一道明文回退。
+  # 列 3 个国内大厂明文 IP，只为把「全失败 → 掉到系统 DNS（电信）」的概率压到最低。
+  # ⚠️ 不要在这里写 system —— 那等于主动把运营商 DNS 接进来。
+  bootstrap:
+  - 223.5.5.5
+  - 223.6.6.6
+  - 119.29.29.29
+  # ================================================================ 上游 DNS 组
+  upstreams:
+    # ---- 国内域名：国内加密 DNS，全部 IP 字面量 ----------------------------
+    # 为什么必须写 IP 而不是 dns.alidns.com：官方第 2 条明确 bootstrap 的用途之一就是
+    # 「解析 upstreams 中加密 DNS 服务器的主机名」。只要端点是主机名，就必然要有一次
+    # 明文查询；写 IP 字面量则一次都不产生，零依赖（不再依赖 hosts 是否命中）。
+    # 下面 6 个端点已逐个实测（RFC8484 线格式 GET ?dns= + DoT 853 握手，见报告表）：
+    #   223.5.5.5 / 223.6.6.6 / 1.12.12.12 / 120.53.53.53 -> HTTP 200 + 有效 A 记录
+    #   tls://223.5.5.5 -> 证书 CN=*.alidns.com（覆盖 IP）；tls://1.12.12.12 -> CN=120.53.53.53
+    # 两家机构 × 两种协议 × 各两个 IP：任一组合存活，本组就不会「全失败」。
+    Domestic-DNS:
+    - https://223.5.5.5/dns-query
+    - https://223.6.6.6/dns-query
+    - https://1.12.12.12/dns-query
+    - https://120.53.53.53/dns-query
+    - tls://223.5.5.5
+    - tls://1.12.12.12
+    # ---- 境外加密 DNS（f10 起无任何引用，保留为 A/B 备用，不影响泄露面）-------------
+    # ⚠️ 本组从 f6 起从 forward 兜底上摘了下来：它的端点必须经代理才可达，把兜底
+    #    挂在它身上等于「先有代理，才敢解析」—— 代理未就绪时那次解析会掉进 bootstrap
+    #    明文，在电信蜂窝上就是泄露给电信。改用 Domestic-DNS 兜底（见 forward 的两条兜底）。
+    #    要切回 f5 的行为：先取消下方 Foreign-DNS 组的注释，再把 forward 最后两条的 value 改回 Foreign-DNS 即可。
+    # 6 个端点、三家机构。关键点有两个：
+    #   ① IP 字面量 ⇒ 不需要 bootstrap（否则 dns.google 这个名字本身在国内就拿不到真 IP，
+    #      这一步一失败，整组就废，随后就是回退明文 —— 这正是原配置的写法带来的后果）；
+    #   ② rules 段开头已把这 5 个 IP 全部判给 Proxy（规则 8/9/10/11/12），配合官方第 1 条
+    #      「连接上游时遵循代理规则」，链路是「设备 → 代理 → 8.8.8.8」，
+    #      于是从电信蜂窝上也能正常解析，且全程加密、不经过国内网络。
+    # 实测（逐个跑过）：
+    #   https://8.8.8.8 / 8.8.4.4 / 1.1.1.1 / 1.0.0.1  -> HTTP 200
+    #   https://9.9.9.9                             -> 失败！HTTP Version Not Supported
+    #     （Quad9 在 9.9.9.9 上只提供 HTTP/3，不响应 HTTP/1.1 线格式；149.112.112.112 同样）
+    #   tls://9.9.9.9 -> 证书 CN=dns.quad9.net，正常应答 ⇒ Quad9 只能走 DoT
+    # 为什么多列几个：官方「同一组内的多个服务器并发竞速，由响应最快者胜出」。
+    # 触发回退的唯一条件是「这一组全部失败」，端点越多越不可能。
+    # ---- Foreign-DNS 组（f10 起：注释掉，未引用，保留为 A/B 备用）---------------
+    # ⚠️ 本组自 f6 起从 forward 兜底摘下、f10 起除上方说明外再无引用，目前是
+    #    「定义了但没人用」的状态。按你的要求保留（不删除），仅注释掉以免被误引用。
+    #    若要恢复：取消下面 7 行的注释，并把 forward 两条兜底的 value 改回 Foreign-DNS
+    #    （或删掉 proxy_nameservers 改回用本组）。注意：用本组兜底会引入「先有代理才敢
+    #    解析」的启动期明文风险（见上方 63~80 行说明），仅在你明确需要境外解析答案时再用。
+#     Foreign-DNS:
+#     - https://8.8.8.8/dns-query
+#     - https://8.8.4.4/dns-query
+#     - https://1.1.1.1/dns-query
+#     - https://1.0.0.1/dns-query
+#     - tls://8.8.8.8
+#     - tls://9.9.9.9
+  forward:
+  # ============ Forward 规则（f10 起：塌缩为 2 条兜底，与订阅彻底解耦）============
+  # ★ f10 的唯一改动：删掉原第 1~8 条规则，只留最后两条兜底。
+  #   删掉的 8 条 = [1] domain_suffix: cn  [2] proxy_rule_set: ChinaDomain.list
+  #                 [3~5] 三个机场节点域名  [6~8] cp.cloudflare.com /
+  #                 connectivitycheck.platform.hicloud.com / jsdelivr.net
+  #
+  # 为什么可以删 —— 两个结构性事实（官方 dns 文档逐字支持）：
+  #   ① 「Forward 规则按声明顺序求值，第一条命中的决定上游」；而原 10 条规则的
+  #      value **全部都是 Domestic-DNS**（单值）。每条的结果都一样 ⇒ **顺序与域名
+  #      清单都不影响结果** ⇒ 删掉其中任何一条都不改变行为（可用 scripts/audit_dns_forward.py
+  #      验证：它会打印 value 集合并对任意域名做演练）。
+  #   ② 「配置了 proxy_nameservers 后，代理 DNS 会**跳过 Forward 阶段**，直接走该
+  #      列表」；而节点域名的解析走的正是代理 DNS ⇒ **它们本来就不会查询本节**。
+  #      所以原第 3~5 条（机场节点域名）自 f7 写出 proxy_nameservers 起就是死代码。
+  #   ⇒ 结论：换订阅、换机场、换节点域名、换中转 CDN，**本节都不需要改一个字**。
+  #      这也正是 Surge 那套配置的形态（一份加密 DNS 列表 + 全直连，不按域名分流 DNS）。
+  #
+  # 为什么兜底必须是 Domestic-DNS（而不是境外组）：
+  #   ① 官方只写了「未命中 Forward 回退 Bootstrap」，「命中的组端点全失败」会怎样
+  #      并未写明。兜底挂境外组，就等于把一条未定义的分支留给明文 UDP:53。
+  #   ② 兜底组若需经代理，就引入隐式依赖「先有代理，才敢解析」。启动阶段（规则集与
+  #      geoip/asn DB 下载、策略组首轮测速）代理尚未就绪，此时任何一次本地解析都会
+  #      掉进 bootstrap 明文 —— 电信蜂窝上就是泄露给电信。
+  #   ③ 实际运行中本地解析只服务于 DIRECT 域名。本配置 DIRECT 的域名来源是：
+  #        Lan.list（私网）/ Apple_All_No_Resolve / 国内域名规则集（Loyalsoldier direct.txt，
+  #        111,160 条纯域名）/ domain_suffix: cn —— 全是国内与 Apple 域名，
+  #      国内加密 DNS 对它们本来就更优更快。而走代理的域名
+  #      由节点远程解析（代理 DNS），根本不经过本节，所以不存在「需要境外答案」的域名。
+  #   ④ 兜底组 Domestic-DNS 的 6 个端点全部是 IP 字面量 ⇒ 自身不需要 bootstrap 解析；
+  #      且这 6 个 IP 字面量端点由 DNS 模块直接访问，不依赖 rules 路由或代理就绪，
+  #      ⇒ **启动阶段即可用**。
+  #   两条兜底刻意用两种互不依赖的匹配语义（官方：domain_regex 是 PCRE2 find 式，
+  #   '.' 命中任意子串；domain_wildcard 是官方示例与社区配置的主用法）。任何一条生效，
+  #   bootstrap 都不会成为用户域名的回退。
+  - domain_regex:
+      match: '.'
+      value: Domestic-DNS
+  - domain_wildcard:
+      match: '*'
+      value: Domestic-DNS
+  # ★ f7 改动 B：显式写 proxy_nameservers（f1~f6 都是不写）。
+  #   官方 dns 文档原文：「未配置时，代理 DNS 与默认 DNS 共用 Forward 规则，**未命中回退到
+  #   Bootstrap**」—— 也就是「不设置」这件事本身，就留下了一条通往明文 UDP:53 的兜底分支。
+  #   设置后官方语义是「所有代理 DNS 查询强制走该列表，**Forward 规则会被跳过**」，
+  #   于是那条回退分支在结构上不再存在。
+  #   为什么只能用国内端点：代理 DNS 是**强制直连**的（官方：避免 DNS→代理→DNS 循环依赖），
+  #   境外解析器在电信线路上根本不可达 —— 那正是 bootstrap 会被逼出来的原因。
+  #   下面 6 个端点与上面的 Domestic-DNS 完全相同、全部是 IP 字面量（⇒ 自身不需要 bootstrap
+  #   解析），且已用 scripts/probe_dns_endpoints.py 逐个实测可用。
+  #   如果你发现「节点连不上」，第一件事是注释掉这 6 行（等价于回到 f6 的行为）。
+  proxy_nameservers:
+  - https://223.5.5.5/dns-query
+  - https://223.6.6.6/dns-query
+  - https://1.12.12.12/dns-query
+  - https://120.53.53.53/dns-query
+  - tls://223.5.5.5
+  - tls://1.12.12.12
+  # ---------------------------------------------------------------- 主机名固定
+  # 把加密 DNS 端点的主机名直接钉到 IP：省掉一次解析，同时让 bootstrap 无事可做。
+  # 与社区参考配置（Repcz/Tool）的取值逐字一致。
+  hosts:
+    dns.alidns.com:
+    - 223.5.5.5
+    - 223.6.6.6
+    doh.pub:
+    - 1.12.12.12
+    - 120.53.53.53
+    dot.pub:
+    - 1.12.12.12
+    - 120.53.53.53
+  # ---------------------------------------------------------------- 污染应答过滤
+  # 丢弃空路由式应答（0.0.0.0 / 127.0.0.1）。官方说明此字段用于对抗 DNS 污染。
+  # 刻意不放 10.0.0.0/8 等私网段，避免误伤内网域名的解析结果。
+  block_ips:
+  - 0.0.0.0
+  - 127.0.0.1
+proxies: []
+# 在此添加你的节点。本模板不附带任何示例 / 虚拟节点 —— 节点由你自行填写，
+# 再把下方分流组的 policies 填上对应的节点名（或订阅组名）。
+policy_groups:
+- select:
+    name: Proxy
+    policies:
+    - MAX
+    - Smart
+    - Hong Kong
+    - USA
+    - Singapore
+    - Taiwan
+    - Japan
+    - Korea
+    - Other Regions
+    icon: https://raw.githubusercontent.com/RiverFlowsInUUU/Self-Configuration/main/icons/Proxy.png
+- smart:
+    name: Smart
+    policies:
+    - Airport-Free
+    - Airport-C
+    icon: https://raw.githubusercontent.com/RiverFlowsInUUU/Self-Configuration/main/icons/Auto.png
+- fallback:
+    name: ChatGPT
+    policies: []
+    icon: https://raw.githubusercontent.com/RiverFlowsInUUU/Self-Configuration/main/icons/openai.png
+- fallback:
+    name: Gemini
+    policies: []
+    icon: https://raw.githubusercontent.com/RiverFlowsInUUU/Self-Configuration/main/icons/gemini-color.png
+- smart:
+    name: Claude
+    policies:
+    - Taiwan
+    icon: https://raw.githubusercontent.com/RiverFlowsInUUU/Self-Configuration/main/icons/claude-color.png
+- smart:
+    name: AI
+    policies:
+    - Proxy
+    icon: https://raw.githubusercontent.com/RiverFlowsInUUU/Self-Configuration/main/icons/grok.png
+- select:
+    name: Spotify
+    policies:
+    - Proxy
+    flatten: true
+    icon: https://raw.githubusercontent.com/RiverFlowsInUUU/Self-Configuration/main/icons/Spotify.png
+- select:
+    name: YouTubeMusic
+    policies:
+    - Proxy
+    flatten: true
+    icon: https://raw.githubusercontent.com/RiverFlowsInUUU/Self-Configuration/main/icons/YouTubeMusic.png
+- select:
+    name: YouTube
+    policies:
+    - Proxy
+    flatten: true
+    icon: https://raw.githubusercontent.com/RiverFlowsInUUU/Self-Configuration/main/icons/YouTube.png
+- select:
+    name: GitHub
+    policies:
+    - Proxy
+    flatten: true
+    icon: https://raw.githubusercontent.com/RiverFlowsInUUU/Self-Configuration/main/icons/GitHub.png
+- select:
+    name: Google
+    policies:
+    - Gemini
+    - Proxy
+    icon: https://raw.githubusercontent.com/RiverFlowsInUUU/Self-Configuration/main/icons/Google.png
+- select:
+    name: Microsoft
+    policies:
+    - DIRECT
+    - Proxy
+    flatten: true
+    icon: https://raw.githubusercontent.com/RiverFlowsInUUU/Self-Configuration/main/icons/Microsoft.png
+- select:
+    name: Telegram
+    policies:
+    - Proxy
+    flatten: true
+    icon: https://raw.githubusercontent.com/RiverFlowsInUUU/Self-Configuration/main/icons/Telegram.png
+- select:
+    name: Twitter
+    policies:
+    - Proxy
+    flatten: true
+    icon: https://raw.githubusercontent.com/RiverFlowsInUUU/Self-Configuration/main/icons/Twitter.png
+- external:
+    name: Airport-A
+    type: smart
+    urls:
+    - https://sub.example.com/api/v1/client/subscribe?token=REPLACE_WITH_YOUR_TOKEN
+    - https://sub.example.com/api/v1/client/subscribe?token=REPLACE_WITH_YOUR_TOKEN
+    icon: https://raw.githubusercontent.com/RiverFlowsInUUU/Self-Configuration/main/icons/Airport.png
+- external:
+    name: Airport-B
+    type: smart
+    urls:
+    - https://sub.example.com/api/v1/client/subscribe?token=REPLACE_WITH_YOUR_TOKEN
+    - https://sub.example.com/api/v1/client/subscribe?token=REPLACE_WITH_YOUR_TOKEN
+    urls_disabled:
+    - https://sub.example.com/api/v1/client/subscribe?token=REPLACE_WITH_YOUR_TOKEN
+    icon: https://raw.githubusercontent.com/RiverFlowsInUUU/Self-Configuration/main/icons/Airport.png
+- external:
+    name: Airport-C
+    type: smart
+    urls:
+    - https://sub.example.com/api/v1/client/subscribe?token=REPLACE_WITH_YOUR_TOKEN
+    icon: https://raw.githubusercontent.com/RiverFlowsInUUU/Self-Configuration/main/icons/Airport.png
+- smart:
+    name: Airport-Free
+    policies: []
+    urls:
+    - https://sub.example.com/api/v1/client/subscribe?token=REPLACE_WITH_YOUR_TOKEN
+    icon: https://raw.githubusercontent.com/RiverFlowsInUUU/Self-Configuration/main/icons/Airport.png
+- select:
+    name: WeChat
+    policies:
+    - DIRECT
+    flatten: true
+    icon: https://raw.githubusercontent.com/RiverFlowsInUUU/Self-Configuration/main/icons/WeChat.png
+- select:
+    name: AD
+    policies:
+    - REJECT
+    - DIRECT
+    icon: https://raw.githubusercontent.com/RiverFlowsInUUU/Self-Configuration/main/icons/AdBlock.png
+- smart:
+    name: Hong Kong
+    policies:
+    - Airport-A
+    - Airport-B
+    flatten: true
+    filter: (?i)🇭🇰|香港|Hong\s*Kong|\bHKG?\b|(?:深|沪|京|广)港
+    icon: https://raw.githubusercontent.com/RiverFlowsInUUU/Self-Configuration/main/icons/HongKong.png
+- smart:
+    name: USA
+    policies:
+    - Airport-A
+    - Airport-B
+    flatten: true
+    filter: (?i)🇺🇸|美国|United\s*States|America|\bUSA?\b|洛杉矶|硅谷|西雅图|芝加哥|达拉斯|凤凰城|阿什本|纽约|迈阿密|波士顿|休斯顿|亚特兰大|拉斯维加斯|圣地亚哥|盐湖城|奥斯汀|波特兰|丹佛|奥克兰|安大略|圣安娜|\b(?:LAX|SJC|SFO|SEA|ORD|JFK|DFW|IAD|PHX|ATL|BOS|MIA|EWR|LGA|IAH|HOU|DEN|OAK|ONT|SNA|LAS|PDX|DAL|SAN|SLC|MSP)\b
+    icon: https://raw.githubusercontent.com/RiverFlowsInUUU/Self-Configuration/main/icons/UnitedStates.png
+- smart:
+    name: Japan
+    policies:
+    - Airport-C
+    - Airport-A
+    - Airport-B
+    flatten: true
+    filter: (?i)🇯🇵|日本|东京|大阪|Japan|\b(?:JPN?|NRT|HND|KIX|FUK|NGO|OSA|CTS|SDJ|OKA)\b
+    icon: https://raw.githubusercontent.com/RiverFlowsInUUU/Self-Configuration/main/icons/Japan.png
+- smart:
+    name: Taiwan
+    policies:
+    - Airport-A
+    - Airport-B
+    flatten: true
+    filter: (?i)🇹🇼|台湾|Taiwan|\b(?:TWN?|TPE|Taipei)\b
+    icon: https://raw.githubusercontent.com/RiverFlowsInUUU/Self-Configuration/main/icons/Taiwan.png
+- smart:
+    name: Singapore
+    policies:
+    - Airport-A
+    - Airport-B
+    flatten: true
+    filter: (?i)🇸🇬|新加坡|狮城|Singapore|\b(?:SGP?|SIN)\b
+    icon: https://raw.githubusercontent.com/RiverFlowsInUUU/Self-Configuration/main/icons/Singapore.png
+- smart:
+    name: Korea
+    policies:
+    - Smart
+    - Airport-A
+    - Airport-B
+    flatten: true
+    filter: (?i)🇰🇷|韩国|首尔|仁川|Korea|South\s*Korea|\b(?:KOR|KR|ICN|SEL)\b
+    icon: https://raw.githubusercontent.com/RiverFlowsInUUU/Self-Configuration/main/icons/Korea.png
+- smart:
+    name: Other Regions
+    policies:
+    - Airport-A
+    - Airport-B
+    flatten: true
+    filter: |-
+      (?xi) ^ (?! .* (?:
+        🇭🇰|香港|Hong\s*Kong|\bHKG?\b|(?:深|沪|京|广)港|
+        🇯🇵|日本|东京|大阪|Japan|\b(?:JPN?|NRT|HND|KIX|FUK|NGO|OSA|CTS|SDJ|OKA)\b|
+        🇸🇬|新加坡|狮城|Singapore|\b(?:SGP?|SIN)\b|
+        🇹🇼|台湾|Taiwan|\b(?:TWN?|TPE|Taipei)\b|
+        🇰🇷|韩国|首尔|仁川|Korea|South\s*Korea|\b(?:KOR|KR|ICN|SEL)\b|
+        🇺🇸|美国|United\s*States|America|\bUSA?\b|
+        洛杉矶|硅谷|西雅图|芝加哥|达拉斯|凤凰城|阿什本|纽约|迈阿密|波士顿|休斯顿|亚特兰大|拉斯维加斯|圣地亚哥|盐湖城|奥斯汀|波特兰|丹佛|奥克兰|安大略|圣安娜|
+        \b(?:LAX|SJC|SFO|SEA|ORD|JFK|DFW|IAD|PHX|ATL|BOS|MIA|EWR|LGA|IAH|HOU|DEN|OAK|ONT|SNA|LAS|PDX|DAL|SAN|SLC|MSP)\b|
+        倍率|剩余|到期|流量|官网|订阅|测试|有效|禁止|邮箱|客服|地址|网站|群组
+      ) ) .+ $
+    icon: https://raw.githubusercontent.com/RiverFlowsInUUU/Self-Configuration/main/icons/WorldMap.png
+- smart:
+    name: MAX
+    policies:
+    - Airport-A
+    flatten: true
+    filter: 0\.(?:01|1)
+    urls:
+    - https://sub.example.com/api/v1/client/subscribe?token=REPLACE_WITH_YOUR_TOKEN
+    - https://sub.example.com/api/v1/client/subscribe?token=REPLACE_WITH_YOUR_TOKEN
+    urls_disabled:
+    - https://sub.example.com/api/v1/client/subscribe?token=REPLACE_WITH_YOUR_TOKEN
+    - https://sub.example.com/api/v1/client/subscribe?token=REPLACE_WITH_YOUR_TOKEN
+    icon: https://raw.githubusercontent.com/RiverFlowsInUUU/Self-Configuration/main/icons/Nfcloud.png
+- select:
+    name: Final
+    policies:
+    - Proxy
+    icon: https://raw.githubusercontent.com/RiverFlowsInUUU/Self-Configuration/main/icons/Final.png
+rules:
+# 注：原「DNS 端点固定路由」规则（alidns / doh.pub / dns.google / cloudflare-dns 及若干 DNS 服务器 IP）
+# 已全部移除 —— 本模板 dns.upstreams / proxy_nameservers / bootstrap 均为 IP 字面量，解析器直接以 IP 访问，
+# 无需在 rules 中钉域名/IP；移除不影响防 DNS 泄露（详见 DetailsReadme 的「配置框架逐段详解」）。
+# ---- 原有规则（2026-09-21 在其之前新增了 white-guard / ads 两条；原有规则之间顺序不变）----
+- rule_set:
+    name: Jinx-CN
+    match: https://raw.githubusercontent.com/RiverFlowsInUUU/Jinx/main/surge-white-guard.list
+    policy: DIRECT
+- rule_set:
+    name: Jinx-Ads
+    match: https://raw.githubusercontent.com/RiverFlowsInUUU/Jinx/main/surge-ads.list
+    policy: AD
+- rule_set:
+    name: AWAvenue-Ads
+    match: https://raw.githubusercontent.com/TG-Twilight/AWAvenue-Ads-Rule/main/Filters/AWAvenue-Ads-Rule-Surge-RULE-SET.list
+    policy: AD
+- rule_set:
+    name: Lan
+    match: https://raw.githubusercontent.com/blackmatrix7/ios_rule_script/master/rule/Surge/Lan/Lan.list
+    policy: DIRECT
+- rule_set:
+    name: ChatGPT
+    match: https://raw.githubusercontent.com/blackmatrix7/ios_rule_script/master/rule/Surge/OpenAI/OpenAI.list
+    policy: ChatGPT
+- rule_set:
+    name: Gemini
+    match: https://raw.githubusercontent.com/blackmatrix7/ios_rule_script/master/rule/Surge/Gemini/Gemini.list
+    policy: Gemini
+- rule_set:
+    name: Anthropic
+    match: https://raw.githubusercontent.com/blackmatrix7/ios_rule_script/master/rule/Surge/Anthropic/Anthropic.list
+    policy: Claude
+- rule_set:
+    name: Claude
+    match: https://raw.githubusercontent.com/blackmatrix7/ios_rule_script/master/rule/Surge/Claude/Claude.list
+    policy: Claude
+- rule_set:
+    name: AI
+    match: https://raw.githubusercontent.com/ACL4SSR/ACL4SSR/75f0101039d71724b6e998b34604c2e053580e0c/Clash/Ruleset/AI.list
+    policy: AI
+- rule_set:
+    name: Spotify
+    match: https://raw.githubusercontent.com/blackmatrix7/ios_rule_script/master/rule/Surge/Spotify/Spotify.list
+    policy: Spotify
+- rule_set:
+    name: YTM
+    match: https://raw.githubusercontent.com/blackmatrix7/ios_rule_script/master/rule/Surge/YouTubeMusic/YouTubeMusic.list
+    policy: YouTubeMusic
+- rule_set:
+    name: YouTube
+    match: https://raw.githubusercontent.com/blackmatrix7/ios_rule_script/master/rule/Surge/YouTube/YouTube.list
+    policy: YouTube
+- rule_set:
+    name: Github
+    match: https://raw.githubusercontent.com/blackmatrix7/ios_rule_script/master/rule/Surge/GitHub/GitHub.list
+    policy: GitHub
+- rule_set:
+    name: Google
+    match: https://raw.githubusercontent.com/blackmatrix7/ios_rule_script/master/rule/Surge/Google/Google.list
+    policy: Google
+- rule_set:
+    name: Microsoft
+    match: https://raw.githubusercontent.com/blackmatrix7/ios_rule_script/master/rule/Surge/Microsoft/Microsoft.list
+    policy: Microsoft
+- rule_set:
+    name: Telegram
+    match: https://raw.githubusercontent.com/blackmatrix7/ios_rule_script/master/rule/Surge/Telegram/Telegram.list
+    policy: Telegram
+- rule_set:
+    name: Twitter
+    match: https://raw.githubusercontent.com/blackmatrix7/ios_rule_script/master/rule/Surge/Twitter/Twitter.list
+    policy: Twitter
+- rule_set:
+    name: Proxy
+    match: https://raw.githubusercontent.com/blackmatrix7/ios_rule_script/master/rule/Surge/Proxy/Proxy.list
+    policy: Proxy
+    disabled: true
+# ★ f7 核心改动：Apple_All.list -> Apple_All_No_Resolve.list
+#   官方 rules 文档原文：「no_resolve (bool)……设为 true 时仅匹配已解析的 IP 地址，
+#   **不会触发 DNS 解析**」—— 反过来说，不带 no_resolve 的 IP 类条目**会触发解析**。
+#   Apple_All.list 里有 13 条 IP-CIDR 没带 no-resolve（139.178.128.0/18 等 Apple CDN 段），
+#   而这条规则排在 default 之前且 policy=DIRECT（未禁用）⇒ **每个没被前面规则命中的域名，
+#   经过这里都会被强制解析一次**。这就是 dnsleaktest 里「判定是 default → Final → Proxy，
+#   但 upstream 显示 bootstrap」的来源：为了判定这条 IP 规则而触发的解析走了明文。
+#   No_Resolve 版与原版逐条等价（只是那 13 条补上 ,no-resolve），覆盖面无损失；
+#   对 IP 形式的连接判定也完全不受影响（IP 本就无需解析）。
+#   全部 20 个远程规则集已逐个下载核对：**只有 Apple_All.list 存在这个缺陷**。
+- rule_set:
+    name: Apple
+    match: https://raw.githubusercontent.com/blackmatrix7/ios_rule_script/master/rule/Surge/Apple/Apple_All_No_Resolve.list
+    policy: DIRECT
+- rule_set:
+    name: WeChat
+    match: https://raw.githubusercontent.com/blackmatrix7/ios_rule_script/master/rule/Surge/WeChat/WeChat.list
+    policy: WeChat
+# ★ 国内域名直连的**主力**规则集。
+#   历史（f8）：f7 给 geoip:CN 加 no_resolve 治住泄露后，国内域名整片落到 default → Final → Proxy。
+#   根因不在 DNS、在**分流**：geoip 加了 no_resolve 便不再匹配域名，国内域名的直连必须由
+#   一份「域名条目足够多」的国内规则集承接。f8 起用 ChinaMax_All_No_Resolve.list
+#   （111,332 域名 + 同份 12,472 条带 no-resolve 的 IP）补齐——注意 ChinaMax.list 本身
+#   只是 IP 规则集（12,614 条里 12,472 条是 IP、域名仅 64 条），兜不住域名。
+#   现改为 Loyalsoldier `direct.txt`：共 111,160 条，**纯域名**
+#   （110,607 条 DOMAIN-SUFFIX + 553 条 DOMAIN，零 IP 条目）。
+#   —— 纯域名规则集只做域名串匹配、**不触发任何解析**，因此与 no_resolve 无关；
+#      原先由 ChinaMax 的 IP 条目承担的「已是 IP 的连接」由下方 geoip:CN 兜住。
+- rule_set:
+    name: CN
+    match: https://raw.githubusercontent.com/Loyalsoldier/surge-rules/release/ruleset/direct.txt
+    policy: DIRECT
+# .cn 直连兜底：geoip 加了 no_resolve 后无法匹配域名。上面的国内域名规则集
+# 已覆盖绝大多数国内域名；这一条把整个 .cn TLD 再钉一次，不依赖规则集是否加载成功。
+- domain_suffix:
+    match: cn
+    policy: DIRECT
+- geoip:
+    match: CN
+    policy: DIRECT
+    no_resolve: true
+- default:
+    name: Final
+    policy: Final
+# ================================================================ MITM（模板已移除）
+# ⚠️ 原配置这里带 `ca_p12` + `ca_passphrase` —— 那是**个人 MITM CA 的私钥**（PKCS#12）。
+#    它一旦公开，任何人都能用它解密你经 MITM 的 TLS 流量并签发任意证书，
+#    所以**绝对不要提交到任何仓库**。本模板整个 mitm 段已注释掉。
+#    注意：本配置的防 DNS 泄露**完全不需要 MITM**（靠的是 dns 段 + no_resolve +
+#    规则集筛选），需要用到 MITM 时再自行生成 CA 并在本地填写。
+# mitm:
+#   ca_p12: <在此填入你自己生成的 base64 PKCS#12>
+#   ca_passphrase: <你的口令>
+
+default_proxy_group: Proxy

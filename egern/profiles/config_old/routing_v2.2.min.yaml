@@ -1,0 +1,327 @@
+vif_only: true
+hijack_dns:
+- '*'
+geoip_db_url: https://raw.githubusercontent.com/Loyalsoldier/geoip/release/Country.mmdb
+asn_db_url: https://raw.githubusercontent.com/Loyalsoldier/geoip/release/GeoLite2-ASN.mmdb
+proxy_latency_test_url: http://cp.cloudflare.com/generate_204
+direct_latency_test_url: http://connectivitycheck.platform.hicloud.com/generate_204
+real_ip_domains:
+- '*.lan'
+- '*.local'
+- '*.push.apple.com'
+dns:
+  bootstrap:
+  - 223.5.5.5
+  - 119.29.29.29
+  upstreams:
+    Domestic-DNS:
+    - https://223.5.5.5/dns-query
+    - tls://223.5.5.5
+    - https://120.53.53.53/dns-query
+    - tls://1.12.12.12
+  forward:
+  - domain_wildcard:
+      match: '*'
+      value: Domestic-DNS
+  proxy_nameservers:
+  - https://223.5.5.5/dns-query
+  - tls://223.5.5.5
+  - https://120.53.53.53/dns-query
+  - tls://1.12.12.12
+  block_ips:
+  - 0.0.0.0
+  - 127.0.0.1
+proxies: []
+policy_groups:
+- select:
+    name: Proxy
+    policies:
+    - MAX
+    - Smart
+    - Hong Kong
+    - USA
+    - Singapore
+    - Taiwan
+    - Japan
+    - Korea
+    - Other Regions
+    icon: https://raw.githubusercontent.com/RiverFlowsInUUU/Self-Configuration/main/icons/Proxy.png
+- smart:
+    name: Smart
+    policies:
+    - Airport-A
+    - Airport-B
+    icon: https://raw.githubusercontent.com/RiverFlowsInUUU/Self-Configuration/main/icons/Auto.png
+- fallback:
+    name: ChatGPT
+    policies: []
+    icon: https://raw.githubusercontent.com/RiverFlowsInUUU/Self-Configuration/main/icons/openai.png
+- fallback:
+    name: Gemini
+    policies: []
+    icon: https://raw.githubusercontent.com/RiverFlowsInUUU/Self-Configuration/main/icons/gemini-color.png
+- smart:
+    name: Claude
+    policies:
+    - Taiwan
+    icon: https://raw.githubusercontent.com/RiverFlowsInUUU/Self-Configuration/main/icons/claude-color.png
+- smart:
+    name: AI
+    policies:
+    - Proxy
+    icon: https://raw.githubusercontent.com/RiverFlowsInUUU/Self-Configuration/main/icons/grok.png
+- select:
+    name: Spotify
+    policies:
+    - Proxy
+    flatten: true
+    icon: https://raw.githubusercontent.com/RiverFlowsInUUU/Self-Configuration/main/icons/Spotify.png
+- select:
+    name: YouTubeMusic
+    policies:
+    - Proxy
+    flatten: true
+    icon: https://raw.githubusercontent.com/RiverFlowsInUUU/Self-Configuration/main/icons/YouTubeMusic.png
+- select:
+    name: YouTube
+    policies:
+    - Proxy
+    flatten: true
+    icon: https://raw.githubusercontent.com/RiverFlowsInUUU/Self-Configuration/main/icons/YouTube.png
+- select:
+    name: GitHub
+    policies:
+    - Proxy
+    flatten: true
+    icon: https://raw.githubusercontent.com/RiverFlowsInUUU/Self-Configuration/main/icons/GitHub.png
+- select:
+    name: Google
+    policies:
+    - Gemini
+    - Proxy
+    icon: https://raw.githubusercontent.com/RiverFlowsInUUU/Self-Configuration/main/icons/Google.png
+- select:
+    name: Microsoft
+    policies:
+    - DIRECT
+    - Proxy
+    flatten: true
+    icon: https://raw.githubusercontent.com/RiverFlowsInUUU/Self-Configuration/main/icons/Microsoft.png
+- select:
+    name: Telegram
+    policies:
+    - Proxy
+    flatten: true
+    icon: https://raw.githubusercontent.com/RiverFlowsInUUU/Self-Configuration/main/icons/Telegram.png
+- select:
+    name: Twitter
+    policies:
+    - Proxy
+    flatten: true
+    icon: https://raw.githubusercontent.com/RiverFlowsInUUU/Self-Configuration/main/icons/Twitter.png
+- external:
+    name: Airport-A
+    type: smart
+    urls:
+    - https://sub.example.com/api/v1/client/subscribe?token=REPLACE_WITH_YOUR_TOKEN
+    - https://sub.example.com/api/v1/client/subscribe?token=REPLACE_WITH_YOUR_TOKEN
+    icon: https://raw.githubusercontent.com/RiverFlowsInUUU/Self-Configuration/main/icons/Airport.png
+- external:
+    name: Airport-B
+    type: smart
+    urls:
+    - https://sub.example.com/api/v1/client/subscribe?token=REPLACE_WITH_YOUR_TOKEN
+    - https://sub.example.com/api/v1/client/subscribe?token=REPLACE_WITH_YOUR_TOKEN
+    urls_disabled:
+    - https://sub.example.com/api/v1/client/subscribe?token=REPLACE_WITH_YOUR_TOKEN
+    icon: https://raw.githubusercontent.com/RiverFlowsInUUU/Self-Configuration/main/icons/Airport.png
+- select:
+    name: WeChat
+    policies:
+    - DIRECT
+    flatten: true
+    icon: https://raw.githubusercontent.com/RiverFlowsInUUU/Self-Configuration/main/icons/WeChat.png
+- select:
+    name: AD
+    policies:
+    - REJECT
+    - DIRECT
+    icon: https://raw.githubusercontent.com/RiverFlowsInUUU/Self-Configuration/main/icons/AdBlock.png
+- smart:
+    name: Hong Kong
+    policies:
+    - Airport-A
+    - Airport-B
+    flatten: true
+    filter: (?i)🇭🇰|香港|Hong\s*Kong|\bHKG?\b|(?:深|沪|京|广)港
+    icon: https://raw.githubusercontent.com/RiverFlowsInUUU/Self-Configuration/main/icons/HongKong.png
+- smart:
+    name: USA
+    policies:
+    - Airport-A
+    - Airport-B
+    flatten: true
+    filter: (?i)🇺🇸|美国|United\s*States|America|\bUSA?\b|洛杉矶|硅谷|西雅图|芝加哥|达拉斯|凤凰城|阿什本|纽约|迈阿密|波士顿|休斯顿|亚特兰大|拉斯维加斯|圣地亚哥|盐湖城|奥斯汀|波特兰|丹佛|奥克兰|安大略|圣安娜|\b(?:LAX|SJC|SFO|SEA|ORD|JFK|DFW|IAD|PHX|ATL|BOS|MIA|EWR|LGA|IAH|HOU|DEN|OAK|ONT|SNA|LAS|PDX|DAL|SAN|SLC|MSP)\b
+    icon: https://raw.githubusercontent.com/RiverFlowsInUUU/Self-Configuration/main/icons/UnitedStates.png
+- smart:
+    name: Japan
+    policies:
+    - Airport-A
+    - Airport-B
+    flatten: true
+    filter: (?i)🇯🇵|日本|东京|大阪|Japan|\b(?:JPN?|NRT|HND|KIX|FUK|NGO|OSA|CTS|SDJ|OKA)\b
+    icon: https://raw.githubusercontent.com/RiverFlowsInUUU/Self-Configuration/main/icons/Japan.png
+- smart:
+    name: Taiwan
+    policies:
+    - Airport-A
+    - Airport-B
+    flatten: true
+    filter: (?i)🇹🇼|台湾|Taiwan|\b(?:TWN?|TPE|Taipei)\b
+    icon: https://raw.githubusercontent.com/RiverFlowsInUUU/Self-Configuration/main/icons/Taiwan.png
+- smart:
+    name: Singapore
+    policies:
+    - Airport-A
+    - Airport-B
+    flatten: true
+    filter: (?i)🇸🇬|新加坡|狮城|Singapore|\b(?:SGP?|SIN)\b
+    icon: https://raw.githubusercontent.com/RiverFlowsInUUU/Self-Configuration/main/icons/Singapore.png
+- smart:
+    name: Korea
+    policies:
+    - Smart
+    - Airport-A
+    - Airport-B
+    flatten: true
+    filter: (?i)🇰🇷|韩国|首尔|仁川|Korea|South\s*Korea|\b(?:KOR|KR|ICN|SEL)\b
+    icon: https://raw.githubusercontent.com/RiverFlowsInUUU/Self-Configuration/main/icons/Korea.png
+- smart:
+    name: Other Regions
+    policies:
+    - Airport-A
+    - Airport-B
+    flatten: true
+    filter: |-
+      (?xi) ^ (?! .* (?:
+        🇭🇰|香港|Hong\s*Kong|\bHKG?\b|(?:深|沪|京|广)港|
+        🇯🇵|日本|东京|大阪|Japan|\b(?:JPN?|NRT|HND|KIX|FUK|NGO|OSA|CTS|SDJ|OKA)\b|
+        🇸🇬|新加坡|狮城|Singapore|\b(?:SGP?|SIN)\b|
+        🇹🇼|台湾|Taiwan|\b(?:TWN?|TPE|Taipei)\b|
+        🇰🇷|韩国|首尔|仁川|Korea|South\s*Korea|\b(?:KOR|KR|ICN|SEL)\b|
+        🇺🇸|美国|United\s*States|America|\bUSA?\b|
+        洛杉矶|硅谷|西雅图|芝加哥|达拉斯|凤凰城|阿什本|纽约|迈阿密|波士顿|休斯顿|亚特兰大|拉斯维加斯|圣地亚哥|盐湖城|奥斯汀|波特兰|丹佛|奥克兰|安大略|圣安娜|
+        \b(?:LAX|SJC|SFO|SEA|ORD|JFK|DFW|IAD|PHX|ATL|BOS|MIA|EWR|LGA|IAH|HOU|DEN|OAK|ONT|SNA|LAS|PDX|DAL|SAN|SLC|MSP)\b|
+        倍率|剩余|到期|流量|官网|订阅|测试|有效|禁止|邮箱|客服|地址|网站|群组
+      ) ) .+ $
+    icon: https://raw.githubusercontent.com/RiverFlowsInUUU/Self-Configuration/main/icons/WorldMap.png
+- smart:
+    name: MAX
+    policies:
+    - Airport-A
+    - Airport-B
+    flatten: true
+    filter: 0\.(?:01|1)
+    icon: https://raw.githubusercontent.com/RiverFlowsInUUU/Self-Configuration/main/icons/Nfcloud.png
+- select:
+    name: Final
+    policies:
+    - Proxy
+    icon: https://raw.githubusercontent.com/RiverFlowsInUUU/Self-Configuration/main/icons/Final.png
+rules:
+- rule_set:
+    name: Jinx-CN
+    match: https://raw.githubusercontent.com/RiverFlowsInUUU/Jinx/main/surge-white-guard.list
+    policy: DIRECT
+- rule_set:
+    name: Jinx-Ads
+    match: https://raw.githubusercontent.com/RiverFlowsInUUU/Jinx/main/surge-ads.list
+    policy: AD
+- rule_set:
+    name: AWAvenue-Ads
+    match: https://raw.githubusercontent.com/TG-Twilight/AWAvenue-Ads-Rule/main/Filters/AWAvenue-Ads-Rule-Surge-RULE-SET.list
+    policy: AD
+- rule_set:
+    name: Lan
+    match: https://raw.githubusercontent.com/blackmatrix7/ios_rule_script/master/rule/Surge/Lan/Lan.list
+    policy: DIRECT
+- rule_set:
+    name: ChatGPT
+    match: https://raw.githubusercontent.com/blackmatrix7/ios_rule_script/master/rule/Surge/OpenAI/OpenAI.list
+    policy: ChatGPT
+- rule_set:
+    name: Gemini
+    match: https://raw.githubusercontent.com/blackmatrix7/ios_rule_script/master/rule/Surge/Gemini/Gemini.list
+    policy: Gemini
+- rule_set:
+    name: Anthropic
+    match: https://raw.githubusercontent.com/blackmatrix7/ios_rule_script/master/rule/Surge/Anthropic/Anthropic.list
+    policy: Claude
+- rule_set:
+    name: Claude
+    match: https://raw.githubusercontent.com/blackmatrix7/ios_rule_script/master/rule/Surge/Claude/Claude.list
+    policy: Claude
+- rule_set:
+    name: AI
+    match: https://raw.githubusercontent.com/ACL4SSR/ACL4SSR/75f0101039d71724b6e998b34604c2e053580e0c/Clash/Ruleset/AI.list
+    policy: AI
+- rule_set:
+    name: Spotify
+    match: https://raw.githubusercontent.com/blackmatrix7/ios_rule_script/master/rule/Surge/Spotify/Spotify.list
+    policy: Spotify
+- rule_set:
+    name: YTM
+    match: https://raw.githubusercontent.com/blackmatrix7/ios_rule_script/master/rule/Surge/YouTubeMusic/YouTubeMusic.list
+    policy: YouTubeMusic
+- rule_set:
+    name: YouTube
+    match: https://raw.githubusercontent.com/blackmatrix7/ios_rule_script/master/rule/Surge/YouTube/YouTube.list
+    policy: YouTube
+- rule_set:
+    name: Github
+    match: https://raw.githubusercontent.com/blackmatrix7/ios_rule_script/master/rule/Surge/GitHub/GitHub.list
+    policy: GitHub
+- rule_set:
+    name: Google
+    match: https://raw.githubusercontent.com/blackmatrix7/ios_rule_script/master/rule/Surge/Google/Google.list
+    policy: Google
+- rule_set:
+    name: Microsoft
+    match: https://raw.githubusercontent.com/blackmatrix7/ios_rule_script/master/rule/Surge/Microsoft/Microsoft.list
+    policy: Microsoft
+- rule_set:
+    name: Telegram
+    match: https://raw.githubusercontent.com/blackmatrix7/ios_rule_script/master/rule/Surge/Telegram/Telegram.list
+    policy: Telegram
+- rule_set:
+    name: Twitter
+    match: https://raw.githubusercontent.com/blackmatrix7/ios_rule_script/master/rule/Surge/Twitter/Twitter.list
+    policy: Twitter
+- rule_set:
+    name: Proxy
+    match: https://raw.githubusercontent.com/blackmatrix7/ios_rule_script/master/rule/Surge/Proxy/Proxy.list
+    policy: Proxy
+    disabled: true
+- rule_set:
+    name: Apple
+    match: https://raw.githubusercontent.com/blackmatrix7/ios_rule_script/master/rule/Surge/Apple/Apple_All_No_Resolve.list
+    policy: DIRECT
+- rule_set:
+    name: WeChat
+    match: https://raw.githubusercontent.com/blackmatrix7/ios_rule_script/master/rule/Surge/WeChat/WeChat.list
+    policy: WeChat
+- rule_set:
+    name: CN
+    match: https://raw.githubusercontent.com/Loyalsoldier/surge-rules/release/ruleset/direct.txt
+    policy: DIRECT
+- domain_suffix:
+    match: cn
+    policy: DIRECT
+- geoip:
+    match: CN
+    policy: DIRECT
+    no_resolve: true
+- default:
+    name: Final
+    policy: Final
+default_proxy_group: Proxy

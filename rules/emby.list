@@ -1,0 +1,20 @@
+#########################################
+# emby.list
+# 本仓自托管的规则集：Emby 相关域名 → Emby 分流组。
+#
+# 为什么自托管而不是引用上游：
+#   上游没有现成的 Emby 集，且这 4 个域名属**自用枚举**（用户提供），
+#   不随任何第三方清单漂移 ⇒ 放本仓维护最直接，也避免跨项目引用。
+#
+# 条数：4（**本行为唯一真源**，改内容时同步改这里）
+#
+# ⚠️ 纯域名集、零 IP 条目 ⇒ 引用方**不写**规则级 no-resolve
+#    （判据见 skill/reference/shared/rulesets.md §4 的 4b）。
+#
+# 维护：新增域名直接往下加 `DOMAIN-SUFFIX,<域>`，并同步上面的条数。
+#########################################
+
+DOMAIN-SUFFIX,okemby.org
+DOMAIN-SUFFIX,lilyemby.com
+DOMAIN-SUFFIX,lilyemby.app
+DOMAIN-SUFFIX,bangumi.ca

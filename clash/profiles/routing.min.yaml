@@ -1,0 +1,490 @@
+ipv6: false
+proxy-providers:
+  Airport:
+    type: http
+    url: https://sub.example.com/api/v1/client/subscribe?token=REPLACE_WITH_YOUR_TOKEN
+    path: ./proxy_provider/Airport.yaml
+    interval: 86400
+    health-check:
+      enable: true
+      url: https://www.gstatic.com/generate_204
+      interval: 300
+proxy-groups:
+  - name: Proxy
+    type: select
+    proxies:
+      - Smart
+      - Hong Kong
+      - Taiwan
+      - Japan
+      - Singapore
+      - United States
+      - Other Regions
+    icon: https://raw.githubusercontent.com/RiverFlowsInUUU/Clash/main/icons/Proxy.png
+  - name: Smart
+    type: fallback
+    proxies:
+      - Low Mult.
+      - Auto
+      - High Mult.
+    url: https://www.gstatic.com/generate_204
+    interval: 300
+    icon: https://raw.githubusercontent.com/RiverFlowsInUUU/Clash/main/icons/Auto.png
+  - name: Low Mult.
+    type: url-test
+    include-all: true
+    filter: '^(?=.*(?:^|[^\d.])(0\.\d*[1-9]))((?!直连|DIRECT).)*$'
+    exclude-filter: 剩余|流量|到期|过期|官网|订阅|重置|续费|Traffic|Expire|GB
+    url: https://www.gstatic.com/generate_204
+    interval: 300
+    tolerance: 50
+    hidden: true
+  - name: Auto
+    type: url-test
+    include-all: true
+    filter: '^(?!.*(?:^|[^\d.])(0\.\d*[1-9]))(?!.*(?:^|[^\d.])([1-9]\d*(?:\.\d+)?\s*(?:倍率|倍|x|X|\*)))((?!直连|DIRECT).)*$'
+    exclude-filter: 剩余|流量|到期|过期|官网|订阅|重置|续费|Traffic|Expire|GB
+    url: https://www.gstatic.com/generate_204
+    interval: 300
+    tolerance: 50
+    hidden: true
+  - name: High Mult.
+    type: url-test
+    include-all: true
+    filter: '^(?=.*(?:^|[^\d.])([1-9]\d*(?:\.\d+)?\s*(?:倍率|倍|x|X|\*)))((?!直连|DIRECT).)*$'
+    exclude-filter: 剩余|流量|到期|过期|官网|订阅|重置|续费|Traffic|Expire|GB
+    url: https://www.gstatic.com/generate_204
+    interval: 300
+    tolerance: 50
+    hidden: true
+  - name: ChatGPT
+    type: select
+    proxies:
+      - United States
+      - Taiwan
+      - Japan
+      - Singapore
+    icon: https://raw.githubusercontent.com/RiverFlowsInUUU/Clash/main/icons/openai.png
+  - name: Gemini
+    type: select
+    proxies:
+      - United States
+      - Taiwan
+      - Japan
+      - Singapore
+    icon: https://raw.githubusercontent.com/RiverFlowsInUUU/Clash/main/icons/gemini-color.png
+  - name: Claude
+    type: select
+    proxies:
+      - Taiwan
+      - Japan
+      - Singapore
+      - United States
+    icon: https://raw.githubusercontent.com/RiverFlowsInUUU/Clash/main/icons/claude-color.png
+  - name: AI
+    type: select
+    proxies:
+      - Smart
+      - Taiwan
+      - Japan
+      - Singapore
+      - United States
+    icon: https://raw.githubusercontent.com/RiverFlowsInUUU/Clash/main/icons/grok.png
+  - name: YouTube
+    type: select
+    proxies:
+      - Smart
+      - Hong Kong
+      - Taiwan
+      - Japan
+      - Singapore
+      - United States
+    icon: https://raw.githubusercontent.com/RiverFlowsInUUU/Clash/main/icons/YouTube.png
+  - name: Emby
+    type: select
+    proxies:
+      - Smart
+      - Hong Kong
+      - Taiwan
+      - Japan
+      - Singapore
+      - United States
+    icon: https://raw.githubusercontent.com/RiverFlowsInUUU/Clash/main/icons/Emby.png
+  - name: Google
+    type: select
+    proxies:
+      - Gemini
+      - Smart
+      - Hong Kong
+      - Taiwan
+      - Japan
+      - Singapore
+      - United States
+    icon: https://raw.githubusercontent.com/RiverFlowsInUUU/Clash/main/icons/Google.png
+  - name: Telegram
+    type: select
+    proxies:
+      - Smart
+      - Hong Kong
+      - Taiwan
+      - Japan
+      - Singapore
+      - United States
+    icon: https://raw.githubusercontent.com/RiverFlowsInUUU/Clash/main/icons/Telegram.png
+  - name: YouTube Music
+    type: select
+    proxies:
+      - United States
+      - Hong Kong
+      - Taiwan
+      - Japan
+      - Singapore
+    icon: https://raw.githubusercontent.com/RiverFlowsInUUU/Clash/main/icons/YouTubeMusic.png
+  - name: Spotify
+    type: select
+    proxies:
+      - United States
+      - Hong Kong
+      - Taiwan
+      - Japan
+      - Singapore
+    icon: https://raw.githubusercontent.com/RiverFlowsInUUU/Clash/main/icons/Spotify.png
+  - name: Twitter
+    type: select
+    proxies:
+      - Smart
+      - Hong Kong
+      - Taiwan
+      - Japan
+      - Singapore
+      - United States
+    icon: https://raw.githubusercontent.com/RiverFlowsInUUU/Clash/main/icons/Twitter.png
+  - name: Microsoft
+    type: select
+    proxies:
+      - DIRECT
+      - Proxy
+    icon: https://raw.githubusercontent.com/RiverFlowsInUUU/Clash/main/icons/Microsoft.png
+  - name: Apple Update
+    type: select
+    proxies:
+      - DIRECT
+      - REJECT
+    icon: https://raw.githubusercontent.com/RiverFlowsInUUU/Clash/main/icons/Apple.png
+  - name: AD
+    type: select
+    proxies:
+      - REJECT
+      - DIRECT
+    icon: https://raw.githubusercontent.com/RiverFlowsInUUU/Clash/main/icons/AdBlock.png
+  - name: Hong Kong
+    type: url-test
+    include-all: true
+    filter: '(?=.*(港|HK|(?i)Hong))^((?!(台|日|韩|新|美)).)*$'
+    url: https://www.gstatic.com/generate_204
+    interval: 300
+    tolerance: 50
+    icon: https://raw.githubusercontent.com/RiverFlowsInUUU/Clash/main/icons/HongKong.png
+  - name: Taiwan
+    type: url-test
+    include-all: true
+    filter: '(?=.*(台|TW|(?i)Taiwan|Tai))^((?!(港|韩|新|美|日)).)*$'
+    url: https://www.gstatic.com/generate_204
+    interval: 300
+    tolerance: 50
+    icon: https://raw.githubusercontent.com/RiverFlowsInUUU/Clash/main/icons/Taiwan.png
+  - name: Japan
+    type: url-test
+    include-all: true
+    filter: '(?=.*(日|JP|(?i)Japan))^((?!(港|台|韩|新|美)).)*$'
+    url: https://www.gstatic.com/generate_204
+    interval: 300
+    tolerance: 50
+    icon: https://raw.githubusercontent.com/RiverFlowsInUUU/Clash/main/icons/Japan.png
+  - name: Singapore
+    type: url-test
+    include-all: true
+    filter: '(?=.*(新加坡|坡|狮城|SG|Singapore))^((?!(台|日|韩|深|美)).)*$'
+    url: https://www.gstatic.com/generate_204
+    interval: 300
+    tolerance: 50
+    icon: https://raw.githubusercontent.com/RiverFlowsInUUU/Clash/main/icons/Singapore.png
+  - name: United States
+    type: url-test
+    include-all: true
+    filter: '(?=.*(美|US|(?i)States|America))^((?!(港|台|韩|新|日)).)*$'
+    url: https://www.gstatic.com/generate_204
+    interval: 300
+    tolerance: 50
+    icon: https://raw.githubusercontent.com/RiverFlowsInUUU/Clash/main/icons/UnitedStates.png
+  - name: Other Regions
+    type: url-test
+    include-all: true
+    filter: '^(?!(.*(港|HK|Hong|台|TW|Taiwan|Tai|日|JP|Japan|新加坡|坡|狮城|SG|Singapore|美|US|States|America|洛杉矶|硅谷|西雅图|纽约|东京|大阪|LAX|SJC|SFO|SEA|ORD|JFK|DFW|IAD|PHX|ATL|BOS|MIA|NRT|HND|KIX|FUK|TPE|SIN)))(?!(.*(剩余|流量|到期|过期|官网|订阅|重置|续费|Traffic|Expire|GB|倍率|测试|有效|禁止|邮箱|客服|地址|网站|群组))).+$'
+    url: https://www.gstatic.com/generate_204
+    interval: 300
+    tolerance: 50
+    icon: https://raw.githubusercontent.com/RiverFlowsInUUU/Clash/main/icons/WorldMap.png
+rule-providers:
+  apple-update:
+    type: http
+    behavior: domain
+    format: mrs
+    url: https://cdn.jsdelivr.net/gh/MetaCubeX/meta-rules-dat@meta/geo/geosite/apple-update.mrs
+    path: ./rule_provider/apple-update.mrs
+    interval: 86400
+  spotify:
+    type: http
+    behavior: domain
+    format: mrs
+    url: https://cdn.jsdelivr.net/gh/MetaCubeX/meta-rules-dat@meta/geo/geosite/spotify.mrs
+    path: ./rule_provider/spotify.mrs
+    interval: 86400
+  private:
+    type: http
+    behavior: domain
+    format: mrs
+    url: https://cdn.jsdelivr.net/gh/MetaCubeX/meta-rules-dat@meta/geo/geosite/private.mrs
+    path: ./rule_provider/private.mrs
+    interval: 86400
+  anthropic:
+    type: http
+    behavior: domain
+    format: mrs
+    url: https://cdn.jsdelivr.net/gh/MetaCubeX/meta-rules-dat@meta/geo/geosite/anthropic.mrs
+    path: ./rule_provider/anthropic.mrs
+    interval: 86400
+  category-ai-chat-!cn:
+    type: http
+    behavior: domain
+    format: mrs
+    url: https://cdn.jsdelivr.net/gh/MetaCubeX/meta-rules-dat@meta/geo/geosite/category-ai-chat-!cn.mrs
+    path: ./rule_provider/category-ai-chat-!cn.mrs
+    interval: 86400
+  github:
+    type: http
+    behavior: domain
+    format: mrs
+    url: https://cdn.jsdelivr.net/gh/MetaCubeX/meta-rules-dat@meta/geo/geosite/github.mrs
+    path: ./rule_provider/github.mrs
+    interval: 86400
+  youtube:
+    type: http
+    behavior: domain
+    format: mrs
+    url: https://cdn.jsdelivr.net/gh/MetaCubeX/meta-rules-dat@meta/geo/geosite/youtube.mrs
+    path: ./rule_provider/youtube.mrs
+    interval: 86400
+  google:
+    type: http
+    behavior: domain
+    format: mrs
+    url: https://cdn.jsdelivr.net/gh/MetaCubeX/meta-rules-dat@meta/geo/geosite/google.mrs
+    path: ./rule_provider/google.mrs
+    interval: 86400
+  microsoft:
+    type: http
+    behavior: domain
+    format: mrs
+    url: https://cdn.jsdelivr.net/gh/MetaCubeX/meta-rules-dat@meta/geo/geosite/microsoft.mrs
+    path: ./rule_provider/microsoft.mrs
+    interval: 86400
+  apple-cn:
+    type: http
+    behavior: domain
+    format: mrs
+    url: https://cdn.jsdelivr.net/gh/MetaCubeX/meta-rules-dat@meta/geo/geosite/apple-cn.mrs
+    path: ./rule_provider/apple-cn.mrs
+    interval: 86400
+  telegram:
+    type: http
+    behavior: domain
+    format: mrs
+    url: https://cdn.jsdelivr.net/gh/MetaCubeX/meta-rules-dat@meta/geo/geosite/telegram.mrs
+    path: ./rule_provider/telegram.mrs
+    interval: 86400
+  twitter:
+    type: http
+    behavior: domain
+    format: mrs
+    url: https://cdn.jsdelivr.net/gh/MetaCubeX/meta-rules-dat@meta/geo/geosite/twitter.mrs
+    path: ./rule_provider/twitter.mrs
+    interval: 86400
+  cn:
+    type: http
+    behavior: domain
+    format: mrs
+    url: https://cdn.jsdelivr.net/gh/MetaCubeX/meta-rules-dat@meta/geo/geosite/cn.mrs
+    path: ./rule_provider/cn.mrs
+    interval: 86400
+  openai:
+    type: http
+    behavior: domain
+    format: mrs
+    url: https://cdn.jsdelivr.net/gh/MetaCubeX/meta-rules-dat@meta/geo/geosite/openai.mrs
+    path: ./rule_provider/openai.mrs
+    interval: 86400
+  google-gemini:
+    type: http
+    behavior: domain
+    format: mrs
+    url: https://cdn.jsdelivr.net/gh/MetaCubeX/meta-rules-dat@meta/geo/geosite/google-gemini.mrs
+    path: ./rule_provider/google-gemini.mrs
+    interval: 86400
+  geoip-private:
+    type: http
+    behavior: ipcidr
+    format: mrs
+    url: https://cdn.jsdelivr.net/gh/MetaCubeX/meta-rules-dat@meta/geo/geoip/private.mrs
+    path: ./rule_provider/geoip-private.mrs
+    interval: 86400
+  geoip-google:
+    type: http
+    behavior: ipcidr
+    format: mrs
+    url: https://cdn.jsdelivr.net/gh/MetaCubeX/meta-rules-dat@meta/geo/geoip/google.mrs
+    path: ./rule_provider/geoip-google.mrs
+    interval: 86400
+  geoip-telegram:
+    type: http
+    behavior: ipcidr
+    format: mrs
+    url: https://cdn.jsdelivr.net/gh/MetaCubeX/meta-rules-dat@meta/geo/geoip/telegram.mrs
+    path: ./rule_provider/geoip-telegram.mrs
+    interval: 86400
+  geoip-cn:
+    type: http
+    behavior: ipcidr
+    format: mrs
+    url: https://cdn.jsdelivr.net/gh/MetaCubeX/meta-rules-dat@meta/geo/geoip/cn.mrs
+    path: ./rule_provider/geoip-cn.mrs
+    interval: 86400
+  AWAvenue-Ads:
+    type: http
+    behavior: domain
+    format: mrs
+    url: https://raw.githubusercontent.com/TG-Twilight/AWAvenue-Ads-Rule/main/Filters/AWAvenue-Ads-Rule-Clash.mrs
+    path: ./rule_provider/AWAvenue-Ads-Rule-Clash.mrs
+    interval: 86400
+  Jinx-CN:
+    type: http
+    behavior: classical
+    format: yaml
+    url: https://raw.githubusercontent.com/RiverFlowsInUUU/Jinx/main/mihomo-direct.yaml
+    path: ./rule_provider/Jinx-CN.yaml
+    interval: 86400
+  Jinx-Ads:
+    type: http
+    behavior: classical
+    format: yaml
+    url: https://raw.githubusercontent.com/RiverFlowsInUUU/Jinx/main/mihomo-ads.yaml
+    path: ./rule_provider/Jinx-Ads.yaml
+    interval: 86400
+  emby:
+    type: http
+    behavior: classical
+    format: yaml
+    url: https://raw.githubusercontent.com/RiverFlowsInUUU/Clash/main/rules/emby.yaml
+    path: ./rule_provider/emby.yaml
+    interval: 86400
+  AI_Domains:
+    type: http
+    behavior: classical
+    format: yaml
+    url: https://raw.githubusercontent.com/RiverFlowsInUUU/Clash/main/rules/AI_Domains.yaml
+    path: ./rule_provider/AI_Domains.yaml
+    interval: 86400
+  apple-system:
+    type: http
+    behavior: classical
+    format: yaml
+    url: https://raw.githubusercontent.com/RiverFlowsInUUU/Clash/main/rules/apple_system.yaml
+    path: ./rule_provider/apple_system.yaml
+    interval: 86400
+rules:
+  - RULE-SET,Jinx-CN,DIRECT
+  - RULE-SET,Jinx-Ads,AD
+  - RULE-SET,AWAvenue-Ads,AD
+  - RULE-SET,apple-update,Apple Update
+  - RULE-SET,apple-system,DIRECT
+  - RULE-SET,geoip-private,DIRECT,no-resolve
+  - RULE-SET,private,DIRECT
+  - RULE-SET,openai,ChatGPT
+  - RULE-SET,google-gemini,Gemini
+  - RULE-SET,anthropic,Claude
+  - RULE-SET,category-ai-chat-!cn,AI
+  - RULE-SET,AI_Domains,AI
+  - DOMAIN-SUFFIX,music.youtube.com,YouTube Music
+  - RULE-SET,github,Proxy
+  - RULE-SET,youtube,YouTube
+  - RULE-SET,emby,Emby
+  - RULE-SET,google,Google
+  - RULE-SET,spotify,Spotify
+  - RULE-SET,twitter,Twitter
+  - RULE-SET,microsoft,Microsoft
+  - RULE-SET,apple-cn,DIRECT
+  - RULE-SET,telegram,Telegram
+  - RULE-SET,geoip-google,Google
+  - RULE-SET,geoip-telegram,Telegram
+  - RULE-SET,cn,DIRECT
+  - RULE-SET,geoip-cn,DIRECT
+  - MATCH,Proxy
+dns:
+  enable: true
+  ipv6: false
+  enhanced-mode: fake-ip
+  fake-ip-range: 198.18.0.1/16
+  respect-rules: true
+  use-hosts: true
+  use-system-hosts: false
+  prefer-h3: false
+  default-nameserver:
+    - 223.5.5.5
+    - 119.29.29.29
+  direct-nameserver:
+    - https://doh.18bit.cn/dns-query
+    - https://dns.alidns.com/dns-query
+  proxy-server-nameserver:
+    - https://doh.18bit.cn/dns-query
+    - https://dns.alidns.com/dns-query
+  nameserver:
+    - https://dns.cloudflare.com/dns-query
+    - https://dns.google/dns-query
+  fallback:
+    - https://dns.cloudflare.com/dns-query
+    - https://dns.google/dns-query
+  fallback-filter:
+    geoip: true
+  nameserver-policy:
+    rule-set:AWAvenue-Ads: rcode://success
+    rule-set:Jinx-Ads: rcode://success
+    rule-set:private,cn:
+      - https://doh.18bit.cn/dns-query
+      - https://dns.alidns.com/dns-query
+  fake-ip-filter:
+    - '*.lan'
+    - '*.local'
+    - '*.localdomain'
+    - '*.home.arpa'
+    - +.msftconnecttest.com
+    - +.msftncsi.com
+    - localhost.ptlogin2.qq.com
+    - +.srv.nintendo.net
+    - +.stun.playstation.net
+    - +.xboxlive.com
+    - 'stun.*'
+    - 'time.*.com'
+    - 'ntp.*.com'
+    - +.pool.ntp.org
+    - +.market.xiaomi.com
+    - rule-set:AWAvenue-Ads
+    - rule-set:Jinx-Ads
+tun:
+  enable: true
+  stack: mips
+  dns-hijack:
+    - any:53
+  auto-route: true
+  auto-detect-interface: true
+  strict-route: true
+proxies: []

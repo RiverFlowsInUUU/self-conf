@@ -1,0 +1,52 @@
+#########################################
+# apple_system.list
+# 本仓自托管的规则集：只给 Egern 侧引用（Surge 侧直接用内置 SYSTEM，不引用本文件）。
+#
+# 内容 = Surge 官方内置规则集 SYSTEM 的 2026-09-24 时点快照
+#   官方手册：https://manual.nssurge.com/rules/ruleset.html
+#   ⚠️ 内置 SYSTEM 随 Surge 版本变化，本文件是手工快照、不自动跟随；
+#      Surge 大版本更新时人工比对一次（自托管的集没有第三方刷新审计可依赖）。
+#
+# 与快照原件的唯一差异：删去 `PROCESS-NAME,trustd` 与 `PROCESS-NAME,netbiosd`
+#   两条 —— Egern 没有进程名匹配能力，留着只会让整份文件多一次加载失败的风险。
+#
+# 覆盖关系（2026-09-24 实测，与仓内已引用的规则集逐条对拍）：
+#   18 条里 10 条 `direct.txt` 已经接住，8 条是这份文件独有的增量；
+#   其中 6 条（ls / push / push-apple.com.akadns.net / ess / lcdn-locator /
+#   lcdn-registration）连 blackmatrix7 的 Apple 全量集也不含，
+#   只有本文件（或 Surge 内置 SYSTEM）能接住。
+#########################################
+
+# --- 系统更新 ---
+DOMAIN,mesu.apple.com
+
+# --- 网络门户探测 / 连通性检测 ---
+DOMAIN,captive.apple.com
+
+# --- 遥测 / 体验改进 ---
+DOMAIN,xp.apple.com
+DOMAIN,api.smoot.apple.com
+DOMAIN,api.smoot.apple.cn
+
+# --- 系统配置下发 ---
+DOMAIN,configuration.apple.com
+DOMAIN,smp-device-content.apple.com
+
+# --- Siri / 定位服务 ---
+DOMAIN,guzzoni.apple.com
+DOMAIN,gs-loc.apple.com
+DOMAIN-SUFFIX,ls.apple.com
+
+# --- APNs 推送 ---
+DOMAIN-SUFFIX,push.apple.com
+DOMAIN-SUFFIX,push-apple.com.akadns.net
+
+# --- 系统级音频流 ---
+DOMAIN,aod.itunes.apple.com
+DOMAIN,mvod.itunes.apple.com
+DOMAIN,streamingaudio.itunes.apple.com
+
+# --- 边缘服务 / P2P CDN 定位 ---
+DOMAIN-SUFFIX,ess.apple.com
+DOMAIN-SUFFIX,lcdn-locator.apple.com
+DOMAIN-SUFFIX,lcdn-registration.apple.com

@@ -1,0 +1,108 @@
+vif_only: true
+hijack_dns:
+- '*'
+geoip_db_url: https://raw.githubusercontent.com/Loyalsoldier/geoip/release/Country.mmdb
+asn_db_url: https://raw.githubusercontent.com/Loyalsoldier/geoip/release/GeoLite2-ASN.mmdb
+proxy_latency_test_url: http://cp.cloudflare.com/generate_204
+direct_latency_test_url: http://connectivitycheck.platform.hicloud.com/generate_204
+real_ip_domains:
+- '*.lan'
+- '*.local'
+- '*.push.apple.com'
+dns:
+  bootstrap:
+  - 223.5.5.5
+  - 119.29.29.29
+  upstreams:
+    Domestic-DNS:
+    - https://223.5.5.5/dns-query
+    - tls://223.5.5.5
+    - https://120.53.53.53/dns-query
+    - tls://1.12.12.12
+  forward:
+  - proxy_rule_set:
+      match: https://raw.githubusercontent.com/RiverFlowsInUUU/Jinx/main/surge-white-guard.list
+      value: Domestic-DNS
+  - proxy_rule_set:
+      match: https://raw.githubusercontent.com/RiverFlowsInUUU/Jinx/main/surge-ads.list
+      value: reject
+  - proxy_rule_set:
+      match: https://raw.githubusercontent.com/TG-Twilight/AWAvenue-Ads-Rule/main/Filters/AWAvenue-Ads-Rule-Surge-RULE-SET.list
+      value: reject
+  - domain_wildcard:
+      match: '*'
+      value: Domestic-DNS
+  proxy_nameservers:
+  - https://223.5.5.5/dns-query
+  - tls://223.5.5.5
+  - https://120.53.53.53/dns-query
+  - tls://1.12.12.12
+  block_ips:
+  - 0.0.0.0
+  - 127.0.0.1
+proxies: []
+policy_groups:
+- select:
+    name: Proxy
+    policies: []
+    icon: https://raw.githubusercontent.com/RiverFlowsInUUU/Self-Configuration/main/icons/Proxy.png
+- smart:
+    name: AI
+    policies:
+    - Proxy
+    flatten: true
+    icon: https://raw.githubusercontent.com/RiverFlowsInUUU/Self-Configuration/main/icons/openai.png
+- select:
+    name: AD
+    policies:
+    - REJECT
+    icon: https://raw.githubusercontent.com/RiverFlowsInUUU/Self-Configuration/main/icons/AdBlock.png
+rules:
+- rule_set:
+    name: Jinx-CN
+    match: https://raw.githubusercontent.com/RiverFlowsInUUU/Jinx/main/surge-white-guard.list
+    policy: DIRECT
+    update_interval: 604800
+- rule_set:
+    name: Jinx-Ads
+    match: https://raw.githubusercontent.com/RiverFlowsInUUU/Jinx/main/surge-ads.list
+    policy: AD
+    update_interval: 604800
+- rule_set:
+    name: AWAvenue-Ads
+    match: https://raw.githubusercontent.com/TG-Twilight/AWAvenue-Ads-Rule/main/Filters/AWAvenue-Ads-Rule-Surge-RULE-SET.list
+    policy: AD
+    update_interval: 604800
+- rule_set:
+    name: Lan
+    match: https://raw.githubusercontent.com/blackmatrix7/ios_rule_script/master/rule/Surge/Lan/Lan.list
+    policy: DIRECT
+    update_interval: 604800
+- rule_set:
+    name: Private
+    match: https://raw.githubusercontent.com/Loyalsoldier/surge-rules/release/ruleset/private.txt
+    policy: DIRECT
+    update_interval: 604800
+- rule_set:
+    name: System
+    match: https://raw.githubusercontent.com/RiverFlowsInUUU/Self-Configuration/main/egern/apple_system.list
+    policy: DIRECT
+    update_interval: 604800
+- rule_set:
+    name: AI
+    match: https://raw.githubusercontent.com/ACL4SSR/ACL4SSR/75f0101039d71724b6e998b34604c2e053580e0c/Clash/Ruleset/AI.list
+    policy: AI
+    update_interval: 604800
+- rule_set:
+    name: CN
+    match: https://raw.githubusercontent.com/Loyalsoldier/surge-rules/release/ruleset/direct.txt
+    policy: DIRECT
+    update_interval: 604800
+- geoip:
+    match: CN
+    policy: DIRECT
+    no_resolve: true
+- default:
+    name: Final
+    policy: Proxy
+default_proxy_group: Proxy
