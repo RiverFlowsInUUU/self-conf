@@ -1,6 +1,36 @@
-# 操作：Surge · Egern · 日常维护
+# 操作：Surge · Egern · mihomo · 日常维护
 
 > 由原手册 03、04、06 三章合并。装完之后怎么改、怎么维护，都在这一篇。
+> mihomo 章是整合后新增 —— 那一侧的目录与生成链跟 Surge / Egern **不是同一套**
+> （配置真源是覆写脚本，不是静态 profile），动手前先读 §5.2 的动线。
+
+## 三侧共通：动手前先记住五条
+
+三个内核目录并列（`surge/` · `egern/` · `clash/`），各写各的语法，但**操作层的规矩是共通的**。
+下面五条先记住，再翻到对应内核那一章；各侧独有的东西（文件结构、改配置的动线、生成器）在各自章里。
+
+| # | 规矩 | 落点 |
+|:-:|:-----|:-----|
+| 1 | **固定名四件**：每侧现役只有 `routing` / `lazy` × 完整版 / `.min` 共四件，订阅地址不随版本改名 | 三侧一致，见 §6.1 |
+| 2 | **`.min` 不手工编辑**：它是"同一份配置去掉注释"，漂了肉眼看不出来 | Surge / Egern → `make_min.py`；mihomo → `build_profiles.py`（见下表） |
+| 3 | **改完跑全套闸门**：`python skill/tests/verify_all.py`（现 18 道，其中 mihomo 占 6 道） | §6.2 动线⑤ |
+| 4 | **不提交真实地址 / 凭据 / token** | `check_secrets.py` 两份都跑（跨内核版 + mihomo 版，见 §5.9） |
+| 5 | **改配置去适配判据，不是改判据去适配配置** | §6.8 |
+
+三侧现役件与生成器对照 —— **生成器这一列是本仓最容易记错的地方**：
+
+| 内核 | 现役四件 | `.min` 由谁生成 | 配置真源 |
+|:-----|:---------|:----------------|:---------|
+| Surge | `surge/profiles/{routing,lazy}.conf` + `.min.conf` | `skill/tests/make_min.py --apply` | 完整版 `.conf`（手工维护） |
+| Egern | `egern/profiles/{routing,lazy}.yaml` + `.min.yaml` | 同左 | 完整版 `.yaml`（手工维护） |
+| mihomo | `clash/profiles/{routing,lazy}.yaml` + `.min.yaml` | `skill/scripts/clash/build_profiles.py` | **`clash/override/*.js`**（脚本才是真源） |
+
+> ⚠️ mihomo 那一行的"配置真源"是三侧里唯一的例外：Surge / Egern 改**完整版**，
+> mihomo 改**覆写脚本**、再由脚本生成静态 profile（§5.2）。别把两侧的习惯带过去 ——
+> 手工改 `clash/profiles/*.yaml` 会被下一次重生成整份覆盖（§5.3）。
+>
+> ⚠️ 版本头注与归档只属于 Surge / Egern 两侧：mihomo 静态 profile 没有 `#! version=`、
+> 也不进 `config_old/`（§5.10）。那套规矩不要搬过去。
 
 ## Surge 操作
 
@@ -150,7 +180,7 @@ Hong Kong = smart, include-all-proxies=true, include-other-group="Airport", poli
 
 | 下一步 | 去处 |
 |:-------|:-----|
-| 对侧内核的操作章 | 本篇「Egern 操作」章（已并入本篇） |
+| 对侧内核的操作章 | 本篇「Egern 操作」章（已并入本篇）·「mihomo 操作」章（§5） |
 | 换、加、删任何规则集之前 | [规则集与素材](rulesets.md) |
 | 出问题了 | [故障排查 · FAQ](troubleshoot-faq.md) |
 | 把本篇改动搬到 Egern 侧 | [跨内核移植](cross-kernel-diff.md) |
@@ -246,16 +276,261 @@ python skill/scripts/egern/check_egern_dns.py egern/profiles/lazy.yaml egern/pro
 
 | 下一步 | 去处 |
 |:-------|:-----|
-| 对侧内核的操作章 | 本篇「Surge 操作」章（已并入本篇） |
+| 对侧内核的操作章 | 本篇「Surge 操作」章（已并入本篇）·「mihomo 操作」章（§5） |
 | 换、加、删任何规则集之前 | [规则集与素材](rulesets.md) |
 | 出问题了 | [故障排查 · FAQ](troubleshoot-faq.md) |
 | 把本篇改动搬到 Surge 侧 | [跨内核移植](cross-kernel-diff.md) |
 | 名词不认识、常见疑问没解决 | [FAQ 与术语表](troubleshoot-faq.md) |
 
+## mihomo 操作
+
+对象：`clash/` 下的**两种交付形态**（静态 profile 四件 + 覆写脚本两份）。
+加固清单在 [`hardening-checklist.md`](hardening-checklist.md) 的 mihomo 侧；
+逐键权威（语义、边界、取舍）是 [`clash/reference/profile-anatomy.md`](../clash/profile-anatomy.md)
+—— **那一篇是权威，本章只讲动线与坑，不重复逐键语义**；
+门禁命令与判据细节在 [`clash/reference/checker.md`](../clash/checker.md)。
+
+> 📌 **三侧里只有这一侧"配置真源不是 profile 本身"**：改配置改的是 `override/*.js`，
+> 静态 `profiles/*.yaml` 由脚本生成。这是最容易带错的一侧，先读 §5.2 再动手。
+
+### 5.1 文件结构速览
+
+```
+clash/
+├── profiles/                          # 静态 profile 四件（**生成物**）
+│   ├── routing.yaml · routing.min.yaml   # 分流版  25 组 / 25 集 / 27 条
+│   └── lazy.yaml    · lazy.min.yaml      # 懒人版   3 组 / 10 集 / 11 条
+└── override/                          # 覆写脚本（**真源**）
+    ├── my_clash.js                    # → 分流版  22 组 / 25 集 / 27 条
+    ├── my_clash_lazy.js               # → 懒人版   3 组 / 10 集 / 11 条
+    └── README.md                      # 两形态差别、用法、本地实测
+```
+
+两份 profile 是**分工关系**（分流版细分 / 懒人版全量一个出口），不是版本关系，选一份用、不要叠加。
+现役规模（实测 `build_profiles.py --check` 与 `yaml.safe_load` 核对，2026-10-07）：
+
+| | 分流版 `routing` | 懒人版 `lazy` |
+|:--|:--|:--|
+| 策略组 | **25** | **3**（`Proxy` / `AI` / `AD`） |
+| `rule-providers` | **25**（16 `.mrs`/domain + 4 `.mrs`/ipcidr + 5 `.yaml`/classical） | **10**（4 + 2 + 4） |
+| 规则 | **27** | **11** |
+| 带 `no-resolve` 的规则 | **4** | **2** |
+
+两份脚本与两份 profile 的**差一处、且是有意的**：
+脚本分流版 **22 组** vs 静态 **25 组**，差的是模板专属的三个隐藏分档子组
+`Low Mult.` / `Auto` / `High Mult.`（mihomo 没有权重键，倍率偏好靠 `fallback` + `filter` 分档模拟；
+脚本侧 `Smart` 是单组 `fallback`，做不到这三档）。规则数、provider 数、provider URL 集合两边相同。
+懒人版则**完全同构**：脚本 3 组 / 11 条 / 10 份，与 `lazy.yaml` 逐位相同。
+
+> 📌 **已知的过期文字（改之前先读，别被它们带偏）**：两份脚本与两份 profile 的**头注**、以及
+> `override/README.md` 的表格里仍写着旧数字（`my_clash.js` 头注「20 组 / 20 份 / 26 条」、
+> `routing.yaml` 旧头注「23 / 22 / 24」等）。**判据以配置文件为准**，
+> 完整清单见 `profile-anatomy` §18.2。改配置时顺手把过期文字一起改掉。
+
+### 5.2 改配置的正确顺序
+
+```bash
+① 改真源：        clash/override/my_clash.js        （或 my_clash_lazy.js）
+② 重生成 profile： python skill/scripts/clash/build_profiles.py
+                  # 一次性写好 routing/lazy 的 .yaml 与 .min.yaml 四件
+③ 若动了规则集内容：python skill/scripts/clash/build_rules.py   # rules/*.list → *.yaml
+④ 跑全套闸门：      python skill/tests/verify_all.py            # 现 18 道，含 mihomo 六道
+```
+
+> ⚠️ **步骤 ② 不可跳过，也不可用手工同步替代。** 脚本与静态是同一套配置的两个形态，
+> 由 `check_script_sync.py` 逐位对拍（比 `rules`、`rule-providers` URL 集合、
+> `proxy-groups` / `dns` / `ipv6`）。只改一边 ⇒ 用户遇到「照文档用脚本订阅，
+> 效果跟直接导入配置不一样」，而两边都能正常跑、都不报错 —— 只能靠对拍发现。
+>
+> ⚠️ **步骤 ② 的 `--check` 是门禁**（`build_profiles.py --check` 进 18 道中的第 18 道）：
+> 脚本有更新而静态 profile 没重生成 ⇒ 判负。想只看看有没有漂移，跑这个。
+
+三个只在这一侧存在的环节，逐个说清：
+
+| 环节 | 脚本 | 判据 |
+|:-----|:-----|:-----|
+| 静态 profile 新鲜度 | `skill/scripts/clash/build_profiles.py --check` | 脚本输出 ≠ 静态文件即判负（18 道之第 18 道） |
+| 规则集生成物新鲜度 | `skill/scripts/clash/build_rules.py --check` | `.yaml` 与 `.list` 真源不一致即判负 |
+| 脚本 ↔ 静态对拍 | `skill/tests/clash/check_script_sync.py` | 需 **node**（Windows 下由 `_clash_common.find_node()` 显式探测；Git Bash 的 PATH 不继承给 subprocess） |
+
+### 5.3 不要手工改 `profiles/*.yaml`
+
+`clash/profiles/` 四件全部由 `build_profiles.py` 生成，头注里也写了"请勿手工编辑"。两条理由，都不是理论：
+
+1. **手工改会被整份覆盖** —— 下次跑脚本，`open(fp, "w")` 覆盖写，你的改动无声消失；
+2. **更糟的是追加写会堆叠** —— 本仓**真踩过**：此前靠临时脚本手工重生成，
+   误用追加模式把 `routing.yaml` 纵向堆了 **7 份**完整配置（**3294 行**、
+   7 个历史版本首尾相接、无 `---` 分隔）。PyYAML 只保留最后一份 ⇒
+   **门禁全绿、肉眼也看不出来**，但用户拿到的是畸形文件。
+
+`build_profiles.py` 现在的两条硬保证正是为这个存在（写在它自己的头注里）：
+
+- ① **一律覆盖写**（`"w"` 模式），绝不追加；
+- ② **生成后立即自检**：顶层键不得重复（专抓堆叠）、解析后组数 / 规则数与脚本输出一致、
+  `proxy-providers` 与 `tun` 必须存在。
+
+> ⚠️ **每次手工改过 profile 之后**，跑 `python skill/scripts/clash/build_profiles.py --check`
+> 确认生成器认为"已是最新" —— 若它说"已过期"，说明有改动没回灌进脚本，
+> 要么把改动搬进 `override/*.js` 重生成，要么接受下次重生成时被覆盖。
+
+### 5.4 规则集：改 `.list` 真源，再生成 `.yaml`
+
+`rules/` 是本仓**三内核共享真源**（合并最直接的收益）：
+
+| 唯一真源 | 条数 | 生成物 | 谁消费 |
+|:---------|----:|:-------|:-------|
+| `rules/AI.list` | **272** | `rules/AI_Domains.yaml` | Surge / Egern 直接引 `.list`；mihomo 引 `.yaml`（classical） |
+| `rules/apple_system.list` | **18** | `rules/apple_system.yaml` | Egern 补 Surge 内置 `SYSTEM`；mihomo 用 `.yaml` |
+| `rules/emby.list` | **4** | `rules/emby.yaml` | 同 AI |
+
+```bash
+python skill/scripts/clash/build_rules.py            # 生成
+python skill/scripts/clash/build_rules.py --check    # CI 用：过期即判负（18 道之第 17 道）
+```
+
+改内容**只改 `.list`**，重跑脚本 —— 物理上不可能漂移。
+❌ **不手工编辑 `rules/*.yaml`**（生成物；`SKILL.md` 的红线之一）。
+mihomo 其余 **20 份 `.mrs` 远程集 + 2 份第三方 YAML** 不在此链上，由 `rule-providers` 自己管理。
+
+### 5.5 日常验什么、用哪个脚本
+
+| 想验什么 | 跑哪个 | 联网 |
+|:---------|:-------|:----:|
+| 结构 / 悬空引用 / 广告双条件 / tun 四键 / IPv6 / 零 dat | `skill/tests/clash/check_structure.py`（8 项） | 否 |
+| 防 DNS 泄露语义（分级发现） | `skill/scripts/clash/check_clash_dns.py clash/profiles/routing.yaml` | 否 |
+| `.min` 与完整版是否漂移 | `skill/tests/clash/check_min_pair.py` | 否 |
+| 脚本 ↔ 静态是否漂移 | `skill/tests/clash/check_script_sync.py` | 否（需 node） |
+| 规则集生成物是否过期 | `skill/scripts/clash/build_rules.py --check` | 否 |
+| 静态 profile 是否过期 | `skill/scripts/clash/build_profiles.py --check` | 否（需 node） |
+| **远程集 URL 是否还活着** | `skill/tests/clash/check_remote_urls.py` | **是**（慢，按需） |
+| 全部（含 Surge / Egern） | `python skill/tests/verify_all.py` | 部分 |
+
+一键命令（详见 [`clash/reference/checker.md`](../clash/checker.md) §2）：
+
+```bash
+python skill/scripts/clash/check_clash_dns.py clash/profiles/lazy.yaml clash/profiles/routing.yaml
+python skill/tests/clash/check_structure.py
+python skill/tests/clash/check_min_pair.py
+python skill/tests/clash/check_script_sync.py
+python skill/tests/clash/check_remote_urls.py          # 慢，按需
+```
+
+当前基线（2026-10-07 实测）：`check_clash_dns.py` 分流版 **0 high / 0 medium / 7 LOW / 21 OK**，
+懒人版 **0 high / 0 medium / 2 LOW / 21 OK**；`check_structure.py` 四份 profile 全绿。
+
+那些 **LOW 是取舍，不是缺陷**，别去"修"它们：分流版 `proxy-server-nameserver` / `direct-nameserver`
+的国内端点写的是主机名（`doh.18bit.cn` / `dns.alidns.com`）⇒ 引导期明文解析一次，信号弱（只带出"本机在用哪个 DoH"）；
+`dns-hijack: any:53` 未接管 TCP:53（不写协议前缀时默认 `udp://`，明文 TCP 查询在现代客户端罕见）；
+5 个 `classical` 规则集内容无法静态判定（本仓自托管的 `rules/*.list` 实测 0 条 IP 条目）；
+`fallback-filter.geoip: true` 是双倍延迟、不是泄露。**改它们之前先问一句"我真的需要吗"**（懒人版干脆不开 `fallback` 就是同一个判断）。
+
+> ⚠️ **审计通过 ≠ 配置可用**（三侧共通的母题，见 [故障排查 · FAQ](troubleshoot-faq.md) §7.5）。
+> mihomo 侧目前**没有专用的分流覆盖审计脚本**（Surge / Egern 有 `audit_routing_coverage.py`）。
+> 因此每次增删 `no-resolve`、替换 `cn` provider、或移动 `MATCH` 前的规则时，
+> 仍要人工核对三条：`cn` 仍是 `behavior: domain` 的国内域名集；
+> `RULE-SET,cn,DIRECT` 仍在 `MATCH,Proxy` 之前；用国内**非 `.cn`** 域名验证，不能只测会被后缀兜底救活的样本。
+
+### 5.6 两种交付形态分别怎么维护
+
+这是 mihomo 侧**独有**的东西，Surge / Egern 都没有对等件：
+
+| 形态 | 给谁 | 怎么用 |
+|:-----|:-----|:-------|
+| 静态 `.yaml` | 下载即用的人 | 导入客户端 / 订阅这个文件的 raw 地址 |
+| 覆写 `.js` | 想保留自己订阅的人 | 挂到**任意订阅**上，把订阅改造成同款结构 |
+
+脚本做的事（`main(config)` 返回改写后的 config）：
+`proxies` **保留**（订阅的节点原样）· `proxy-groups` **整体替换** ·
+`rule-providers` **整体重建**（先清空，避免残留无用 provider 与命名冲突）·
+`rules` **整体替换** · `dns` **整体替换**（含双层广告拦截）· `ipv6` 显式置 `false` ·
+入站端口（`port` / `mixed-port` / `dns.listen`）**不覆盖**，交给客户端决定。
+
+两种形态维护上的**三条硬分界**：
+
+1. **`tun` 只属于静态 profile。** 脚本**不生成** `tun` 段是对的 —— 客户端
+   （Mihomo Party / Clash Verge）自己管理 TUN，脚本只覆写策略组与规则，不该越俎代庖。
+   ⚠️ 本仓踩过：由脚本重建静态 profile 时把 `tun` 丢了（脚本输出里本就没有），
+   四份配置全没了 `dns-hijack` + `strict-route` —— **防线破了而门禁全绿**。
+   现在两道守门：`build_profiles.py` 从静态版**继承** `tun` 且自检它存在；
+   `check_structure.py` 第 ④ 项查 `enable` / `dns-hijack` / `auto-route` / `strict-route` 四键。
+2. **`proxy-providers` 只属于静态 profile。** 脚本用 `include-all` 直接吃节点，不需要订阅槽位；
+   但静态 profile **必须有** `proxy-providers.Airport`（用户导入后要靠它填自己的订阅地址）。
+   同样踩过：重建时把它丢了，而头注还让用户去改 `proxy-providers.Airport.url` ⇒ 用户无从下手。
+3. **`Smart` 三档必须"接上"**，不只是"声明"。三个子组的定义有了、`Smart.proxies` 仍写 `["DIRECT"]`
+   的话，三档形同虚设 —— 声明了却没连，比不声明更隐蔽。`build_profiles.py` 的自检会抓这一条。
+
+> 📌 一句话记法：**脚本不生成的字段只有 `proxy-providers` 与 `tun` 两个，生成时必须从静态版继承。**
+> 这条来自一次真实回归的事后系统排查（见 `build_profiles.py` 头注）。
+
+### 5.7 必须替换与环境
+
+- **必填（两形态各一处）**：静态 profile 的 `proxy-providers.Airport.url`
+  （当前占位 `https://sub.example.com/api/v1/client/subscribe?token=REPLACE_WITH_YOUR_TOKEN`）
+  换成你自己的订阅地址。不换 ⇒ 走代理的流量全不通 —— 占位地址是 `example.com`，不是真实服务。
+- 覆写脚本不需要这一步：它保留传入订阅自己的 `proxies`（若订阅还带 `proxy-providers`，
+  脚本自动从 `include-all-proxies` 切到 `include-all`，避免 provider 里的节点成为孤儿）。
+- 运行门禁需要 **Python 3 + PyYAML**（本仓唯一第三方依赖）；`check_script_sync.py` 与
+  `build_profiles.py` 另需 **node**（跑 `override/*.js` 取输出）。
+- 从**仓库根**调用门禁。四个 clash 门禁的 `_default_root()` 都是「当前工作目录 → 逐级向上 + `/clash`」，
+  找到同时含 `profiles/` 与 `override/` 的目录为止 —— CWD 优先是刻意设计
+  （CI 上基于 `__file__` 探测会算错目录，报"缺文件"而本地全过）。
+
+### 5.8 改完之后
+
+```bash
+python skill/tests/clash/check_structure.py
+python skill/tests/clash/check_min_pair.py
+python skill/tests/clash/check_script_sync.py          # 需 node
+python skill/scripts/clash/build_profiles.py --check
+python skill/scripts/clash/build_rules.py --check
+python skill/tests/verify_all.py                       # 全套 18 道
+python skill/tests/clash/check_remote_urls.py          # 慢，联网，按需
+```
+
+最后在目标链路（尤其蜂窝）跑一次 leak test，并先写下"哪台设备、哪条链路、谁的 DNS" ——
+混链路会让整轮结论作废（[故障排查 · FAQ](troubleshoot-faq.md) §7.0）。
+判据逐项见 `skill/scripts/clash/check_clash_dns.py` 头注与
+[`clash/reference/checker.md`](../clash/checker.md) §4–§8。
+
+### 5.9 两个 `check_secrets.py`，别只跑一个
+
+| 脚本 | 扫描面 | 判据 |
+|:-----|:-------|:-----|
+| `skill/tests/check_secrets.py`（跨内核，进 18 道） | 全仓 `.conf` / `.yaml` / `.yml`，**跳过 `icons/`** | 禁串 `tange365.com` / `wangxinyu`；IPv4 白名单；`YAML_CRED_KEYS` 值必须占位 |
+| `skill/tests/clash/check_secrets.py`（mihomo 版） | 全仓 **`.js`** / `.yaml` / `.md` / `.conf` / `.list` / `.txt` / `.json`，跳过 `icons/` 与 `rules/` 的主机扫描 | 凭据字段非占位即报；IPv4 白名单；主机白名单；私钥头无条件报 |
+
+两者互不可替代：mihomo 版能扫 **`.js`**（脚本里也有订阅 URL），跨内核版带禁串黑名单。
+**改名合并会同时丢掉两边的判据。**
+
+> ⚠️ **各内核的"常识"不同**：`198.18.0.1` 是 mihomo 的 `fake-ip-range`（`198.18.0.1/16`，
+> RFC 6815 保留段），但 Surge / Egern 侧的 secrets 扫描不认识它 —— 整合时已加入 `DOC_NETS` 白名单。
+> 这类分歧必须在整合层处理，不能指望某一侧的脚本天然认识另一侧的合法值。
+
+### 5.10 版本与归档：这一侧不适用
+
+Surge / Egern 的 `#! version=` 头注、`config_old/` 归档、"一天一版"（§6.1）**只管那两侧**。
+mihomo 静态 profile 由脚本生成、当前文件**没有 `#! version=`**，也不进 `config_old/`。
+**不要把那套版本号与归档约定机械搬到 mihomo** —— 生成物天然由 git 历史记录中间态，
+再叠一层人工版本号只会多一个会对不上的数字（历史教训见 §6.7）。
+
+### 相关页面
+
+| 下一步 | 去处 |
+|:-------|:-----|
+| mihomo 逐键权威（语义 / 边界 / 取舍） | [`clash/reference/profile-anatomy.md`](../clash/profile-anatomy.md) |
+| 门禁命令与逐条判据 | [`clash/reference/checker.md`](../clash/checker.md) |
+| mihomo 加固清单（14 项判据 + 验收标准） | [加固清单 · mihomo 侧](hardening-checklist.md#mihomo-侧) |
+| `no-resolve` 的三侧成对交付 | [分流与 no-resolve 必须成对交付](no-resolve-pairing.md) |
+| 对侧内核的操作章 | 本篇「Surge 操作」章 ·「Egern 操作」章 |
+| 换、加、删任何规则集之前 | [规则集与素材](rulesets.md) |
+| 出问题了 | [故障排查 · FAQ](troubleshoot-faq.md) |
+| 把本篇改动搬到另外两侧 | [跨内核移植](cross-kernel-diff.md) |
+
 ## 日常维护
 
 面向"改这份配置的人"：改哪里、怎么升版、怎么同步、怎么记录。
 仓库级红线（节点不提交真实值等）见根 [`SECURITY.md`](../../../SECURITY.md)，本章不重复其条文，只讲操作动线。
+⚠️ 本章的版本 / 归档 / Release 各节（§6.1、§6.9）**只适用 Surge / Egern 两侧**，mihomo 侧见 §5.10。
 
 ### 6.1 固定名规矩：先记住这个，再碰任何文件
 

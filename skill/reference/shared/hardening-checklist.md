@@ -1,6 +1,6 @@
-# 加固清单：Surge 14 项 · Egern 18 项
+# 加固清单：Surge 14 项 · Egern 18 项 · mihomo 14 项
 
-> 由原两侧 `docs/03` 合并。清单按内核分节，逐项对应各侧配置键。
+> 由原两侧 `docs/03` 合并，整合后增补 mihomo 侧。清单按内核分节，逐项对应各侧配置键。
 
 ## Surge 侧
 
@@ -125,6 +125,103 @@
 > ⭐ **本项目最贵的一条工程教训：审计通过 ≠ 配置可用。**
 > 这条线上连续出现过 5 次"脚本 0 high、用户实测仍有问题"：有的是靠加配置压指标、有的是审计维度缺失（只看 profile、没看它引用的规则集）、有的是两个脚本双双全绿而分流整片是坏的。
 > **固化规则：任何一次「审计绿了但实测有问题」，都必须假设"存在审计器看不见的维度"，并把这个维度补成一个可复跑的脚本 —— 而不是重跑同一个脚本。**
+
+## mihomo 侧
+
+> 用法：从上到下逐条对照你的 profile。**14 项判据与 `check_clash_dns.py` 一一对应**（编号即脚本里的判据号）；
+> 另有 `check_structure.py` 8 项结构判据与之互补（见文末的分工表）。
+> 逐键语义与边界的权威是 [`clash/reference/profile-anatomy.md`](../clash/profile-anatomy.md)，
+> 本章只列清单与判据，不重复逐键解释。
+
+**自动化**：
+
+```bash
+# 防泄露语义（14 项，分级发现）
+python skill/scripts/clash/check_clash_dns.py clash/profiles/routing.yaml
+python skill/scripts/clash/check_clash_dns.py clash/profiles/lazy.yaml
+python skill/scripts/clash/check_clash_dns.py out.yaml --override   # 覆写脚本输出形态：不要求 tun 段
+python skill/scripts/clash/check_clash_dns.py clash/profiles/routing.yaml --strict   # medium 也算失败
+
+# 结构（8 项，四份 profile 一起判）
+python skill/tests/clash/check_structure.py
+```
+
+退出码：`0` = 无 high（`--strict` 下还要求无 medium）· `1` = 有 high · `2` = 用法错误 / 读不到 / YAML 坏 / 缺 pyyaml。
+⚠️ `2` 与 `1` 必须分开：环境炸掉**绝不能被读成一次成功的判负**（Windows cp936 下 `print` 一个中文就可能让进程以 1 退出 —— 而 1 恰是"判负"的码）。
+
+### 清单（14 项，与 `check_clash_dns.py` 判据号一致）
+
+| # | 检查 | 判据 | 严重度 |
+|---|---|---|---|
+| 1 | `dns` 段存在且 `enable: true` | 没有 `dns` 段 ⇒ 全部查询走**系统 DNS**（运营商 DHCP 下发的那台）；`enable` 不为 true ⇒ DNS 劫持与 fake-ip 全部失效 | **高** |
+| 2 | ⭐ `default-nameserver` 是否全为 **IP 字面量** | 官方硬性要求。这一层**唯一**用途是解析其余 DNS 端点**自己的域名**（引导），它必然是明文 UDP:53（不能再依赖加密解析器，否则成环）⇒ 它自己写主机名 = "解析解析器"又要一次明文解析 = **鸡生蛋**。带 scheme 的写法（如 `https://223.5.5.5/dns-query`）判 MEDIUM（引导层成环）。当前两版均为 `223.5.5.5` / `119.29.29.29` 纯 IP | **高**（主机名）／中（带 scheme） |
+| 3 | ⭐ `nameserver` / `fallback` 端点必须是「**IP 字面量** **且** **加密 scheme**」的**合取** | 两条独立的坏法对应两个面：**写主机名** ⇒ 冷启动必然用 `default-nameserver` 明文解析一次（面①）；**写裸 IP**（如 `nameserver: 8.8.8.8`）⇒ **每一笔查询都是明文 UDP:53**（面②，比面①严重得多 —— 带的是业务域名）。⚠️ 只判"是不是 IP"会把最坏写法判成通过 | **高** |
+| 4 | ⭐ `proxy-server-nameserver` 必须存在（节点域名解析的鸡蛋问题） | 缺它 ⇒ 代理节点自己的域名走主路径（本仓是境外 DoH）⇒ "要先有代理才能解析出节点地址"，失败时退回明文 / 系统 DNS，**节点域名明文暴露**（与 Egern 侧 `proxy_nameservers` 同一条判据）。缺 `direct-nameserver` ⇒ `DIRECT` 出站的域名也去问境外主解析器（答案不准 + 多一次境外查询，非明文 ⇒ MEDIUM）。当前分流版两个端点写的是**主机名**（`doh.18bit.cn` / `dns.alidns.com`）⇒ 4 条 LOW：国内端点、信号弱，是取舍不是缺陷 | **高**（缺前者）／中（缺后者）／低（端点用主机名） |
+| 5 | `enhanced-mode: fake-ip` 且 `fake-ip-range` 落在 **RFC 6815 保留段** | `redir-host` / 未设置 ⇒ 每个域名都真实解析一次（本地留答案）；`fake-ip-range` 不在 `198.18.0.0/15` ⇒ 拿假 IP 去连真实网络。当前 `198.18.0.1/16` ✅ | **高**（段不对）／中（模式不对） |
+| 6 | ⭐ IPv6 **两处**都要显式关闭：顶层 `ipv6` **与** `dns.ipv6` | 判据用 `is not False` ⇒ **键缺失也算不过**。`dns.ipv6: true` ⇒ 应用拿到真实 AAAA；顶层 `ipv6: false` ⇒ IPv6 流量不被 TUN 接管；两者叠加 = 双栈站点直连出去、绕过代理。⚠️ 只关一处比两处都开更隐蔽 | **高** |
+| 7 | ⭐ `tun` 是否接管 `:53`（旁路设备面③）+ `strict-route` | ⭐ 判据不是"列了几条"，而是**是否覆盖 `:53` 的整个地址空间** —— 地址空间无限，逐个列举永远列不全（Surge 侧第 3 项踩过同一个坑：按条数判负是错的）。只有 `any:53` / `0.0.0.0:53` 才叫收口。另要求 `enable` / `auto-route` / `strict-route` 三键。<br>⚠️ **形态差异**：覆写脚本（`override/*.js`）的输出**不该有** `tun`（客户端自己管 TUN）⇒ `--override` 下本项整体跳过；当前也未接管 TCP:53（不写协议前缀默认 `udp://`，LOW，是已知取舍） | **高** |
+| 8 | ⭐⭐ **DNS 层广告拦截的两个必要条件**（缺任一 ⇒ 静默失效、且不报错） | ① `nameserver-policy` 里 `rule-set:<广告集>: rcode://success`；② **同一个广告集在 `fake-ip-filter` 里再列一遍** —— 否则 `withFakeIP` 中间件对 A / AAAA **直接返回假 IP**，请求永远走不到 ①。另：两处广告集**必须一致**，且都**不得引用未定义**的 `rule-set:`（死引用 ⇒ 静默消失）。当前两版均为 `AWAvenue-Ads` + `Jinx-Ads`，两处一致 ✅ | **高** |
+| 9 | `nameserver-policy` 的**广告项必须排在 `cn` / `private` 之前** | YAML mapping 在 Python 3.7+ 保持插入顺序，而这个顺序**就是 mihomo 的匹配顺序**：先命中 `rule-set:cn` ⇒ 拿国内答案，永远走不到后面的 `rcode://success` | **高** |
+| 10 | ⭐⭐ IP 类规则必须带 `no-resolve`（面④），域名类不该写 | ⭐ 判"是不是 IP 类规则"的**第一依据是 provider 的 `behavior`**，不是名字前缀：`ipcidr` ⇒ 不带会为判定而强制解析；`domain` ⇒ 写了无意义；`classical` ⇒ 内容混合、**无法静态判定**（单独归组提示）。只有 provider 未声明 `behavior` 时才退回 `geoip-` 名字前缀兜底。<br>⚠️ **双刃与另两侧同**：给 IP 规则补 `no-resolve` 会同时关掉"靠解析判 IP 归属"那条直连路径 ⇒ 必须与域名补偿**成对交付**（见 [no-resolve-pairing.md](no-resolve-pairing.md)）。当前分流版 4 条 / 懒人版 2 条全部带 ✅ | **高**（IP 类缺）／低（域名类写了） |
+| 11 | ⭐ **零 dat 依赖** | 顶层出现 `geox-url` / `geo-auto-update` / `geo-update-interval` ⇒ mihomo 会去下载并加载 `GeoSite.dat` / `GeoIP.dat`；规则写原生 `GEOSITE,` / `GEOIP,` ⇒ 直接查那两个库；`nameserver-policy` 键用 `geosite:` 同理；provider 引 `.dat` 文件同样判负。<br>⚠️ **这不排斥 `.mrs`**：`geoip-private` / `geoip-cn` 等是 MetaCubeX 的**独立远程集文件**（`format: mrs`），与 dat 数据库无关 —— 正是本仓想要的形态。判据只拦 dat，不拦 mrs（注入测试专门验过不误伤） | **高** |
+| 12 | `rule-provider` 形态（**不做网络探测**） | 既无 `url` 也无 `path` ⇒ 永远加载不出来 ⇒ 引用它的规则**静默变成空集**（死规则），门禁看不出来。一个 provider 都没有 ⇒ MEDIUM。可达性归 `check_remote_urls.py` | **高**（缺 url+path）／中（零 provider） |
+| 13 | ⭐ 规则引用的名字必须**能解析**（provider / 策略组） | 引用不存在的东西**不会让 mihomo 拒绝启动** —— 它只是静默不生效。对防泄露而言这最危险：那正是收口装置所在的位置（广告集 / 国内集 / 兜底）。策略名笔误（如 `负载均衡`）同判 | **高** |
+| 14 | 其余 DNS 开关（提示性） | `respect-rules` 未开 ⇒ DNS 查询自己不按路由规则走；`use-system-hosts: true` ⇒ 读本机 hosts；`prefer-h3: true` ⇒ 优先 HTTP/3；`dns.listen` 设了 ⇒ 内核对外开明文 `:53` 端口（脚本**不设**它，早期写死 `0.0.0.0:7874` 会与客户端 DNS 端口冲突） | 低 |
+
+### `no_resolve` 的位置：两个层级
+
+| 层级 | 写法 | 作用范围 |
+|---|---|---|
+| **规则级** | `RULE-SET,geoip-cn,DIRECT,no-resolve` | 只影响这一条规则。mihomo 的 `RULE-SET` 确实解析该参数并传给 `NewRuleSet`（源码：`rules/parser.go` 的 `case "RULE-SET": isSrc, noResolve := RC.ParseParams(params)`） |
+| **provider 的 `behavior`** | `behavior: ipcidr` | **判定"这条规则是不是 IP 类"的第一依据** —— 比名字前缀可靠，也是 `check_clash_dns.py` 判据 10 的落点 |
+
+> ⚠️ 与 Egern 相反的一点是：**写在 `rule-set` 规则对象上（Egern 的 `no_resolve: true`）不生效**，
+> mihomo 的 `no-resolve` 写在规则行尾。三侧落点对照见 [no-resolve-pairing.md](no-resolve-pairing.md)。
+
+### 验收标准（六条同时满足才算完）
+
+1. `dns` 段存在且 `enable: true`；`default-nameserver` **全部 IP 字面量**（不带 scheme）。
+2. `nameserver`（及 `fallback`，若开启）端点全部「**IP 字面量 + 加密 scheme`**」的合取 ——
+   消灭面①（引导解析）与面②（明文回退链）。
+3. `proxy-server-nameserver` **存在**（节点域名有独立出口，不依赖代理）—— 消灭面③ 的鸡蛋问题；
+   另 `direct-nameserver` 存在 ⇒ 直连域名不碰境外解析器。
+4. `tun` 收口：`enable` + `auto-route` + `strict-route` + `dns-hijack` 覆盖 `:53` **整个**地址空间（`any:53`）
+   —— 消灭面③（旁路设备）。⚠️ 覆写脚本形态下这一条换成"客户端自己管 TUN"，用 `--override` 审。
+5. 顶层 `ipv6: false` **与** `dns.ipv6: false` —— 两处，少一处都不算完（面③′）。
+6. ⭐⭐ **分流仍然正确：国内域名仍判给 `DIRECT`** —— `RULE-SET,cn,DIRECT` 必须在 `MATCH,Proxy` **之前**，
+   且它必须是 `behavior: domain` 的真正域名集。
+   **这一条是第 10 项的代价，必须成对交付**：给 IP 规则补 `no-resolve` 会同时关掉
+   "靠解析判 IP 归属"那条直连路径。
+   ⚠️ **本仓目前没有 mihomo 侧的专用分流覆盖审计脚本** —— 前 5 条自动化后仍必须人工核对这一条，
+   且要用**国内非 `.cn` 域名**验证（只测 `.cn` 会被后缀兜底救活，假通过）。
+
+### 两个脚本的定位与分工
+
+| 脚本 | 看哪一层 | 关键点 |
+|---|---|---|
+| `check_clash_dns.py`（`skill/scripts/clash/`） | **profile 文本 + provider 语义** | 14 项防泄露判据，分级（🔴/🟠/🟡/✅）。判据是**实测推导**而非字符串匹配；**不做网络探测**；豁免写在**被审对象**里（`# audit-waive: <判据号> <理由>`） |
+| `check_structure.py`（`skill/tests/clash/`） | **结构 / 引用 / 形态** | 8 项：① 无悬空引用 ② 规则指向的 provider 与策略组存在 ③ 广告双条件 + 广告项排在 `cn` 之前 ④ `tun` 四键齐全（**仅静态 profile**）⑤ `geoip-*` 规则带 `no-resolve` ⑥ `nameserver` 必须 IP 字面量 ⑦ 零 dat 依赖 ⑧ IPv6 两处显式关闭 |
+| `check_min_pair.py`（`skill/tests/clash/`） | **`.min` ↔ 完整版** | 去掉注释后配置本体必须逐字相同 |
+| `check_script_sync.py`（`skill/tests/clash/`） | **脚本输出 ↔ 静态 profile** | 同一套配置的两种交付形态必须逐位一致（需 node）；Smart 三档是**已知差异**，打印提醒不判负 |
+| `build_profiles.py --check`（`skill/scripts/clash/`） | **生成物新鲜度** | 改了 `override/*.js` 没重生成 ⇒ 判负；内含自检（防"纵向堆叠 7 份"那类畸形） |
+| `build_rules.py --check`（`skill/scripts/clash/`） | **`rules/*.yaml` ↔ `.list` 真源** | 生成物过期即判负；❌ 不手工编辑 `rules/*.yaml` |
+| `check_remote_urls.py`（`skill/tests/clash/`） | **远程集可达性**（联网，慢） | 死链不是报错，是**静默降级** —— provider 拉不到就变空集，广告全进兜底出口而配置看着跑得挺好 |
+
+> ⭐ **审计通过 ≠ 配置可用**（三侧共通的母题）。mihomo 侧目前**没有**分流覆盖审计脚本
+> （Surge / Egern 有 `audit_routing_coverage.py`），所以上面的第 6 条验收标准只能人工做。
+> 这正是 `no-resolve-pairing.md` 要跨内核保留下来的教训：**不得因为两道静态门禁全绿就跳过它。**
+
+### 已知取舍（LOW 不是缺陷）
+
+当前基线（2026-10-07 实测）：分流版 **0 high / 0 medium / 7 LOW / 21 OK**，懒人版 **0 high / 0 medium / 2 LOW / 21 OK**。
+那些 LOW 都是刻意留下的取舍，改之前先问"我真的需要吗"：
+
+| LOW | 来源 | 为什么留着 |
+|:----|:-----|:-----------|
+| `proxy-server-nameserver` / `direct-nameserver` 端点是主机名（`doh.18bit.cn` / `dns.alidns.com`） | 判据 4 | 国内端点：只带出"本机在用哪个 DoH"，信号弱；改成 IP 字面量需自建端点 |
+| `dns-hijack` 未接管 TCP:53 | 判据 7 | 不写协议前缀时默认 `udp://`；明文 TCP 查询在现代客户端里罕见（要覆盖得写 `tcp://any:53`） |
+| 5 个 `classical` 规则集内容无法静态判定 | 判据 10 | 面⑤：远程集里的裸 IP 条目**不在本文件里**，本地静态门禁看不见，必须拉下来数；本仓自托管的 `rules/*.list` 实测 **0 条 IP 条目** |
+| `fallback-filter.geoip: true` | 判据 3 | 两端都是 DoH 时不是泄露，是**双倍延迟**；懒人版干脆不开 `fallback` 就是同一个判断 |
 
 ---
 

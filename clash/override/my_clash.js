@@ -4,8 +4,10 @@
 //
 //  作用
 //    对任意 mihomo 订阅配置做整体覆写，使其与本仓库 profiles/my_clash.yaml 一致：
-//      · 20 个策略组（Smart + 6 地区组 + 12 应用组）
-//      · 20 份规则集（17 份 MRS + 3 份 yaml）+ 26 条规则
+//      · 22 个策略组（Proxy + Smart + 4 个 AI 组 + AI + 8 个应用组 + Apple Update + AD + 6 地区组）
+//      · 25 份规则集（20 份 MRS + 5 份 yaml）+ 27 条规则
+//        ⚠️ 这些数字由 skill/tests/clash/check_header_numbers.py 与脚本实际输出对拍，
+//           改了策略组或规则后如不同步更新，CI 会判负。
 //      · DNS 双层广告拦截（fake-ip-filter + nameserver-policy rcode://success）
 //      · 订阅内的节点直接成为组内成员 —— 不再需要 Airport 订阅组
 //

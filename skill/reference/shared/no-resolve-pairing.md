@@ -1,7 +1,7 @@
 # 分流与 no-resolve 必须成对交付
 
 > 核心命题：「DNS 不泄露」和「分流正确」是同一个机制的正面和反面。
-> 由原两侧 `docs/05` 合并，机制论述两侧同源，案例按内核分节。
+> 由原 Surge / Egern 两侧 `docs/05` 合并，机制论述三侧同源，案例与落点按内核分节。
 
 ## Surge 侧
 
@@ -269,6 +269,167 @@ comm -23 dA.txt dB.txt | wc -l    # 期望 0
 > 三个脚本里，`check_egern_dns.py` 和 `audit_ruleset_noresolve.py` 全绿**不代表配置可用** —— 它们不检查分流。
 
 这条规则现在写进了 `skill/SKILL.md` 的「加固结束的验收标准」第 6 条。
+
+## mihomo 侧
+
+> mihomo 侧没有留下一次可核实的、与 Surge / Egern 同量级的「审计双绿但国内分流整片坏掉」
+> 独立事故；不能把姊妹内核的事故改写成 mihomo 事故。
+> 可核实的历史问题是**两版漂移**：懒人版两条 `geoip-*` 都带 `no-resolve`，
+> 分流版四条里只有 `geoip-private` 带，`geoip-google` / `geoip-telegram` / `geoip-cn`
+> 三条缺失。当前六个规则落点（分流版 4 条、懒人版 2 条）已经全部补齐，
+> 并用两道静态判据守住 `no-resolve` 落点，避免同类配置漂移重演。
+
+### 1. 落点：写在 `RULE-SET` 规则行尾
+
+mihomo 把「规则集是什么」和「引用时怎么判」拆成两层：
+
+```yaml
+rule-providers:
+  geoip-cn:
+    behavior: ipcidr
+    format: mrs
+    # url / path 省略
+
+rules:
+  - RULE-SET,geoip-cn,DIRECT,no-resolve
+```
+
+这里有三个不能混淆的事实：
+
+1. `behavior: ipcidr` 才是「这是一份 IP 段规则集」的语义依据；
+2. `format: mrs` 只是远程集的存储格式，不会自动赋予 `no-resolve`；
+3. `no-resolve` 写在消费 provider 的 `RULE-SET` 规则行末尾，不写进 provider 定义，
+   也不是只看 `geoip-` 名字就能推断内核已经启用。
+
+因此本仓的标准写法是：
+
+```yaml
+- RULE-SET,geoip-cn,DIRECT,no-resolve
+```
+
+不是只写：
+
+```yaml
+- RULE-SET,geoip-cn,DIRECT
+```
+
+### 2. 源码证据：`RULE-SET` 确实接收并传递参数
+
+此前本仓对「`no-resolve` 写在 `RULE-SET` 上是否真的有效」存疑；现在已经有
+[mihomo `rules/parser.go`](https://github.com/MetaCubeX/mihomo/blob/Meta/rules/parser.go)
+的源码级证据：
+
+```go
+case "RULE-SET":
+    isSrc, noResolve := RC.ParseParams(params)
+    parsed, parseErr = RP.NewRuleSet(payload, target, isSrc, noResolve)
+```
+
+`RC.ParseParams(params)` 解析出了 `noResolve`，随后原样传给 `RP.NewRuleSet`。
+所以这不是「照搬 Clash 语法」或「待确认的猜测」：**对 `RULE-SET` 的行尾写法有效。**
+同一结论也已经写入 [`hardening-template.md` §9.2](../clash/hardening-template.md)。
+
+### 3. 为什么必须带：它收的是泄露面④
+
+[`leak-localization.md` §4](../clash/leak-localization.md) 把 mihomo 的泄露路径拆成五个面；
+其中面④就是**规则判定触发的解析**：
+
+```
+收到域名
+  ↓
+走到 behavior: ipcidr 的 RULE-SET
+  ↓
+为了判断「目标 IP 是否落在这份网段里」先解析域名
+  ↓
+这次额外解析暴露了用户正要访问的站点
+```
+
+不带 `no-resolve`，IP 规则为了完成判定会主动补出目标 IP；带上以后，它只匹配已经拿到的
+IP，不再为了规则判定另起一次解析。分流版的 `geoip-private` / `geoip-google` /
+`geoip-telegram` / `geoip-cn`，以及懒人版的 `geoip-private` / `geoip-cn`，
+provider 均为 `behavior: ipcidr`、`format: mrs`，所以六个引用落点都必须带。
+
+但双刃刀的另一面没有改变：`no-resolve` 也会切断「先把域名解析成 IP，再靠 IP 集分流」
+这条路径。对国内直连而言，正确结构仍然必须是：
+
+```yaml
+- RULE-SET,cn,DIRECT
+- RULE-SET,geoip-cn,DIRECT,no-resolve
+- MATCH,Proxy
+```
+
+`cn` 是域名类 provider，负责接住域名；`geoip-cn` 是 IP 类 provider，只兜已经是 IP 的连接；
+`MATCH` 才是最终兜底。两者分工后，才同时得到：
+
+| 判据 | mihomo 侧的落地 |
+|---|---|
+| **A · 不泄露** | 所有 `behavior: ipcidr` 的引用都带 `no-resolve` |
+| **B · 分流不坏** | `MATCH` 前保留域名类国内直连集 `RULE-SET,cn,DIRECT` |
+
+**只满足 A，仍可能复刻 Surge / Egern 的事故；只满足 B，面④仍然开着。**
+
+### 4. 本仓现状：4 条 + 2 条，已经统一
+
+逐项核对现役 [`routing.yaml`](../../../clash/profiles/routing.yaml) 与
+[`lazy.yaml`](../../../clash/profiles/lazy.yaml)：
+
+| profile | provider | behavior / format | 现役规则 | 结果 |
+|---|---|---|---|:---:|
+| 分流版 | `geoip-private` | `ipcidr` / `mrs` | `RULE-SET,geoip-private,DIRECT,no-resolve` | ✅ |
+| 分流版 | `geoip-google` | `ipcidr` / `mrs` | `RULE-SET,geoip-google,Google,no-resolve` | ✅ |
+| 分流版 | `geoip-telegram` | `ipcidr` / `mrs` | `RULE-SET,geoip-telegram,Telegram,no-resolve` | ✅ |
+| 分流版 | `geoip-cn` | `ipcidr` / `mrs` | `RULE-SET,geoip-cn,DIRECT,no-resolve` | ✅ |
+| 懒人版 | `geoip-private` | `ipcidr` / `mrs` | `RULE-SET,geoip-private,DIRECT,no-resolve` | ✅ |
+| 懒人版 | `geoip-cn` | `ipcidr` / `mrs` | `RULE-SET,geoip-cn,DIRECT,no-resolve` | ✅ |
+
+数字口径是**每份 profile 内的规则行数**：分流版 4 条，懒人版 2 条；不是把同名 provider
+跨版本去重后的数量。此前的差异也要准确表述：分流版不是「4 条全缺」，而是
+`geoip-private` 已带、其余 **3 条缺**；懒人版 **2 条一直都带**。现在两版规则已统一为
+「凡 `geoip-*` / `ipcidr` 引用，全部带 `no-resolve`」。
+
+### 5. 判据固化：一层看名字，一层看真实语义
+
+本仓没有靠文档提醒维持现状，而是把缺口写进了两个门禁：
+
+1. [`check_structure.py`](../../tests/clash/check_structure.py) **第 ⑤ 项**：
+   遍历 `RULE-SET,geoip-*`，任一规则缺 `no-resolve` 就判负。它针对本仓命名约定，
+   能直接阻止「分流版又漏三条」这类漂移。
+2. [`check_clash_dns.py`](../../scripts/clash/check_clash_dns.py) **判据 10**：
+   判断 IP 类规则时以 provider 的 `behavior` 为第一依据；`behavior: ipcidr` 必须带，
+   `behavior: domain` 不该带，`behavior: classical` 则标成内容无法静态判定。
+   只有 provider 没声明 `behavior` 时，才退回 `geoip-` 名字前缀兜底。
+
+这两层不是重复劳动：第 ⑤ 项守本仓结构约定，判据 10 守实际匹配语义。
+当前实跑结果为：结构门禁四份 profile 全部通过；DNS 审计中分流版报告
+「4 条 IP 类规则全部带 `no-resolve`」，懒人版对应为 2 条，两版均为 `0 high`。
+
+但这里必须保留事故复盘最重要的边界：**这两道静态门禁只证明 A，不自动证明 B。**
+本仓目前没有 mihomo 侧的专用分流覆盖审计脚本；因此每次增删 `no-resolve`、替换 `cn`
+provider 或移动 `MATCH` 前规则时，还必须同时核对：
+
+- `cn` 仍是 `behavior: domain` 的国内域名集；
+- `RULE-SET,cn,DIRECT` 仍在 `MATCH,Proxy` 之前；
+- 用国内非 `.cn` 域名做分流验证，不能只测会被后缀兜底救活的样本。
+
+不能把「两道门禁全绿」再次误读成「配置一定可用」—— 这正是本文要跨内核保留下来的教训。
+
+## 三侧对照：语法不同，成对交付的机制相同
+
+| 内核 | 开关拼写与落点 | IP 侧示例 | 域名补偿必须落在 |
+|---|---|---|---|
+| Surge | 连字符 `no-resolve`，写在 IP 规则行尾 | `GEOIP,CN,DIRECT,no-resolve` | `FINAL` 前的国内域名规则集 |
+| Egern | 下划线 `no_resolve: true`，写在结构化 IP 规则对象内 | `- geoip: {match: CN, policy: DIRECT, no_resolve: true}` | `default` 前的国内域名 `rule_set` |
+| mihomo | 连字符 `no-resolve`，写在消费 provider 的 `RULE-SET` 行尾 | `RULE-SET,geoip-cn,DIRECT,no-resolve` | `MATCH` 前的 `RULE-SET,cn,DIRECT` |
+
+三侧共同的机制可以压成一句话：
+
+> **IP 规则不得为判定主动解析；关掉这条路以后，域名分流必须由真正的域名规则集接手。**
+
+因此评审任何一侧时，都不能只搜开关字符串。必须同时问：
+
+1. 这个开关是否落在内核真正读取的位置？
+2. 被关掉的「域名 → IP → 归属」路径，由哪份域名规则集补回？
+3. 审计是在检查结构，还是已经用能证伪的域名验证了最终去向？
 
 ---
 

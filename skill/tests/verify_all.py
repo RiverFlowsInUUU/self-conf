@@ -114,6 +114,7 @@ def build_gates():
         ('clash min 版一致', [PY, 'skill/tests/clash/check_min_pair.py'], {}),
         ('clash 脚本/静态对拍', [PY, 'skill/tests/clash/check_script_sync.py'], {}),
         ('clash 规则集生成物', [PY, 'skill/scripts/clash/build_rules.py', '--check'], {}),
+        ('clash 头注数字新鲜度', [PY, 'skill/tests/clash/check_header_numbers.py'], {}),
         ('clash 静态 profile 新鲜度', [PY, 'skill/scripts/clash/build_profiles.py', '--check'], {}),
     ]
     return gates

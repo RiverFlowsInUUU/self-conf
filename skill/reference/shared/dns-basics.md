@@ -1,6 +1,9 @@
 # DNS 基础：工作原理与泄露面
 
-> 由原 `surge/docs/01` 与 `02` 合并，内容与内核无关，两内核通用。
+> 由原 `surge/docs/01` 与 `02` 合并。
+> **原理部分（DNS 怎么工作、为什么会泄露）与内核无关** —— Surge / Egern / mihomo 三内核共用同一套推导；
+> **落地语法逐内核不同**：三内核并列对照见 §7，mihomo 侧的六个专属特点见 §8。
+> 判据脚本：Surge `check_surge_dns.py` · Egern `check_egern_dns.py` · mihomo `check_clash_dns.py`。
 
 ## DNS 是怎么工作的
 
@@ -91,7 +94,7 @@ DoH 端点通常写成 `https://dns.google/dns-query` —— **那是个域名�
 
 ### 5. Fake-IP 与 Real-IP
 
-Surge 默认让走代理的域名返回一个**假 IP**（`198.18.x.x` 段），好处是：
+三个内核都让走代理的域名返回一个**假 IP**（`198.18.x.x` 段），好处是：
 
 - 域名不需要在本地解析 —— 交给代理服务器远端解析，本地全程不产生查询；
 - 本地的 DNS 缓存被彻底绕过，污染无处下手。
@@ -102,29 +105,39 @@ Surge 默认让走代理的域名返回一个**假 IP**（`198.18.x.x` 段），
 - **NTP 时间同步**
 - **Apple 推送（APNs）与局域网设备发现**
 
-所以 Surge 提供 `always-real-ip`：把这些主机名排除在 Fake-IP 之外，DNS 直接返回真实地址。
+所以各内核都提供一份"跳过假 IP"的名单，但**键名与通配语法都不同**（§7）：
 
-> ⚠️ 但要注意：`always-real-ip` **只改变"返回真实 IP 还是假 IP"，不改变路由去向**。
-> 一个在 `always-real-ip` 里的域名，如果规则判它走代理，它依然走代理 ——
+| 内核 | 键 | 形态 |
+|:--|:--|:--|
+| Surge | `always-real-ip` | 逗号分隔的主机名通配，写在 `[General]` |
+| Egern | `real_ip_domains` | YAML 列表 |
+| mihomo | `dns.fake-ip-filter` | YAML 列表；`+.` 含本域与任意层子域，`*` / `*.` **只匹配一层** |
+
+> ⚠️ 但要注意：这份名单 **只改变"返回真实 IP 还是假 IP"，不改变路由去向**。
+> 一个在名单里的域名，如果规则判它走代理，它依然走代理 ——
 > 只是它的 IP 是真实的而已。（Egern 项目出现过这个误读。）
 
 ### 6. 接到本模板上
 
-Surge 的 DNS 泄露只有三条出口，本模板逐条堵：
+DNS 泄露的出口（以 Surge 为例是三条），本模板逐条堵：
 
 | 出口 | 怎么堵 |
 |---|---|
 | **引导解析**（端点是主机名） | 端点写 IP 字面量；`dns-server` 写裸 IP，绝不用 `system` |
-| **旁路设备**（忽略 Surge DNS 的设备发 `:53`） | `hijack-dns` 把查询接管回来 |
+| **旁路设备**（忽略本内核 DNS 的设备发 `:53`） | `hijack-dns` / `hijack_dns` / `tun.dns-hijack` 把查询接管回来 |
 | **规则触发解析**（IP 类规则不带 `no-resolve`） | 全部 IP 类规则带 `no-resolve`，含第三方规则集 |
 
 逐条判据见 [加固清单](hardening-checklist.md)。
 为什么泄露一定会落到"运营商"那一边，见 [本篇「DNS 为什么会泄露」](#dns-为什么会泄露)。
 
+> ⚠️ **出口清单不是三内核共用的**：mihomo 侧还多一条 **IPv6 面**（§8.4），
+> 且它的收口装置（TUN 劫持）挂在 `tun` 段而不是 DNS 段。三内核的完整对照见 §7。
+
 ## DNS 为什么会泄露
 
 > 五个真实案例，每个给出：**现象 → 机制 → 修法**。
 > 全部来自 Egern / Surge 两份配置的实测复盘，不是假设。
+> （**机制在三内核上同构** —— mihomo 侧的对应判据编号见文末汇总表。）
 
 ### 案例 1 · "我用的是国内加密 DNS，却泄露到中国电信"
 
@@ -144,10 +157,13 @@ Surge 的 DNS 泄露只有三条出口，本模板逐条堵：
 **机制**：**IP 类规则没带 `no-resolve`**。
 Surge 的 `GEOIP` / `IP-CIDR` 类规则需要一个**已解析的地址**才能判定。
 如果查到某条 IP 规则时地址还没解析，Surge 会**暂停规则求值、先做一次本地解析**。
+（mihomo 同构：走到 `RULE-SET,geoip-*,…` 这类 `behavior: ipcidr` 的规则时同样会为判定而解析。）
 
 **修法**：给所有 IP 类规则加 `no-resolve`。
 ⚠️ 但这条改动有代价 —— **它会同时关掉"靠解析判 IP 归属"这条直连路径**（见案例 5）。
 所以补 `no-resolve` 的**同一时刻**必须确认国内域名有域名类规则集接住。
+（mihomo 侧这道防线由 `check_clash_dns.py` 判据 **⑩** 守，且判"是不是 IP 类"的第一依据是
+provider 的 `behavior`，不是 `geoip-` 名字前缀。）
 
 ### 案例 3 · 第三方规则集不受 profile 洁净度影响
 
@@ -160,6 +176,10 @@ Surge 的 `GEOIP` / `IP-CIDR` 类规则需要一个**已解析的地址**才能�
 
 **修法**：换用上游提供的 `No_Resolve` 变体，或把整个规则集下载下来**数**一遍。
 这正是 `skill/scripts/surge/audit_ruleset_content.py` 存在的原因 —— 这个缺陷**无法从 profile 里看出来**。
+
+（mihomo 侧的同一条面：远程集里**内嵌的裸 IP 条目**不在 profile 里，本地静态门禁看不见。
+`check_clash_dns.py` 判据 ⑩ 对 `behavior: classical` 的集**明确判不了**，只给 LOW 提示 ——
+必须拉下来数。本仓自托管的 `rules/*.list` 实测 **0 条 IP 条目**，所以那一侧天然没有这个面。）
 
 ### 案例 4 · "profile 自己需要的域名，我一个都没接住"
 
@@ -205,14 +225,238 @@ Surge 的 `GEOIP` / `IP-CIDR` 类规则需要一个**已解析的地址**才能�
 > ⇒ 所以本仓库多了一个脚本：`audit_routing_coverage.py` —— 拿真实域名走一遍，
 > 而且国内探针**刻意混入非 `.cn` 域名**（只靠 `DOMAIN-SUFFIX,cn` 兜住的配置会在这里暴露）。
 
-### 三个案例的共同点
+### 五个案例的共同点（三内核判据对照）
 
-| 案例 | 缺陷在哪 | 能不能静态审出来 |
-|---|---|:---:|
-| 1 · 透明重定向 | 链路上 | ❌ 只能靠"不产生明文"来规避 |
-| 2 · 规则缺 no-resolve | profile 里 | ✅ `check_surge_dns.py` 第 12 项 |
-| 3 · 规则集缺 no-resolve | **别人仓库里** | ✅ 但必须**下载下来数** |
-| 4 · 配置自身依赖的域名 | profile + 规则集 | ⚠️ 部分可判（远程内容未知） |
-| 5 · 分流覆盖 | 规则集**内容** | ✅ 必须**拿真实域名走一遍** |
+| 案例 | 缺陷在哪 | 能不能静态审出来 | Surge | Egern | **mihomo** |
+|---|---|:---:|:--|:--|:--|
+| 1 · 透明重定向 | 链路上 | ❌ 只能靠"不产生明文"来规避 | — | — | — |
+| 2 · 规则缺 no-resolve | profile 里 | ✅ | `check_surge_dns.py` 第 12 项 | `check_egern_dns.py` | **判据 ⑩** |
+| 3 · 规则集缺 no-resolve | **别人仓库里** | ✅ 但必须**下载下来数** | `audit_ruleset_content.py` | `audit_ruleset_noresolve.py` | ⚠️ **判不了**，只给 LOW 提示（面⑤） |
+| 4 · 配置自身依赖的域名 | profile + 规则集 | ⚠️ 部分可判（远程内容未知） | 第 11 项 | 对应项 | 判据 **④**（节点域名） |
+| 5 · 分流覆盖 | 规则集**内容** | ✅ 必须**拿真实域名走一遍** | `audit_routing_coverage.py` | 同左 | 同思路（差集 + 人工分类） |
 
 ⇒ 结论：**判据必须落到"实际会发生什么"上，而不是"配置里写了什么"。**
+
+---
+
+## 7 · 三内核语法对照
+
+> 原理共用，**键名一律不能照抄**。目标可以照搬为「关闭 IPv6 / 端点钉 IP / 劫持 :53」，
+> 但把 Surge 的 `ipv6-vif` 或 mihomo 的 `dns.ipv6` 搬到另一个内核是**无意义的**（甚至被判负）。
+
+| 语义 | Surge | Egern | mihomo（clash） |
+|:--|:--|:--|:--|
+| 接管 DNS 的开关 | `[General]` 里写全套 DNS 键即接管 | `dns:` 段 | **`dns.enable: true` 必须显式给**（缺省是不接管） |
+| 主解析器（加密） | `encrypted-dns-server` | `dns.upstreams.<名>` | `dns.nameserver`（＋可选 `fallback`） |
+| 引导 / 兜底解析器 | `dns-server`（裸 IP，**绝不写 `system`**） | `dns.bootstrap` | `dns.default-nameserver`（**必须纯 IP**） |
+| 节点域名专用解析器 | 无需（走本地路径） | `dns.proxy_nameservers` ⚠️ 会绕过 `forward` | **`dns.proxy-server-nameserver`**（鸡生蛋层） |
+| 直连域名专用解析器 | — | 由 `forward` 分流到 `Domestic-DNS` | **`dns.direct-nameserver`** |
+| 按域换解析器 | — | `dns.forward`（`proxy_rule_set` → `value`） | **`dns.nameserver-policy`**（`rule-set:xxx`） |
+| 假 IP 模式 | 默认 Fake-IP | 默认 Fake-IP | **`enhanced-mode: fake-ip` 必须显式给** |
+| 跳过假 IP 的名单 | `always-real-ip` | `real_ip_domains` | **`dns.fake-ip-filter`**（`+.` ≠ `*.`） |
+| 旁路设备 :53 收口 | `hijack-dns = 8.8.8.8:53, …`（**列举式**） | `hijack_dns: ['*']` | **`tun.dns-hijack: [any:53]`** ⭐ 覆盖整个地址空间 |
+| 是否走路由规则 | `encrypted-dns-follow-outbound-mode = false` | — | **`respect-rules: true`**（反向：要它**跟着**规则走） |
+| 关闭 IPv6 | `ipv6 = false` + `ipv6-vif = disable` | `ipv6: false` | **顶层 `ipv6: false` + `dns.ipv6: false`（两处）** |
+| 地理判定依赖 | `GeoLite2-Country.mmdb` | `Country.mmdb` + `GeoLite2-ASN.mmdb` | **无 dat** —— 全部远程 `.mrs` |
+| 判据脚本 | `skill/scripts/surge/check_surge_dns.py` | `skill/scripts/egern/check_egern_dns.py` | `skill/scripts/clash/check_clash_dns.py` |
+
+⚠️ 三处最容易照抄错的地方：
+
+1. **`hijack-dns` / `dns-hijack` 不是同一种东西**。Surge 是**列举解析器地址**，mihomo 是
+   **TUN 层劫持**且 `any:53` 才叫收口。判据也不是「列了几条」——:53 的地址空间是无限的，
+   逐个列举**永远列不全**。
+2. **`respect-rules` 的方向与 Surge 相反**。Surge 显式关掉「解析跟着出站走」；mihomo 打开它
+   是为了让发往境外 DoH 的查询按规则经代理发出（否则国内线路直连境外 :443 常被阻断）。
+   ⚠️ 代价：打开后内核**强制要求**同时给 `proxy-server-nameserver`，缺了直接报错。
+3. **IPv6 的关闭处数不同**：Surge 两处（`ipv6` + `ipv6-vif`）、Egern 一处（`ipv6`）、
+   mihomo 两处（顶层 `ipv6` + `dns.ipv6`）—— 但**是不同语义的两处**，不是同一处的两种写法。
+
+## 8 · mihomo 的六个专属特点
+
+> 以下六条是 mihomo 侧**独有或与另两内核结构不同**的机制。
+> 逐键行为与边界继续看 [`../clash/profile-anatomy.md`](../clash/profile-anatomy.md) §13；
+> 加固理由见 [`../clash/hardening-template.md`](../clash/hardening-template.md)；
+> 泄露面定位流程见 [`../clash/leak-localization.md`](../clash/leak-localization.md)。
+> 以下数字全部由 `yaml.safe_load` 解析 `clash/profiles/*.yaml` 现算（2026-10-08 复核）。
+
+### 8.1 四个解析器键「各管一段路」，别混用
+
+这是 mihomo 与另两内核最大的结构差异：**解析器不是一个，而是一组，每个只管一段路**。
+
+| 键 | 管哪条路 | 本仓取值（两份 profile 各 2 个端点） |
+|:--|:--|:--|
+| `default-nameserver` | **引导**：只解析其余 DNS 端点**自己的域名** | `223.5.5.5` · `119.29.29.29`（**纯 IP**） |
+| `proxy-server-nameserver` | 只解析**代理节点域名**（连节点前还没有代理可用 ⇒ 鸡生蛋） | 国内 DoH 端点 |
+| `direct-nameserver` | 只解析 **`DIRECT` 出站**的域名 —— 直连流量也不碰系统 DNS | 国内 DoH 端点 |
+| `nameserver` | **主解析器**：需要本地解析出真实 IP 的域名 | `https://1.1.1.1/dns-query` · `https://8.8.8.8/dns-query` |
+
+（另有 `fallback` + `fallback-filter`：主解析器失败时的退路，**仅分流版有**，
+懒人版刻意不配 —— 极简单出口不做污染判定这一层。）
+
+⚠️ **`default-nameserver` 必须纯 IP**（内核做合法性检查，且**不允许为空**）。
+它本身就是"引导"用的：写成域名 ⇒ 「解析解析器」又需要一次解析，形成鸡生蛋。
+且这一层**必然是明文 UDP:53**（它不能再依赖任何加密解析器，否则成环）——
+所以正确的姿势不是"给它加密"，而是**让别的层都不需要引导**（端点全部写 IP 字面量）。
+
+⇒ 判据（判据 ②/③/④）：`default-nameserver` 全 IP；`nameserver` / `fallback` 必须
+**「IP 字面量 + 加密 scheme」两者同时满足**。只判前者会把 `nameserver: 8.8.8.8`
+这种最坏写法判成通过 —— 那是**每一笔查询都是明文 UDP:53**，比引导面严重得多。
+
+### 8.2 `enhanced-mode: fake-ip` + `fake-ip-range`
+
+```yaml
+dns:
+  enhanced-mode: fake-ip
+  fake-ip-range: 198.18.0.1/16
+```
+
+代理域名只回假 IP，**真实解析在落地侧完成** —— 本地不留答案。
+
+`198.18.0.0/15` 是 **RFC 6815 保留段**（198.18.0.0 ~ 198.19.255.255），mihomo 默认与官方示例都用这段。
+
+> ⚠️ **跨内核的"常识冲突"**：这个地址曾被 **Surge 侧的凭据扫描判成「真实 IP」** ——
+> 那个内核不认识这个段。已加入 `DOC_NETS` 白名单（见 [`../../SKILL.md`](../../SKILL.md) §4）。
+> 整合仓必须处理这类分歧：一个内核的合法保留段，是另一个内核眼里的可疑 IP。
+
+⭐ **判据不是"基地址对不对"，而是"整段是否被包含"**（判据 ⑤）：`198.18.0.1/8` 这种写法
+会一路覆盖到 198.255.x.x 的**真实地址** —— 应用会拿着"假 IP"去连真实网络。
+
+⚠️ **fake-ip 模式下有一个必踩的坑**：`withFakeIP` 中间件对 A/AAAA **直接返回假 IP**，
+请求根本走不到 `nameserver-policy`。所以**广告集必须在 `fake-ip-filter` 里再列一遍**
+（判据 ⑧：两处不一致 ⇒ 有一半名字拿不到空回答，且不报错）。
+
+### 8.3 `nameserver-policy` 的键语法：用**单名**，不用逗号多值
+
+```yaml
+nameserver-policy:
+  "rule-set:AWAvenue-Ads": rcode://success      # 广告 → 空回答
+  "rule-set:Jinx-Ads": rcode://success
+  "rule-set:private":                            # 私有域 → 国内 DoH
+    - https://doh.18bit.cn/dns-query
+  "rule-set:cn":                                 # 国内域名 → 国内 DoH
+    - https://doh.18bit.cn/dns-query
+```
+
+✅ **已确认并统一（2026-10-07）**：键用**单名**形式（本仓 4 条 policy，两份 profile 一致）。
+
+依据：**官方文档的示例只有单名**（`'rule-set:cn'`、`geosite:xxx`），
+**逗号分隔多值没有任何官方依据**。此前分流版写 `rule-set:private,cn`、
+懒人版写 `geosite:private,cn`，两版既不一致也无据可依；拆成两条后语义明确，
+且统一用 `rule-set:` 前缀（本仓规则集都是 rule-provider，`geosite:` 无对应物，
+写了反而会引入 dat 依赖 —— 见 §8.5）。
+
+另外两条语义要点：
+
+- **顺序即匹配顺序**（YAML mapping 在 Python 3.7+ 保持插入顺序，而这个顺序**就是 mihomo 的匹配顺序**）
+  ⇒ 广告项**必须排在 `rule-set:private` / `rule-set:cn` 之前**（判据 ⑨）；
+- **`policy` 优先于 `nameserver` / `fallback`**，且引用了不存在的 provider 时该条**静默消失**
+  （判据 ⑧ 查死引用：不只是广告项，`rule-set:cn` 死掉 ⇒ 国内域名改用境外主解析器）。
+
+### 8.4 IPv6 关**两处**，不是一处
+
+```yaml
+ipv6: false          # 顶层：内核不处理 IPv6 流量本身
+dns:
+  ipv6: false        # dns 段：AAAA 查询直接回空应答，不往外发
+```
+
+**只关一处会漏**，而且两种漏法不同：
+
+- 只关顶层 ⇒ DNS 仍在应答 `AAAA`，应用拿到真实地址后尝试建连，行为取决于系统栈；
+- **只关 `dns.ipv6` ⇒ `AAAA` 不回，但 IPv6 通路还在，本机真实 IPv6 可能绕过 TUN 直接出网**
+  ⇒ 站点测到的出口 IP 与节点不符。
+
+⚠️ 判据用 `is not False`，**键缺失也算不过**（写成 `ipv6: no` / `ipv6: "false"` 同样判负 ——
+必须是布尔真值）。这是 mihomo 与另两内核的结构差异：Surge 是 `ipv6` + `ipv6-vif`，
+Egern 只要 `ipv6`。
+
+⭐ **这条面在 Surge / Egern 侧没有对应物**，是 mihomo 特有的第六个泄露面（③′）。
+它**不走 :53**，所以抓包只抓 53 抓不到它。定位与收口见
+[`../clash/leak-localization.md`](../clash/leak-localization.md) §6。
+
+### 8.5 零 dat 依赖：用 `.mrs`，不用 `geosite.dat` / `geoip.dat`
+
+本仓 mihomo 侧**不用任何 dat 数据库** —— 分流版 20 份 `.mrs` + 5 份 `.yaml` 全部是远程集文件。
+
+| | 原生 `GEOSITE` / `GEOIP` | 远程 `.mrs`（本仓） |
+|:--|:--|:--|
+| 依赖 | `geosite.dat` / `geoip.dat` + 顶层 `geox-url` | 只依赖一次 HTTP 拉取 |
+| 落盘 | 无 | ✅ `path` 落盘，离线可用 |
+| 体量 | 数据库全量加载 | 按需、zstd 压缩 |
+
+⚠️ **这不排斥 `.mrs`** —— `geoip-private` / `geoip-cn` 是 MetaCubeX 的**独立远程集文件**，
+与 dat 数据库无关，那正是本仓想要的形态。判据 **⑪ 只拦 dat，不拦 mrs**
+（35 条坏样例注入测试专门验过这条不误伤）。
+
+判据 ⑪ 拦的四类东西：顶层 `geox-url` / `geo-auto-update` / `geo-update-interval` ·
+规则里的原生 `GEOSITE` / `GEOIP` · `nameserver-policy` 键写 `geosite:` ·
+provider 的 `url` / `path` 以 `.dat` 结尾。
+
+> ⚠️ **待确认**：`geodata-mode` / `geodata-loader` 是否同属此类，脚本未判。
+
+### 8.6 TUN 收口：`dns-hijack`，且只有 `any:53` 才叫收口
+
+mihomo 的 :53 劫持挂在 **`tun` 段**，不在 `dns` 段：
+
+```yaml
+tun:
+  enable: true
+  stack: mips
+  dns-hijack:
+    - any:53
+  auto-route: true
+  auto-detect-interface: true
+  strict-route: true
+```
+
+⭐ **判据不是「列了几条」，而是「是否覆盖 :53 的整个地址空间」**：
+:53 的地址空间是无限的，逐个列举**永远不可能列全**（Surge 侧 `check_surge_dns.py` 第 3 项
+踩过同一个坑：按条数判负是错的）。只有 `any:53` / `0.0.0.0:53` 才叫收口；
+只列了具体解析器 ⇒ MEDIUM「列不全就漏」。
+
+另外两个开关不能少：**`auto-route`**（没有它出站流量根本没进 TUN）与
+**`strict-route`**（没有它仍有流量从物理网卡绕出去，锁不死绕行）。
+
+⚠️ **形态差异**：`clash/override/*.js` 的输出**不该有** `tun` 段 —— 客户端（Mihomo Party /
+Clash Verge）自己管 TUN，脚本只覆写策略组与规则。故审计时要带 `--override`，否则判据 ⑦ 会判负。
+
+⚠️ **已知取舍**：`any:53` **不写协议前缀时默认 `udp://`** ⇒ 收的是 **UDP**:53。
+要把 TCP:53 也收进来需另加一条 `tcp://any:53`（本仓**未加**，判据 ⑦ 给 LOW 提示）。
+理由：明文 TCP 查询在现代客户端里罕见。
+
+### 8.7 对应判据脚本：`check_clash_dns.py`
+
+```bash
+python skill/scripts/clash/check_clash_dns.py clash/profiles/lazy.yaml clash/profiles/routing.yaml
+python skill/scripts/clash/check_clash_dns.py clash/profiles/routing.yaml --strict   # medium 也算失败
+python skill/scripts/clash/check_clash_dns.py clash/profiles/routing.yaml --quiet    # 只打印汇总
+python skill/scripts/clash/check_clash_dns.py override_out.yaml --override           # 覆写脚本输出形态
+```
+
+**14 项判据**，与泄露面一一对应：判据 2/3/4（面① 引导）· 3/4（面② 回退链）·
+**7（面③ 旁路设备：dns-hijack 覆盖整个 :53 + strict-route）** · **10（面④ 规则判定）** ·
+10/12（面⑤ 远程集内容）· **6（面③′ IPv6 两处）** · 11（零 dat）· 8/9（广告拦截双条件与顺序）。
+
+⭐ **判别力有实测背书**：35 条坏样例注入 **35/35 全部命中预期**，对照组（两份 profile 原样）均为
+exit 0 · 0 high。本仓纪律要求每条判据**真的会判负** —— 只让「好配置通过」证明不了判别力。
+（坏样例写在仓库外的临时副本上，跑完即删，未改动任何被审文件。）
+
+与另两内核脚本的两个**对齐点**：
+
+- **豁免写在被审对象里**（`# audit-waive: <判据号> <理由>`），不写在审计器里 ——
+  写在审计器里等于判据被永久削弱；写在 profile 里则每次豁免都留痕、可 grep、可复核；
+- **判据是实测推导而非字符串匹配**：端点是否 IP 字面量 / 是否加密 scheme /
+  provider 的 `behavior` / `fake-ip-range` 是否落在 RFC 6815 段 / `dns-hijack` 是否覆盖整个 :53。
+
+⚠️ **边界**：它审的是**防 DNS 泄露语义**，不做网络探测（URL 可达性归
+`check_remote_urls.py`）、不审结构（归 `check_structure.py` / `check_min_pair.py`）。
+**审计通过 ≠ 配置可用** —— 这条是姊妹仓付出多次事故换来的结论。
+
+---
+
+相关：[`hardening-checklist.md`](hardening-checklist.md) · [`no-resolve-pairing.md`](no-resolve-pairing.md) ·
+[`../clash/profile-anatomy.md`](../clash/profile-anatomy.md) §13 ·
+[`../clash/hardening-template.md`](../clash/hardening-template.md) ·
+[`../clash/leak-localization.md`](../clash/leak-localization.md) ·
+[`../clash/ruleset-weight.md`](../clash/ruleset-weight.md) ·
+[`cross-kernel-diff.md`](cross-kernel-diff.md) · [`ops.md`](ops.md)
