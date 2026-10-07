@@ -1,6 +1,17 @@
+# Python
 __pycache__/
+*.py[cod]
 *.pyc
 *.pyo
+
+# OS 残留
 .DS_Store
+Thumbs.db
+desktop.ini
+
+# 编辑器 / 临时
 .idea/
 .vscode/
+*.bak
+*.tmp
+*.log

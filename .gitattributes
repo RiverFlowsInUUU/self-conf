@@ -1,0 +1,45 @@
+# ─────────────────────────────────────────────────────────────
+# 换设备一致性的根：让「磁盘上的字节」= 「提交里的字节」= 「GitHub raw 的字节」
+#
+# 为什么必须有这个文件：Windows 版 Git 安装器会把 `core.autocrlf=true` 写到**系统级**
+# 配置里（`git config --system core.autocrlf` 可查）。它让 checkout 时把 LF 换成 CRLF，
+# 于是同一个 commit 在 Windows 上是 CRLF、在 Linux / macOS 上是 LF ——
+# 换一台机器，磁盘内容就变了，"线上线下逐字一致"在字节层面无法成立，
+# 任何按 `\n` 写的正则也可能在另一台机器上失配（本项目历史上真实踩过一次：
+# 剥 YAML 头的正则按 LF 写，CRLF 工作区上失配，源头部整段漏进正文）。
+#
+# `eol=lf` 的优先级高于 `core.autocrlf`，写进仓就等于**每台机器自动生效**，
+# 不需要任何人去改自己机器的 git 配置。本项目的配置与脚本都源自 macOS / iOS 侧，
+# 全部按 LF 消费，没有任何文件需要 CRLF（仓内 `.bat` / `.cmd` / `.ps1` 数量为 0）。
+#
+# 新增文件类型时若它必须保持原始字节（新的二进制资产），在下面加一行 `binary`。
+# ─────────────────────────────────────────────────────────────
+
+* text=auto eol=lf
+
+# 二进制资产：禁止任何换行改写
+*.png   binary
+*.jpg   binary
+*.jpeg  binary
+*.gif   binary
+*.ico   binary
+*.icns  binary
+*.svg   text eol=lf
+*.mmdb  binary
+*.pcap  binary
+*.p12   binary
+*.pem   binary
+
+# 明确列出常见文本类型，避免 `text=auto` 因内容启发式误判成二进制
+*.conf  text eol=lf
+*.yaml  text eol=lf
+*.yml   text eol=lf
+*.list  text eol=lf
+*.txt   text eol=lf
+*.md    text eol=lf
+*.py    text eol=lf
+*.sh    text eol=lf
+*.js    text eol=lf
+*.json  text eol=lf
+*.html  text eol=lf
+.gitattributes text eol=lf
