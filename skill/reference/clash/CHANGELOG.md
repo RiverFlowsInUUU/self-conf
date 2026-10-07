@@ -248,11 +248,11 @@
   （Node-A 归 Proxy、Node-B 归 AI）。
 - 🖼️ **策略组图标统一引用姊妹仓的 `icons/`** —— 27 处（分流 24 + 懒人 3）从
   Qure / lobe-icons 的外链改为 [Self-Configuration · icons](https://github.com/RiverFlowsInUUU/self-conf/tree/main/icons)
-  （29 个图标，与两仓组名一一对应）。换的三个原因：
+  （29 个图标，与各内核组名一一对应）。换的三个原因：
   ① 原先外链里 `UnitedStates.png` / `WorldMap.png` 两个文件名在 Qure 目录**不存在**（实测 404，
   面板上显示破图），正确名是 `United_States.png` / `World_Map.png`；
   ② lobe-icons 没有 `grok` / `gemini-color` / `claude-color` 这类，隔壁仓现成；
-  ③ 两仓图标同源，风格统一，且省掉一份外部依赖。
+  ③ 各内核图标同源，风格统一，且省掉一份外部依赖。
   ⚠️ 教训：外部图标 URL 必须逐个 HEAD 实测 —— **404 在面板上表现为破图，语法校验发现不了**。
 - 📌 **`proxies` / `proxy-providers` 提到配置文件最顶部** —— 两份配置统一为
   `proxies → proxy-providers → proxy-groups → rule-providers → rules → dns → tun`：

@@ -467,7 +467,7 @@ for method in ("HEAD", "GET"):
 
 ### 为什么需要（合并项目最直接的收益）
 
-整合前，`Self-Configuration` 与 `Clash` 两仓**各存一份相同内容**的规则集，
+此前三个内核**各存一份相同内容**的规则集，
 一份 `.list`（Surge / Egern 原生）、一份 `.yaml`（mihomo payload）。内容逐条相同
 （emby 4 / apple_system 18 / AI 272），只是格式不同 —— **双份维护，改一处忘一处就漂移**。
 
@@ -837,7 +837,7 @@ CI 偶发 3（共享 runner IP 被限流）→ 重跑即可。
 | v2 | 改为 **CWD 优先** + 逐级向上探测（找同时含 `profiles/` 与 `override/` 的目录）| **CI 暴露**：Linux 上报「缺文件」，本地全绿（2026-09-29）|
 | v1 | mihomo 侧门禁未纳入总入口，要单独跑 | 整合前 |
 | v2 | 追加 `clash 结构` / `clash min 版一致` / `clash 脚本/静态对拍` / `clash 规则集生成物` 四道 | 整合后「三内核一视同仁」（2026-10-07）|
-| v1 | 两仓各存一份 `.list` 与 `.yaml` | 整合前：双份维护，改一处忘一处就漂移 |
+| v1 | 各内核各存一份 `.list` 与 `.yaml` | 此前：双份维护，改一处忘一处就漂移 |
 | v2 | `.list` 为唯一真源，`build_rules.py` 生成 `.yaml` | **单一真源，物理上不可能漂移** |
 | v1 | `check_remote_urls.py` 只做文本扫描 | 初版 |
 | v2 | 增加 `collect_from_scripts()` —— **真的跑一遍脚本**收集 | 脚本里 URL 是拼接出来的，文本扫不到 |

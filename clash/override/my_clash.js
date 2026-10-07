@@ -48,7 +48,7 @@ function main(config) {
   const NOJUNK = "剩余|流量|到期|过期|官网|订阅|重置|续费|Traffic|Expire|GB";
 
   // 倍率解析：从节点名里抓出「低倍率」数字（0.01 / 0.1 / 0.5 …）。
-  //  判据沿用姊妹仓 Self-Configuration 的 policy-priority 正则：必须以 `0.` 开头、
+  //  倍率判据：必须以 `0.` 开头、
   //  末位非零、且前面不能紧跟数字或小数点 —— 这样「0.1倍 / 0.1倍率 / 0.1x / 0.5」都能抓到，
   //  而「香港 01」「1.5GB」「剩余流量」不会误伤。抓不到就返回 null（视为正常倍率）。
   function rateOf(name) {
@@ -73,7 +73,7 @@ function main(config) {
   const HC_URL = "https://www.gstatic.com/generate_204";
   const HC_INT = 300;
 
-  // 图标基址（本仓库自带 icons/，与姊妹仓 Self-Configuration 同源）
+  // 图标基址（本仓自带 icons/，三内核共用同一份）
   const ICON = "https://raw.githubusercontent.com/RiverFlowsInUUU/self-conf/main/icons/";
   // 本仓 raw 基址（自托管清单 rules/ 用）
   const RAW = "https://raw.githubusercontent.com/RiverFlowsInUUU/self-conf/main/";
@@ -356,7 +356,7 @@ function main(config) {
     interval: 86400,
   };
 
-  // 本仓自托管清单（上游无对应集，或属自用枚举）—— 与姊妹仓 Self-Configuration
+  // 本仓自托管清单（上游无对应集，或属自用枚举）
   // 同构，但**自托管不跨项目引用**，改内容只需动本仓 rules/ 目录。
   rp["emby"] = {
     type: "http",
@@ -433,7 +433,7 @@ function main(config) {
     enable: true,
     // IPv6 显式关闭：不向客户端返回 AAAA 记录，双栈站点自动回落 IPv4。
     // 否则本机真实 IPv6 会绕过 TUN 直接出网（站点测到的出口 IP 与节点不符）。
-    // 与姊妹仓 Self-Configuration（Surge / Egern 双内核同为 ipv6 = false）对齐。
+    // 三个内核均显式关闭 IPv6。
     ipv6: false,
     "enhanced-mode": "fake-ip",
     "fake-ip-range": "198.18.0.1/16",

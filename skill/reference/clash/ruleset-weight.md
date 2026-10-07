@@ -468,7 +468,7 @@ https://raw.githubusercontent.com/RiverFlowsInUUU/Jinx/main/mihomo-ads.yaml
 
 这是本仓**明确接受**的代价：
 
-> ⚠️ **姊妹仓（原仓 `Self-Configuration` / `Clash`）更新后，本仓不会自动跟随。**
+> ⚠️ **外部仓库的同类资产更新后，本仓不会自动跟随** —— 自托管的代价是人工同步。
 > 需要人工同步。
 
 具体地：

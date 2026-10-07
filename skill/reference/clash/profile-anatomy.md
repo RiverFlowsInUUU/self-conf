@@ -674,7 +674,7 @@ python skill/scripts/clash/build_rules.py --check   # CI 用：过期即判负
 ```
 
 > ❌ **不许手工编辑 `rules/*.yaml`** —— 它们是生成物，改了会被下次生成覆盖。
-> 整合前两仓各存一份（emby 4 / apple_system 18 / AI 272 条，逐条相同），双份维护
+> 此前各内核各存一份（emby 4 / apple_system 18 / AI 272 条，逐条相同），双份维护
 > ⇒ 单一真源后**物理上不可能漂移**。这是三仓合并最直接的收益之一。
 
 三份都是**纯域名集、零 IP 条目** ⇒ 引用方**不写**规则级 `no-resolve`（§12）。
@@ -1225,7 +1225,7 @@ python skill/tests/clash/check_secrets.py        # 占位符纪律
 
 ### 18.6 与姊妹仓的边界
 
-- ❌ 不改 `Self-Configuration` 与 `Clash` 两个原仓；
+- ❌ 不为了本仓测试变绿去改其他仓库；
 - ⚠️ `rules/` 是三内核共享真源，改 `.list` 会影响 Surge / Egern 两侧；
 - ⚠️ 结构性调整需先补判据，不靠"再跑一遍"。
 
