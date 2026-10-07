@@ -2,100 +2,90 @@
 
 <img src="https://raw.githubusercontent.com/RiverFlowsInUUU/self-conf/main/icons/Surge.png" height="56" alt="Surge">&nbsp;&nbsp;<img src="https://raw.githubusercontent.com/RiverFlowsInUUU/self-conf/main/icons/Egern.png" height="56" alt="Egern">&nbsp;&nbsp;<img src="https://raw.githubusercontent.com/RiverFlowsInUUU/self-conf/main/icons/Proxy.png" height="56" alt="mihomo">
 
-# self-conf
+# 三内核配置模板
 
-三内核配置模板 · 殊途同归 · 久用如一
+殊途同归 · 久用如一
 
-[![Surge](https://img.shields.io/badge/Surge-iOS%20%7C%20macOS-1f6feb?style=flat-square)](#-两全其美--皆合心意)
-[![Egern](https://img.shields.io/badge/Egern-iOS%20%7C%20macOS-0969da?style=flat-square)](#-两全其美--皆合心意)
-[![mihomo](https://img.shields.io/badge/mihomo-Clash%20Meta-8250df?style=flat-square)](#-两全其美--皆合心意)
-[![Groups](https://img.shields.io/badge/Groups-23%20%7C%2023%20%7C%2022-8250df?style=flat-square)](#-内核并列)
-[![Rules](https://img.shields.io/badge/Rules-26%20%7C%2026%20%7C%2027-dc3545?style=flat-square)](#-共享与分歧)
-[![DNS](https://img.shields.io/badge/DNS-Zero%20Leak-2ea043?style=flat-square)](#-共享与分歧)
+[![Surge](https://img.shields.io/badge/Surge-iOS%20%7C%20macOS-1f6feb?style=flat-square)](#-取用)
+[![Egern](https://img.shields.io/badge/Egern-iOS%20%7C%20macOS-0969da?style=flat-square)](#-取用)
+[![mihomo](https://img.shields.io/badge/mihomo-Clash%20Meta-8250df?style=flat-square)](#-取用)
+[![Groups](https://img.shields.io/badge/Groups-23%20%7C%2023%20%7C%2025-8250df?style=flat-square)](#-井然有序)
+[![Rules](https://img.shields.io/badge/Rules-26%20%7C%2026%20%7C%2027-dc3545?style=flat-square)](#-井然有序)
+[![DNS](https://img.shields.io/badge/DNS-Zero%20Leak-2ea043?style=flat-square)](#-隐私至上--无-dns-泄露)
 [![License](https://img.shields.io/badge/License-MIT-dfb317?style=flat-square)](LICENSE)
 [![CI](https://github.com/RiverFlowsInUUU/self-conf/actions/workflows/ci.yml/badge.svg)](https://github.com/RiverFlowsInUUU/self-conf/actions/workflows/ci.yml)
 
 </div>
 
-> ⚗️ **实验性整合项目** —— 把 `Self-Configuration`（Surge / Egern）与 `Clash`（mihomo）
-> 两个仓合并到一处，验证「三内核共用一份资产」是否真的成立。
-> **两个原仓保持不变**，本仓随便折腾；折腾不成也不影响它们。
+> 🤖 **AI agent 请从这里开始** → [`skill/SKILL.md`](skill/SKILL.md)：动手前的顺序，和三内核各自的判据。
 
-> 🤖 **AI agent 请从这里开始** → [`skill/SKILL.md`](skill/SKILL.md)
+## 📥 取用
 
-## 📥 两全其美 · 皆合心意
-
-<sub>标题沿用原仓以复用既有文档链接；此处实为**三内核**（Surge / Egern / mihomo）。</sub>
-
-| <div align="center">内核</div> | 🪶 懒人版 · 至简 | 🧭 分流版 · 可控 |
+| <div align="center">内核</div> | 🪶 懒人版 · 至简 · 省心 | 🧭 分流版 · 可控 · 随心 |
 |:--|:--|:--|
-| **Surge** | [`surge/profiles/lazy.min.conf`](surge/profiles/lazy.min.conf) | [`surge/profiles/routing.min.conf`](surge/profiles/routing.min.conf) |
-| **Egern** | [`egern/profiles/lazy.min.yaml`](egern/profiles/lazy.min.yaml) | [`egern/profiles/routing.min.yaml`](egern/profiles/routing.min.yaml) |
-| **mihomo**<br><sub>静态</sub> | [`clash/profiles/lazy.min.yaml`](clash/profiles/lazy.min.yaml) | [`clash/profiles/routing.min.yaml`](clash/profiles/routing.min.yaml) |
-| **mihomo**<br><sub>覆写脚本</sub> | [`clash/override/my_clash_lazy.js`](clash/override/my_clash_lazy.js) | [`clash/override/my_clash.js`](clash/override/my_clash.js) |
+| <img src="https://raw.githubusercontent.com/RiverFlowsInUUU/self-conf/main/icons/Surge-Icon.png" height="20" alt=""> **Surge** | [`lazy.min.conf`](surge/profiles/lazy.min.conf) | [`routing.min.conf`](surge/profiles/routing.min.conf) |
+| <img src="https://raw.githubusercontent.com/RiverFlowsInUUU/self-conf/main/icons/Egern-Icon.png" height="20" alt=""> **Egern** | [`lazy.min.yaml`](egern/profiles/lazy.min.yaml) | [`routing.min.yaml`](egern/profiles/routing.min.yaml) |
+| **mihomo**<br><sub>静态</sub> | [`lazy.min.yaml`](clash/profiles/lazy.min.yaml) | [`routing.min.yaml`](clash/profiles/routing.min.yaml) |
+| **mihomo**<br><sub>覆写脚本</sub> | [`my_clash_lazy.js`](clash/override/my_clash_lazy.js) | [`my_clash.js`](clash/override/my_clash.js) |
 
 mihomo 多一种形态：覆写脚本可挂到任意订阅上，输出与静态文件逐位一致。
 
-## 🧭 内核并列
+---
 
-三个内核各占一个顶层目录，互不干扰 —— 这是整合能成立的前提。
+## 🧭 井然有序
 
-```
-self-conf/
-  surge/      Surge 配置（.conf）
-  egern/      Egern 配置（.yaml）
-  clash/      mihomo 配置 + 覆写脚本
-  icons/      共享图标（三内核同源）
-  rules/      共享规则集（.list 为真源）
-  skill/      手册 + 脚本 + 门禁（按内核分目录）
-```
+🗂️ 各司其职，各安其序，无隙可乘。
+
+| <div align="center">组</div> | 🪶 懒人版 | 🧭 分流版 |
+|:---|:---:|:---:|
+| 🚀 `Proxy` | ✅ | ✅ |
+| ⚡ `Smart` | - | ✅ |
+| 🤖 `ChatGPT` · `Gemini` · `Claude` · `AI` | 仅 `AI` | ✅ |
+| ▶️ `YouTube` · 🎬 `Emby` · 🔎 `Google`<br>✈️ `Telegram` · 🐦 `Twitter` · 🪟 `Microsoft`<br>🎶 `YouTube Music` · 🎵 `Spotify` | - | ✅ |
+| 🍎 `Apple Update` | - | ✅ |
+| 🛑 `AD` | ✅ | ✅ |
+| 🇭🇰 `Hong Kong` · 🇨🇳 `Taiwan` · 🇯🇵 `Japan`<br>🇸🇬 `Singapore` · 🇺🇸 `United States`<br>🇦🇶 `Other Regions` | - | ✅ |
+
+分流版：**Surge / Egern 23 组 · 26 条规则**，**mihomo 25 组 · 27 条规则**（差异在 mihomo 另有 `Smart` 的三档子组，见下）。
+
+---
 
 ## 🔗 共享与分歧
 
-### 共享（合并的直接收益）
+三个内核各占一个顶层目录，互不干扰：
 
-| 资产 | 说明 |
-|:-----|:-----|
-| `icons/` | 38 个图标，三内核引用同一份。整合时 34 个同名文件**内容完全一致**，零冲突 |
-| `rules/` | `AI.list` / `apple_system.list` / `emby.list` 为**唯一真源**；<br>mihomo 用的 `.yaml` 由 `build_rules.py` 生成 |
+```
+surge/    egern/    clash/       各内核配置（clash 另有 override/ 覆写脚本）
+icons/    rules/                 共享资产
+skill/                           手册 · 判据 · 文档
+```
 
-`rules/` 是最典型的收益：整合前两个仓各存一份内容相同、格式不同的规则集
-（emby 4 / apple_system 18 / AI 272 条，逐条相同），改一处忘一处就漂移。
-现在单一真源，物理上不可能漂移。
+**共享是真的共享**：`icons/` 三内核引用同一份（38 个）；`rules/` 以 `.list` 为唯一真源，mihomo 用的 `.yaml` 由 `build_rules.py` 生成 —— 单一真源，不会漂移。
 
-### 分歧（内核机制决定，不是失误）
+**分歧是内核机制决定的**，不是失误：地区组的择优方式、订阅源的载体、倍率机制、规则集格式（`.list` ↔ `.mrs`），三内核各不相同。哪些能互相照搬、哪些照搬就是错的，见 [`cross-kernel-diff.md`](skill/reference/shared/cross-kernel-diff.md)。
 
-| 项 | Surge / Egern | mihomo |
-|:--|:--|:--|
-| 地区组 | `smart` + filter | `url-test` + filter |
-| 订阅源 | `Airport` external 组 | proxy-provider |
-| 倍率分档 | `policy-priority` 权重 | 模板靠 `filter` 分三档；脚本做不到 |
-| 规则集格式 | `.list` | `.mrs` / `.yaml` |
-| IPv6 | 显式关闭 | 显式关闭（一致） |
+mihomo 有一个独有的设计：`Smart` 是 fallback，按**倍率**分三档回落（`Low Mult.` → `Auto` → `High Mult.`）。
+
+---
 
 ## 🌐 隐私至上 · 无 DNS 泄露
 
 三个内核共同的底线：
 
 - **解析器全加密** —— DoH / DoT，无一条明文递归
-- **明文入口收口** —— `hijack-dns` / `dns-hijack` 接管 `:53`
+- **明文入口收口** —— 接管 `:53`，应用直发的查询出不去
 - **代理域名不给真答案** —— fake-ip，真实解析在落地侧
 - **IPv6 显式关闭** —— 杜绝真实 IPv6 绕过 TUN
 - **广告拦截前移到 DNS 层** —— 两个必要条件缺一即失效
+- **零 dat 依赖** —— 用 `.mrs` 远程集，不加载 `GeoSite.dat` / `GeoIP.dat`
 
-## 🧪 门禁
+这不是文档里的一句话，每一条都有判据守着（21 道门禁 + CI）。
 
-| 范围 | 位置 |
-|:-----|:-----|
-| 跨内核 | `skill/tests/*.py`（含 `verify_all.py` 总入口） |
-| mihomo 专属 | `skill/tests/clash/*.py` |
-
-同名文件按目录分开（如 `check_structure.py` 在两个目录下各一份，判据不同），
-互不覆盖。
+---
 
 ## 📖 按需查阅
 
-操作手册与审计判据在 [`skill/SKILL.md`](skill/SKILL.md)。
+操作手册、逐键语义与审计判据都在 [`skill/SKILL.md`](skill/SKILL.md)。
 
 ---
 

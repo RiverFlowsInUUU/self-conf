@@ -1,6 +1,6 @@
 # self-conf 维护手册
 
-三内核（Surge / Egern / mihomo）配置模板的整合仓。**实验性**。
+三内核（Surge / Egern / mihomo）配置模板。
 
 原仓 `Self-Configuration` 与 `Clash` 保持不变；本仓用于验证
 「三内核共用一份资产」是否真的成立。折腾不成也不影响它们。
@@ -113,4 +113,4 @@ python skill/tests/clash/check_remote_urls.py
 
 - ❌ 不改 `Self-Configuration` 与 `Clash` 两个原仓
 - ❌ 不手工编辑 `rules/*.yaml`（生成物，改真源 `.list`）
-- ⚠️ 本仓是实验性的；结论稳定前不要拿它的配置去替换原仓的
+- ⚠️ 结构性调整需先补判据，不靠"再跑一遍"

@@ -1227,7 +1227,7 @@ python skill/tests/clash/check_secrets.py        # 占位符纪律
 
 - ❌ 不改 `Self-Configuration` 与 `Clash` 两个原仓；
 - ⚠️ `rules/` 是三内核共享真源，改 `.list` 会影响 Surge / Egern 两侧；
-- ⚠️ 本仓是实验性的，结论稳定前不要拿它的配置去替换原仓的。
+- ⚠️ 结构性调整需先补判据，不靠"再跑一遍"。
 
 ---
 

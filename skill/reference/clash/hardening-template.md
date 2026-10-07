@@ -332,7 +332,7 @@ proxy-providers:
 | 脚本输出 = 静态文件 | `python skill/tests/clash/check_script_sync.py` |
 | 规则集 URL 全可达 | `python skill/tests/clash/check_remote_urls.py` |
 | 无真实凭据 | `python skill/tests/clash/check_secrets.py` |
-| 不引用原仓资源 | `python skill/tests/check_selfcontained.py` |
+| 不引用外部仓库资源 | `python skill/tests/check_selfcontained.py` |
 | 生成物未过期 | `python skill/scripts/clash/build_rules.py --check`<br>`python skill/scripts/clash/build_profiles.py --check` |
 | 全跑 | `python skill/tests/verify_all.py`（17 道） |
 
