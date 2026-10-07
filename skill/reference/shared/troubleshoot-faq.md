@@ -63,7 +63,7 @@ Egern 日志速读：
 3. 引用了新的国内规则集顶替？数它的域名条目，别看名字（ChinaMax 教训见 [成对交付篇](no-resolve-pairing.md)）；
 4. 只测 `.cn` 通过不算数 —— 探针必须含 `jd.com` / `zhihu.com` 这类非 `.cn` 国内域名，否则一条后缀兜底就能造假通过。
 
-### 7.4 两内核症状速查（改配置前也先扫一眼）
+### 7.4 三内核症状速查（改配置前也先扫一眼）
 
 | 症状 | 高概率根因 | 内核 |
 |:-----|:-----------|:----:|
@@ -77,6 +77,15 @@ Egern 日志速读：
 | 审规则集审出"空文件" | `curl` 没带 `-L`（GitHub raw 301） | — |
 | UDP 应用在某节点上不通 | `https` 类型节点不支持 UDP 中继 | Surge |
 | 改判据后"坏 fixture 反而通过" | 环境坏了也返回 1 —— 看退出码 2 的语义是不是被吞了 | — |
+| 导入后**所有走代理的流量不通** | mihomo：订阅槽位 `proxy-providers.Airport.url` 还是占位值没换自己的 | **mihomo** |
+| 广告拦不住，且**没有任何报错** | mihomo：DNS 双条件缺一（`nameserver-policy` 的 `rcode://success` 与 `fake-ip-filter` 要成对），或广告项排在了 `cn` 之后 | **mihomo** |
+| 站点测到的 IP 与节点所在地不符 | mihomo：IPv6 未关（`ipv6` 与 `dns.ipv6` **两处**都要 false），双栈站点走真实 IPv6 绕过 TUN | **mihomo** |
+| 改了脚本但配置没变 | mihomo：`profiles/*.yaml` 由 `build_profiles.py` 生成，改完脚本必须重生成 | **mihomo** |
+| profile 里出现大段重复内容 | mihomo：手工追加写把配置纵向堆了多份（`routing.yaml` 曾堆 7 份 / 3294 行）—— 不要手工改 profile | **mihomo** |
+| 远程规则集静默变空、拦截悄悄失效 | mihomo：上游 404（Jinx 曾把 `*-white-guard.*` 改名 `*-direct.*`）—— 用 `check_remote_urls.py` 查 | **mihomo** |
+| 头注里的组数/规则数是旧值 | mihomo：手写数字会过期，`check_header_numbers.py` 会判负 | **mihomo** |
+| `Smart` 三档没生效 | mihomo：`Smart.proxies` 未接上 `Low Mult./Auto/High Mult.`（子组继承了却没连，比不声明更隐蔽） | **mihomo** |
+
 
 更长的清单在原两侧坑档：[`../skill/reference/surge/pitfalls.md`](../surge/pitfalls.md) ·
 [`../skill/reference/egern/pitfalls.md`](../egern/pitfalls.md)（速查表在各自文件顶部）。
@@ -95,6 +104,28 @@ Egern 日志速读：
 ### 7.6 汇报纪律
 
 给用户的结论必须带上三样：测试链路（设备 / 网络 / DNS）、复现命令、可证伪预期（"换上去之后应看到 X、不应看到 Y"）。缺任何一样，结论按未完成处理。
+
+### 7.7 mihomo（clash）侧排障
+
+> 三内核中 mihomo 的故障模式与另两个差异最大 —— 它多一个「覆写脚本」形态，
+> 且 profile 是**生成物**。排障前先确认你在查的是哪种形态。
+
+| 现象 | 怎么定位 | 怎么修 | 用哪个脚本验证 |
+|:-----|:---------|:-------|:---------------|
+| 所有走代理的流量不通 | 看 `proxy-providers.Airport.url` 是否还是 `sub.example.com/...REPLACE_WITH_YOUR_TOKEN` | 换成自己的订阅地址 | 人工（占位值不进判据） |
+| 广告拦不住 | 看 `nameserver-policy` 是否有 `rcode://success`，且**同一广告集**是否也在 `fake-ip-filter` 里 | 两个条件都要满足；广告项排在 `cn`/`private` 之前 | `check_structure.py` 第 ③ 项 |
+| 出口 IP 与节点不符 | 看顶层 `ipv6` 与 `dns.ipv6` | 两处都设 false | `check_structure.py` 第 ⑧ 项 + `check_clash_dns.py` 判据 6 |
+| 改了脚本配置没跟着变 | 看 `profiles/*.yaml` 的修改时间是否晚于脚本 | 跑 `build_profiles.py` 重生成 | `build_profiles.py --check` |
+| profile 内容重复/异常长 | 看顶层键是否重复出现 | 用生成脚本覆盖重写，不要手工追加 | `build_profiles.py` 自检 |
+| 规则集突然失效 | 看 `interval` 到期后上游是否 404 | 换可用 URL | `check_remote_urls.py` |
+| Smart 不按倍率选节点 | 看 `Smart.proxies` 是不是 `["DIRECT"]` | 接上三档子组 | `build_profiles.py` 自检 |
+| 头注数字对不上 | 跑一次就知道 | 改文档数字为实际值 | `check_header_numbers.py` |
+
+⚠️ **mihomo 侧已知的验证缺口**：没有分流覆盖审计脚本（Surge / Egern 均有
+`audit_routing_coverage.py`）。即「规则是否真的接住了该接的域名」在 mihomo 侧
+**只能人工验证** —— 见 [`boundaries.md`](boundaries.md) 的如实记录。
+这与 [`no-resolve-pairing.md`](no-resolve-pairing.md) 的母题一致：
+审计绿不等于配置可用。
 
 ### 相关页面
 

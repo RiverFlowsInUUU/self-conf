@@ -11,7 +11,7 @@
 |:-----|:-------------|:---------|
 | `skill/scripts/release_publish.py`（含其 `/releases/latest` 读取） | 发布器，**刻意不套四态退出码** —— 读不到远端只影响「要不要多 PATCH 一次」，不是「未能验证」；`/releases/latest` 那条同理（依据：`apply()` 内的就近注释） | 引入需要 SKIP 语义的新发布流程 |
 | 非 GitHub 的请求点：`egern/probe_dns_endpoints.py`、`egern/probe_doh.py`、`egern/_egern_common.py`、`surge/audit_ruleset_content.py` | 不走 `check_releases._api_json` 那套 **GitHub 请求异常分类**（各自处理自身网络失败）。⚠️ 这与**四态协议无关** —— `probe_dns_endpoints.py` 恰是四态协议的**规范用户**（缺参 → 2、有失效 → 1、`sys.exit(main())`） | 出现第二个消费 GitHub API 的脚本（须共用 `_api_json`） |
-| Clash / mihomo / Shadowrocket / sing-box 等其它内核 | 本仓只覆盖 Surge + Egern 两内核；`no-resolve`、`dns-server`、`fake-ip-filter` 在三者语义各不相同 | 新增内核分支 |
+| Shadowrocket / sing-box 等其它内核 | 本仓覆盖 Surge + Egern + **mihomo（clash）** 三内核；其余内核不在范围内（`no-resolve`、`dns-server`、`fake-ip-filter` 在三内核语义已各不相同，见 [`cross-kernel-diff.md`](cross-kernel-diff.md)）：新增内核分支 |
 
 ## 2 · 已论定清单（裁定 ｜ 依据指针 ｜ 重议条件）
 
@@ -24,6 +24,7 @@
 | 不做 E（AST 闸门 `check_exit_codes`） | `skill/SKILL.md` §3 其他共享纪律 | 见该处「推翻挂账的触发条件」 |
 | 不做闸门清单的机器对账（`ci.yml` ↔ `verify_all.py`） | `skill/tests/verify_all.py` 头注 | 见该处「推翻挂账的触发条件」 |
 | P5 `MyHome` 是**误报关闭**（照官方示例留的占位网络名），非缺陷 | [`ops.md`](ops.md) ／ [`cross-kernel-diff.md`](cross-kernel-diff.md) | 官方示例改名、或该段被实际启用时 |
+| **clash 侧没有分流覆盖审计脚本**（Surge 有 `audit_routing_coverage.py`、Egern 同） —— 意味着「规则是否真的接住了该接的域名」在 mihomo 侧**没有机器判据**，只能人工做 | [`hardening-checklist.md`](hardening-checklist.md) mihomo 章「验收标准」第 6 条；[`no-resolve-pairing.md`](no-resolve-pairing.md) mihomo 侧章（写明静态门禁只证明「不触发解析」，不能代替分流覆盖验证） | 补出 `skill/scripts/clash/audit_routing_coverage.py`（已于 2026-10-07 补出，离线档） 时 |
 | **浅克隆下 `check_releases` 的成片红是噪声，不是缺陷**（缺完整历史 → R3/R4 假红：`81/28` → 完整克隆 `113/0`） | [`ops.md`](ops.md) §6.8「跑判据前先确认前置条件」 | `check_releases` 不再依赖 `--find-object` 反查诞生日期时 |
 | Egern 审计**跨 profile 输出折叠**（约省 3 KB）不做 | `skill/reference/egern/checker.md`（记 22 离线 / 24 联网） | 该处不再引用这组条数时 |
 | 历史 release notes（`release_publish.PUBLIC_NOTES`）保留**发布当时**的条数，不回改 | 该值记录发布时点的事实（v3.9 条目即此例）；自 v2.0.1／v4.0.1 起新条目已改为「当前版本信息统一只保留在文件头注」 | 需修订历史记录本身（发布勘误） |

@@ -115,6 +115,10 @@ def build_gates():
         ('clash 脚本/静态对拍', [PY, 'skill/tests/clash/check_script_sync.py'], {}),
         ('clash 规则集生成物', [PY, 'skill/scripts/clash/build_rules.py', '--check'], {}),
         ('clash 头注数字新鲜度', [PY, 'skill/tests/clash/check_header_numbers.py'], {}),
+        # 分流覆盖审计 —— Surge / Egern 各有 audit_routing_coverage.py，
+        # mihomo 侧此前一直缺（是唯一的验证缺口），现补上。
+        ('clash 分流覆盖', [PY, 'skill/scripts/clash/audit_routing_coverage.py',
+                            'clash/profiles/routing.yaml', 'clash/profiles/lazy.yaml'], {}),
         ('clash 静态 profile 新鲜度', [PY, 'skill/scripts/clash/build_profiles.py', '--check'], {}),
     ]
     return gates
