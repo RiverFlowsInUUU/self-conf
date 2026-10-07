@@ -78,12 +78,12 @@ PLACEHOLDER_PAT = re.compile(
 
 URL_PAT = re.compile(r"https?://[^\s\"'`,)\]]+")
 
-SELF_PREFIX = "https://raw.githubusercontent.com/RiverFlowsInUUU/Clash/"
+SELF_PREFIX = "https://raw.githubusercontent.com/RiverFlowsInUUU/self-conf/"
 
 # 基址常量：脚本里用 `BASE + "xxx.mrs"` 拼接，基址本身不是可探测的资源
 BASE_URLS = (
-    "https://raw.githubusercontent.com/RiverFlowsInUUU/Clash/main/icons/",
-    "https://raw.githubusercontent.com/RiverFlowsInUUU/Clash/main/",
+    "https://raw.githubusercontent.com/RiverFlowsInUUU/self-conf/main/icons/",
+    "https://raw.githubusercontent.com/RiverFlowsInUUU/self-conf/main/",
     "https://cdn.jsdelivr.net/gh/MetaCubeX/meta-rules-dat@meta/geo",
 )
 

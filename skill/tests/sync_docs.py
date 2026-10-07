@@ -280,22 +280,6 @@ def check_baseline_table(root):
 
 
 
-def check_baseline_table(root):
-    """→ [(位次, 表里, 配置里)]，只列不一致的。表缺失返回 None（未验证）。"""
-    path = os.path.join(root, "skill", "reference", "shared", "rulesets.md")
-    if not os.path.isfile(path):
-        return None
-    doc = _doc_positions(io.open(path, encoding="utf-8").read())
-    if not doc:
-        return None
-    actual = _actual_targets()
-    bad = []
-    for i, name in sorted(doc.items()):
-        if i <= len(actual) and name != actual[i - 1]:
-            bad.append((i, name, actual[i - 1]))
-    return bad
-
-
 def main():
     ap = argparse.ArgumentParser(description="文档 AUTO 段生成器（真源=配置）")
     g = ap.add_mutually_exclusive_group()

@@ -124,6 +124,8 @@ def build_gates():
         # ⚠️ 用**联网档**而非 --offline：离线档依赖 7 天缓存，
         #    CI 是全新环境没有缓存，--offline 必然「取不到」退 2 判负 ——
         #    那是环境限制不是配置问题（2026-10-07 CI 首红即此因）。
+        # 自洽性：不得引用外部仓库的在线资源（SECURITY.md 承诺了此判据）
+        ('自洽性', [PY, 'skill/tests/check_selfcontained.py'], {}),
         ('clash 规则集内容', [PY, 'skill/scripts/clash/audit_ruleset_content.py',
                               'clash/profiles/routing.yaml', 'clash/profiles/lazy.yaml'], {}),
         ('clash 静态 profile 新鲜度', [PY, 'skill/scripts/clash/build_profiles.py', '--check'], {}),

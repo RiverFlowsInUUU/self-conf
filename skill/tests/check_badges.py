@@ -33,8 +33,8 @@ for _stream in (sys.stdout, sys.stderr):
 import yaml  # CI 已装（ci.yml: pip install pyyaml）
 
 BADGE_RE = {
-    "Groups": re.compile(r"badge/Groups-(\d+)%20%7C%20(\d+)"),
-    "Rules": re.compile(r"badge/Rules-(\d+)%20%7C%20(\d+)"),
+    "Groups": re.compile(r"badge/Groups-(\d+)%20%7C%20(\d+)(?:%20%7C%20(\d+))?"),
+    "Rules": re.compile(r"badge/Rules-(\d+)%20%7C%20(\d+)(?:%20%7C%20(\d+))?"),
 }
 
 
@@ -79,28 +79,42 @@ def main():
             return 1
         badges[kind] = tuple(int(x) for x in m.groups())
 
+    # 三个内核的实际规模（顺序：Surge · Egern · mihomo）
+    # ⚠️ 本脚本原只比对 surge / egern 两个 —— mihomo 那两个数**从未被校验**，
+    #    而文件头声称「组数与规则数必须一致」。2026-10-07 补上 mihomo。
+    clash_p = os.path.join(root, "clash", "profiles", "routing.yaml")
     try:
         surge = (surge_section_count(surge_p, "[Proxy Group]"),
                  surge_section_count(surge_p, "[Rule]"))
         d = yaml.safe_load(open(egern_p, encoding="utf-8")) or {}
         egern = (len(d.get("policy_groups") or []),
                  len(d.get("rules") or []))
+        clash = None
+        if os.path.isfile(clash_p):
+            dc = yaml.safe_load(open(clash_p, encoding="utf-8")) or {}
+            clash = (len(dc.get("proxy-groups") or []),
+                     len(dc.get("rules") or []))
     except Exception as e:
-        sys.stderr.write("profiles 解析失败：%s\n" % e)
+        sys.stderr.write("profiles 解析失败" + chr(58) + " " + str(e) + NL)
         return 2
 
+    kernels = [("surge", surge), ("egern", egern)]
+    if clash:
+        kernels.append(("mihomo", clash))
     bad = 0
-    rows = [
-        ("Groups", badges["Groups"], surge[0], egern[0]),
-        ("Rules", badges["Rules"], surge[1], egern[1]),
-    ]
-    for kind, (bs, be), vs, ve in rows:
-        ok = bs == vs and be == ve
-        print("%s %s badge %d|%d  ↔  surge %d · egern %d"
-              % ("✅" if ok else "❌", kind, bs, be, vs, ve))
+    for kind in ("Groups", "Rules"):
+        idx = 0 if kind == "Groups" else 1
+        want = badges[kind]
+        got = tuple(v[idx] for _n, v in kernels)
+        ok = want == got
+        line = (("OK " if ok else "NG ") + kind + " badge "
+                + "|".join(str(x) for x in want)
+                + "  " + chr(8596) + "  "
+                + " - ".join(str(n) + " " + str(v[idx]) for n, v in kernels))
+        print(line)
         if not ok:
-            print("   改 README badge，或确认实抓口径（surge 段计数 / egern 数组长度）")
             bad += 1
+
     return 1 if bad else 0
 
 
