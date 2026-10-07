@@ -99,7 +99,7 @@ mihomo 同时覆盖 `clash/profiles/` 静态配置与 `clash/override/` 覆写�
 | ① | 策略组成员无悬空引用。 |
 | ② | 规则引用的 provider 与策略组都存在。 |
 | ③ | DNS 广告拦截同时满足 `nameserver-policy` 与 `fake-ip-filter` 两个条件，且广告项排在 `cn` / `private` 前。 |
-| ④ | 静态 profile 的 `tun` 具备 `enable`、`dns-hijack`、`auto-route`、`strict-route` 四键；覆写脚本不套用此要求。 |
+| ④ | 静态 profile **禁止** `tun` 段（4c4bc56 起反转）；配置内不出现 `tun`，脚本也不写。 |
 | ⑤ | `geoip-*` 规则带 `no-resolve`。 |
 | ⑥ | `nameserver` 使用 IP 字面量，避免冷启动引导泄露。 |
 | ⑦ | 零 dat 依赖：禁用 `geox-url`、自动更新键、原生 `GEOSITE` / `GEOIP` 规则及 `geosite:` policy 键；独立 `.mrs` 不在禁用范围。 |

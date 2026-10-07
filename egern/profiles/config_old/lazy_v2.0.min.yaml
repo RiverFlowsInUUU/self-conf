@@ -1,3 +1,4 @@
+#! version=lazy_v2.0
 ipv6: false
 vif_only: true
 hijack_dns:

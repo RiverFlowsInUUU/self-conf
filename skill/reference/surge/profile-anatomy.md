@@ -48,7 +48,7 @@ Self-Configuration/                          # 两内核合并后同仓（2026-0
 │   │   ├── lazy.conf · lazy.min.conf        # 懒人版（带注释 / 纯配置，注释剥掉那份）
 │   │   ├── routing.conf · routing.min.conf  # 分流版（带注释 / 纯配置，注释剥掉那份）
 │   │   └── config_old/                      # 历史版本归档（成对快照，永不删除）
-│   └── （原 docs/ 与 DetailsReadme/ 已并入 skill/，2026-09-27，git 历史可查）
+│   ├── （原 docs/ 与 DetailsReadme/ 已并入 skill/，2026-09-27，git 历史可查）
 ├── egern/                                   # 姊妹内核一侧（同构：profiles / skill/reference/egern）
 ├── icons/                                   # 策略组图标 PNG + 两个图标订阅 JSON —— 仓库根，两内核共用、不跨项目引用
 ├── LICENSE · SECURITY.md · README.md        # 许可证 · 安全披露 · 门面（订阅入口 + 指路）
@@ -56,7 +56,7 @@ Self-Configuration/                          # 两内核合并后同仓（2026-0
     ├── SKILL.md                             # AI 唯一入口：六条底线 / 归档机制 / 动线 / 分支索引
     ├── reference/                           # 逐条判据（shared/ 七篇 + surge/ · egern/ 各七篇）
     ├── scripts/                             # surge/ 5 个审计脚本 + 1 个共享模块 · egern/ 10 个 + 1 个
-    └── tests/                               # 五个闸门脚本（secrets / portability / min_pair / links / make_min）
+    └── tests/                               # 闸门脚本（secrets / portability / min_pair / links / make_min / …，共 24 道）
 ```
 
 **两份配置是分工关系，不是版本关系**：`lazy` 是懒人版（4 组 / 10 条，全量一个出口），
@@ -755,7 +755,7 @@ Surge 的组名 / 节点名引用**不区分大小写地可解析**，但 `check
 | 5 | `RULE-SET,LAN` | `DIRECT` | `no-resolve` | 含 18 条 IP-CIDR，**必须** `no-resolve`。内网段排在应用之前，与 Egern 同位 |
 | 6 | `RULE-SET,…,private.txt` | `DIRECT` | `update-interval=604800` | 内网域名。实测零 IP ⇒ 按原则**不写** `no-resolve` |
 | 7 | `RULE-SET,…,AI.list`（Repcz） | `AI` | `update-interval=604800` | 实测零 IP（纯域名系）⇒ 不写 `no-resolve` |
-| 8 | `RULE-SET,…/Self-Configuration/main/rules/AI.list` | `AI` | `update-interval=604800` | 本仓自托管整合集（伴生域 / 宽后缀），与 7 号同指 `AI` 组 |
+| 8 | `RULE-SET,…/self-conf/main/rules/AI.list` | `AI` | `update-interval=604800` | 本仓自托管整合集（伴生域 / 宽后缀），与 7 号同指 `AI` 组 |
 | 9 | `RULE-SET,…,direct.txt` | `DIRECT` | `update-interval=604800` | **主承重墙**，纯域名、零 IP（条数一律现抓）。见 §12 |
 | 10 | `GEOIP,CN,DIRECT` | `DIRECT` | `no-resolve` | IP 类规则，放最后 |
 | 11 | `FINAL,Proxy,dns-failed` | `Proxy` | `dns-failed` | 兜底 |

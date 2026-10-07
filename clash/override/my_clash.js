@@ -12,8 +12,10 @@
 //      · 订阅内的节点直接成为组内成员 —— 不再需要 Airport 订阅组
 //
 //  与静态模板的唯一区别
-//    静态模板用 `use: [Airport]` 引入订阅；本脚本改用 `include-all-proxies: true`，
-//    让订阅里已有的 `proxies` 直接入组。二者等价，但后者无需额外订阅槽位。
+//    静态模板用 `use: [Airport]` 引入订阅；本脚本按输入形态**二选一**：
+//    输入带 `proxy-providers` 时用 `include-all`（= proxies + providers），
+//    否则用 `include-all-proxies: true`（只收内联 `proxies`）—— 见代码 HAS_PROVIDERS / ALL_KEY。
+//    这样可避免 provider 节点成为孤儿。
 //
 //  用法（Mihomo Party / Mihomo Purity 等支持 JS 覆写的客户端）
 //    1) 把本文件放到可访问的 URL（或本地导入）；

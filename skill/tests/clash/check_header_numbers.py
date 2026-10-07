@@ -58,6 +58,14 @@ CONTEXT = [
     (r"(\d+)\s*条规则", "rules"),
 ]
 
+# ── 子项拆分（第二轮外部审查第 3 / 4 条）
+# 此前「10 份规则集（5 份 MRS + 5 份 yaml）」只校验总数 10 ⇒ 拆分写成 5+5 也放行，
+# 实际是 6+4。这里把「N 份 MRS」「N 份 yaml」的声明也拉进来对拍。
+SUBITEM = [
+    (r"(\d+)\s*份\s*MRS", "mrs"),
+    (r"(\d+)\s*份\s*yaml", "yaml"),
+]
+
 # 每个脚本对应的规模键
 SCRIPTS = ["my_clash.js", "my_clash_lazy.js"]
 
@@ -88,7 +96,22 @@ def static_sizes(path):
         "groups": len(c.get("proxy-groups") or []),
         "providers": len(c.get("rule-providers") or {}),
         "rules": len(c.get("rules") or []),
-    }
+    } | _split(c.get("rule-providers") or {})
+
+
+def _split(providers):
+    """rule-providers 的 MRS / yaml 拆分 —— 给「N 份 MRS + N 份 yaml」这类声明当真源。"""
+    mrs = yaml_ = 0
+    for v in (providers or {}).values():
+        if not isinstance(v, dict):
+            continue
+        u = str(v.get("url") or v.get("path") or "")
+        f = str(v.get("format") or "").lower()
+        if f == "yaml" or u.endswith((".yaml", ".list")):
+            yaml_ += 1
+        else:
+            mrs += 1
+    return {"mrs": mrs, "yaml": yaml_}
 
 
 def real_sizes(script_path):
@@ -106,7 +129,7 @@ def real_sizes(script_path):
         "groups": len(out.get("proxy-groups") or []),
         "providers": len(out.get("rule-providers") or {}),
         "rules": len(out.get("rules") or []),
-    }
+    } | _split(out.get("rule-providers") or {})
 
 
 def main():
@@ -170,6 +193,15 @@ def main():
                     continue
             for pat, kind in CONTEXT:
                 for m in re.finditer(pat, line):
+                    n = int(m.group(1))
+                    want = truth[kind]
+                    if n != want:
+                        bad.append((rel, i, kind, n, want, stripped[:70]))
+            # 子项：只在 truth 里有对应键时才判（避免对不带拆分声明的文件误报）
+            for pat, kind in SUBITEM:
+                if kind not in truth:
+                    continue
+                for m in re.finditer(pat, line, re.I):
                     n = int(m.group(1))
                     want = truth[kind]
                     if n != want:

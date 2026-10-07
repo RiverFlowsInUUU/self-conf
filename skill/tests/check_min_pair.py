@@ -196,6 +196,40 @@ def version_checks(root):
                     v6_bad.append("%s 与线上同版本但内容已漂（改了没升版，或归档被动过）" % n)
         out.append(("%s V6 归档不高于当前版·同版本仍是逐字快照" % side, not v6_bad,
                     " ".join(v6_bad)))
+        # ── V8 / V9：归档头注（第二轮外部审查第 9 条）
+        #
+        # V8 头注 ↔ 文件名一致：此前把 routing_v4.0.4.conf 的头注改成 v9.9.9，
+        #     V1–V6 与「版本头注」闸门双双全绿 —— 文件名与内容可以各说各话。
+        # V9 头注覆盖率：74 份归档（surge .min 以 audit-waive: 开头、egern .min 以
+        #     vif_only: / ipv6: 开头）没有 #! version= 首行 ⇒ V8 对它们无从判起。
+        #     这里把「缺多少」显式报出来，让缺口可见，而不是被覆盖率掩盖。
+        v8_bad = []
+        no_head = []
+        for n in names:
+            m = ARCHIVE_RE.match(n)
+            if not m:
+                continue
+            fp = os.path.join(old_dir, n)
+            try:
+                with open(fp, encoding="utf-8", errors="replace") as fh:
+                    first = fh.readline().strip()
+            except OSError:
+                continue
+            hh = re.match(r"^#!\s*version=\s*(\S+?)\s*$", first)
+            if not hh:
+                no_head.append(n)
+                continue          # 缺头注 ⇒ 归 V9，不重复计入 V8
+            # 文件名 routing_v4.0.4[.min].conf  ⇒ 期望头注 routing_v4.0.4
+            want = "%s_v%s" % (m.group(1), m.group(2))
+            if hh.group(1) != want:
+                v8_bad.append("%s 头注写 %s（文件名应为 %s）" % (n, hh.group(1), want))
+        out.append(("%s V8 归档头注与文件名一致" % side, not v8_bad,
+                    " ".join(v8_bad)))
+        out.append(("%s V9 归档头注齐全（%d/%d，缺 %d）" % (
+                        side, len(names) - len(no_head), len(names), len(no_head)),
+                    not no_head,
+                    "缺头注：%s" % ", ".join(no_head[:6]) +
+                    ("…等 %d 份" % len(no_head) if len(no_head) > 6 else "")))
     for kind in ("routing", "lazy"):
         a = heads.get("surge", (None, None))[0 if kind == "routing" else 1]
         b = heads.get("egern", (None, None))[0 if kind == "routing" else 1]

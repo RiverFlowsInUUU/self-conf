@@ -29,8 +29,8 @@
 > mihomo 改**覆写脚本**、再由脚本生成静态 profile（§5.2）。别把两侧的习惯带过去 ——
 > 手工改 `clash/profiles/*.yaml` 会被下一次重生成整份覆盖（§5.3）。
 >
-> ⚠️ 版本头注与归档只属于 Surge / Egern 两侧：mihomo 静态 profile 没有 `#! version=`、
-> 也不进 `config_old/`（§5.10）。那套规矩不要搬过去。
+> ℹ️ 版本头注与归档**三内核通用**：mihomo 静态 profile 自 2026-10-07 起也带 `#! version=` 头注，
+> 并按版本存进 `clash/profiles/config_old/`（§5.10）。Surge / Egern / mihomo 三侧口径一致。
 
 ## Surge 操作
 
@@ -322,10 +322,10 @@ clash/
 脚本侧 `Smart` 是单组 `fallback`，做不到这三档）。规则数、provider 数、provider URL 集合两边相同。
 懒人版则**完全同构**：脚本 3 组 / 11 条 / 10 份，与 `lazy.yaml` 逐位相同。
 
-> 📌 **已知的过期文字（改之前先读，别被它们带偏）**：两份脚本与两份 profile 的**头注**、以及
-> `override/README.md` 的表格里仍写着旧数字（`my_clash.js` 头注「20 组 / 20 份 / 26 条」、
-> `routing.yaml` 旧头注「23 / 22 / 24」等）。**判据以配置文件为准**，
-> 完整清单见 `profile-anatomy` §18.2。改配置时顺手把过期文字一起改掉。
+> ℹ️ **过期文字已清理（2026-10-07）**：此前脚本头注与 `override/README.md` 表格里写着旧数字
+> （`my_clash.js`「20 组 / 20 份 / 26 条」、`routing.yaml`「23 / 22 / 24」、`my_clash_lazy.js`「5 MRS + 5 yaml」等），
+> 现已全部按实际值更正为 22 组 / 25 份 / 27 条（分流版）与 3 组 / 10 份 / 11 条（懒人版）。
+> **判据以配置文件为准** —— 头注数字由 `check_header_numbers.py` 与脚本实际输出对拍。
 
 ### 5.2 改配置的正确顺序
 

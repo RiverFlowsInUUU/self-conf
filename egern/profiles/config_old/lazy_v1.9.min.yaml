@@ -1,3 +1,4 @@
+#! version=lazy_v1.9
 vif_only: true
 hijack_dns:
 - '*'

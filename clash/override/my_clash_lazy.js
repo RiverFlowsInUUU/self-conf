@@ -5,7 +5,7 @@
 //  作用
 //    对任意 mihomo 订阅配置做整体覆写，使其与本仓库 profiles/lazy.yaml 一致：
 //      · 3 个策略组（Proxy / AI / AD）
-//      · 10 份规则集（5 份 MRS + 5 份 yaml）+ 11 条规则
+//      · 10 份规则集（6 份 MRS + 4 份 yaml）+ 11 条规则
 //      · DNS 双层广告拦截（fake-ip-filter + nameserver-policy rcode://success）
 //      · 订阅内的节点直接成为组内成员 —— 不再需要 Airport 订阅槽位
 //
@@ -98,7 +98,7 @@ function main(config) {
   const rp = {};
   config["rule-providers"] = rp;
 
-  // 5 份 MRS（原 GEOSITE / GEOIP 原生层，改为远程集以摆脱 geosite.dat 依赖）
+  // 6 份 MRS（原 GEOSITE / GEOIP 原生层，改为远程集以摆脱 geosite.dat 依赖）
   [
     { n: "private", b: "domain" },
     { n: "cn", b: "domain" },

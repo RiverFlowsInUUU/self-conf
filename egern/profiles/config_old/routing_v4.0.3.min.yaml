@@ -1,3 +1,4 @@
+#! version=routing_v4.0.3
 ipv6: false
 vif_only: true
 hijack_dns:

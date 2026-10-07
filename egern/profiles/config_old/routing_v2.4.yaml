@@ -1,3 +1,4 @@
+#! version=routing_v2.4
 # ================================================================ routing_v2.4（正式版 · 推荐）
 # 本版 = **routing_v2.3 + 一处补全**：给全部 21 条 `rule_set` 补上 `update_interval: 86400`。
 # `dns` 段、`rules` 段的规则内容与顺序、`policy_groups` 段**逐字未变**。

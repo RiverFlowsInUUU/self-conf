@@ -7,7 +7,7 @@
 > `clash/profiles/routing.yaml` 与 `clash/override/my_clash.js`。计数只算启用项，不算注释：
 > Surge **23 组 / 26 条规则**，Egern **23 组 / 26 条规则**，mihomo 静态分流版
 > **25 组 / 27 条规则 / 25 份 rule-provider**；mihomo 覆写脚本实际生成
-> **22 组 / 27 条规则 / 25 份 rule-provider**。
+> **<!-- auto:group-count -->23<!-- /auto:group-count --> 组 / <!-- auto:rule-count -->26<!-- /auto:rule-count --> 条规则 / 25 份 rule-provider**。
 
 ## 1 · 语法与机制映射
 
@@ -16,7 +16,7 @@
 | 配置载体 | `.conf`，INI 分段 | `.yaml` | 静态 `.yaml`；另有 `.js` 覆写脚本 | mihomo 的脚本是第二种交付形态，不是可粘进 YAML 的配置片段 |
 | 组结构 | 23 组 | 23 组，名称与顺序和 Surge 逐位相同 | 静态 25 组；覆写脚本 22 组 | 三侧共有 22 个业务/地区组；Surge/Egern 多 `Airport`，mihomo 静态多三个倍率子组 |
 | 策略组类型 | `select` / `smart` | `select` / `smart` / `external` | `select` / `fallback` / `url-test`；内核还支持 `load-balance` | mihomo 没有 `smart`，不能只换类型名 |
-| 订阅源 | `Airport = select, policy-path=…`，`hidden=true` | `Airport` 为 `external`，`urls` + `interval` + `hidden` | 静态 `routing.yaml` 当前**没有** `proxy-providers`，且 `proxies: []`；覆写脚本保留输入订阅的 `proxies` / `proxy-providers` | `policy-path`、`external.urls`、`proxy-providers/use/include-all*` 不是同一种对象，不能互抄；mihomo 静态版现状见 §2 的“待确认” |
+| 订阅源 | `Airport = select, policy-path=…`，`hidden=true` | `Airport` 为 `external`，`urls` + `interval` + `hidden` | 静态 `routing.yaml` **已声明** `proxy-providers.Airport`（2026-10-07 起）；覆写脚本保留输入订阅的 `proxies` / `proxy-providers` | `policy-path`、`external.urls`、`proxy-providers/use/include-all*` 不是同一种对象，不能互抄 |
 | 组展开 / 节点入组 | `include-other-group="X"`；显式成员不受 `policy-regex-filter` 影响 | `policies: [X]` + `flatten: true`；地区组再用 `filter` | 没有 `flatten`；用 `use`、`include-all`、`include-all-proxies` 或把组名写进 `proxies` | `flatten: true` 是 Egern 特有；mihomo 的 `include-all-proxies` 只收内联节点，`include-all` 才连 provider 一起收 |
 | 组内筛选 | `policy-regex-filter` | `filter` | `filter` + `exclude-filter` | 三侧当前地区正则并不相同；只能移植“按地区筛”的意图，不能假定逐字等价 |
 | 倍率 / 权重 | `policy-priority="正则:0.15"`，Smart 与 6 个地区组都有 | `priorities: {正则: 0.15}`，Smart 与 6 个地区组都有 | **无权重键**；只能用 `fallback` + `filter` / 节点排序模拟 | 0.15 在 Surge/Egern 是软权重；mihomo 的分档回落不是同一算法 |
@@ -40,9 +40,11 @@ mihomo 各键的逐键行为与边界，继续看 [`profile-anatomy.md`](../clas
 Surge 与 Egern 各 23 组，名称与顺序逐位相同：
 
 ```text
+<!-- auto:group-list -->
 Proxy · Smart · ChatGPT · Gemini · Claude · AI · YouTube · Emby · Google
 Telegram · YouTube Music · Spotify · Twitter · Airport · Microsoft · Apple Update
 AD · Hong Kong · Taiwan · Japan · Singapore · United States · Other Regions
+<!-- /auto:group-list -->
 ```
 
 mihomo 静态分流版没有 `Airport` 组，但有三个额外隐藏倍率组，所以是 25 组：
@@ -70,7 +72,8 @@ Apple Update · AD · Hong Kong · Taiwan · Japan · Singapore · United States
 但 `Smart.proxies` 当前实际是单独的 `DIRECT`，并未引用这三个组；同一文件也没有
 `proxy-providers`，末尾却是空的 `proxies: []`。这与文件头“替换
 `proxy-providers.Airport.url`”的说明不一致。这里不替配置找理由：移植时应按“当前静态版没有可用订阅源、
-三档没有接到 Smart”处理；是否为生成漂移，**待确认**。覆写脚本不受这个静态入口缺失影响，
+三档没有接到 Smart”处理。**【2026-10-07 更新】此段已过时：静态 `routing.yaml` 现已声明
+`proxy-providers.Airport`，且 Smart 三档已接入。移植时按“有可用订阅源”处理。**
 它从传入订阅保留节点与 provider。
 
 ### 2.2 地区组不能只复制正则
@@ -80,7 +83,7 @@ mihomo 当前使用另一套较短正则。更关键的是节点入口不同：
 
 - Surge：`include-other-group="Airport"`；
 - Egern：`policies: [Airport]` + `flatten: true`；
-- mihomo 静态：地区组是 `include-all-proxies: true`；
+- mihomo 静态：地区组是 `include-all: true`（2026-10-07 起；此前为 `include-all-proxies`）；
 - mihomo 覆写：检测到输入有 provider 时用 `include-all`，否则用 `include-all-proxies`。
 
 因此，“新增一个地区关键词”可以三侧同步做；“复制一整行地区组”一定不行。
@@ -145,7 +148,7 @@ mihomo 的实际值应以本页和 [`profile-anatomy.md`](../clash/profile-anato
 | 规则集引用 | 把 Surge 的 `RULE-SET,https://…list,...` 原样搬进 mihomo | mihomo 的规则位需要 provider **名字**，不是下载 URL；同时缺 `format/behavior/path` | 先声明 `rule-providers`，再 `RULE-SET,<name>,<policy>` |
 | `no-resolve` | 把 Surge 的规则尾参数改成 Egern `rule_set.no_resolve: true` | Egern 对 `rule_set` 不执行该字段，防解析形同虚设 | Egern 只在 `geoip/ip_cidr/ip_cidr6/asn` 用 `no_resolve`，远程集靠条目级语义；mihomo 的 `ipcidr` provider 引用可带行尾 `no-resolve` |
 | IPv6 关闭 | 只复制一个 `ipv6: false` 到 mihomo | 只关顶层或只关 DNS 都不完整，AAAA 或真实 IPv6 通路仍可能存在 | mihomo 同时关顶层与 `dns.ipv6`；Surge 关 `ipv6` + `ipv6-vif`；Egern 关顶层 `ipv6` |
-| 订阅入口 | 把 Surge `Airport` 当组名写进 mihomo `proxies` | `Airport` 在 mihomo 设计里应是 provider 名；未声明时就是悬空引用 | 静态声明 `proxy-providers.Airport` 并用 `use/include-all`；脚本沿用传入订阅。当前静态文件缺该段，待确认 |
+| 订阅入口 | 把 Surge `Airport` 当组名写进 mihomo `proxies` | `Airport` 在 mihomo 设计里应是 provider 名；未声明时就是悬空引用 | 静态声明 `proxy-providers.Airport` 并用 `use/include-all`；脚本沿用传入订阅。段**已存在**（2026-10-07） |
 | DNS 路由 | 把 Egern `proxy_nameservers` 当成 mihomo `proxy-server-nameserver` 的纯改名 | Egern 的键会跳过 `forward`；mihomo 的键负责节点域名解析，并与 `respect-rules` 有约束，执行链不同 | 按“引导 / 直连 / 节点 / 主解析 / 回退”五个角色逐项重配 |
 | 默认规则 | 把 `FINAL,Proxy,dns-failed` 改个大小写放进另外两侧 | Egern / mihomo 不认 Surge 的 `dns-failed` 语义 | Egern 用 `default.policy`；mihomo 用 `MATCH` |
 | 规则禁用 | 把 Egern 的 `disabled: true` 搬到 Surge | Surge `RULE-SET` 没有该字段；整行仍可能无法加载 | 为保持位数一致，本仓两侧都把不用的 `Proxy.list` 注释掉；mihomo 则删除对应 rules 项与无用 provider |
@@ -171,13 +174,14 @@ mihomo 的实际值应以本页和 [`profile-anatomy.md`](../clash/profile-anato
 
 三侧懒人版的**语义骨架**已经对齐为：广告白名单 → 广告 ×2 → 系统 → 内网 ×2 → AI ×2 → 国内域名 → 国内 IP → 兜底。
 仍然只能按语义移植，不能复制规则行。mihomo 静态懒人版也存在“头注要求替换
-`proxy-providers.Airport.url`，实际却没有 `proxy-providers` 且 `proxies: []`”的同类现状，**待确认**。
+`proxy-providers.Airport.url`”的对照 —— 该段**现已存在**，不再是待确认项。
 
 ## 6 · 版本保留策略
 
 - 三侧 `profiles/` 顶层都保留固定名四件：`routing` / `lazy`，各有带注释版与 `.min` 版；订阅地址不随版本改名。
 - Surge / Egern 的现役文件以 `#! version=` 标当前版本，并把历史成对放进 `profiles/config_old/`。
-- mihomo 静态 profile 由 `skill/scripts/clash/build_profiles.py` 生成，当前文件没有 `#! version=`；另有两个覆写脚本。
+- mihomo 静态 profile 由 `skill/scripts/clash/build_profiles.py` 生成，**现已带 `#! version=` 头注**（2026-10-07 补），
+  并按版本存进 `clash/profiles/config_old/`；另有两个覆写脚本。
   **不要把 Surge/Egern 的头注版本与归档约定机械搬到 mihomo。**
 - `.min` 的含义始终是“同一配置去注释”，不是精简功能；改完必须对拍。
 
@@ -230,7 +234,7 @@ python skill/scripts/clash/build_rules.py --check
 当前对拍结果为 4 / 18 / 272 条全部一致。**不要手工编辑 `rules/*.yaml`。**
 
 这里的“共享”不等于三内核直接读取同一种文件：Surge/Egern 消费 `.list`，mihomo 消费生成的 `.yaml`；
-共享的是同一份内容真源。mihomo 其余 **20 份 `.mrs` + 2 份第三方 YAML** 仍由自己的 `rule-providers` 管理。
+共享的是同一份内容真源。mihomo 其余 **20 份 `.mrs` + 5 份 YAML** 仍由自己的 `rule-providers` 管理。
 
 ## 9 · 已知单侧独有、不可移植项
 
@@ -258,7 +262,7 @@ python skill/scripts/clash/build_rules.py --check
 2. **刷新周期**：Surge/Egern 规则集当前统一 604800 秒；mihomo provider 是 86400 秒。
 3. **静态与覆写职责**：mihomo 静态 YAML 自带 TUN，覆写 JS 交给客户端；这不是漏项。
 
-最后，`my_clash.js` 头注仍写“20 组 / 20 份规则集 / 26 条规则”，但按脚本实际执行结果是
+最后，`my_clash.js` 头注写“22 组 / 25 份规则集 / 27 条规则”，与脚本实际执行结果一致
 **22 / 25 / 27**；静态 `routing.yaml` 的头注数字 **25 / 25 / 27** 与实际一致，但订阅入口与 Smart 接线存在
 §2.1 所述不一致。这些都应在后续修配置或生成器时处理，**不能在移植文档里替真实配置补写不存在的行为**。
 

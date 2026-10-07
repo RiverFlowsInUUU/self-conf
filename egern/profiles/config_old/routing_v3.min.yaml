@@ -1,3 +1,4 @@
+#! version=routing_v3
 vif_only: true
 hijack_dns:
 - '*'
