@@ -119,6 +119,10 @@ def build_gates():
         # mihomo 侧此前一直缺（是唯一的验证缺口），现补上。
         ('clash 分流覆盖', [PY, 'skill/scripts/clash/audit_routing_coverage.py',
                             'clash/profiles/routing.yaml', 'clash/profiles/lazy.yaml'], {}),
+        # 规则集内容审计 —— surge 有 audit_ruleset_content、egern 有
+        # audit_ruleset_noresolve，clash 侧此前为零（最后一个对标缺口）。
+        ('clash 规则集内容', [PY, 'skill/scripts/clash/audit_ruleset_content.py', '--offline',
+                              'clash/profiles/routing.yaml', 'clash/profiles/lazy.yaml'], {}),
         ('clash 静态 profile 新鲜度', [PY, 'skill/scripts/clash/build_profiles.py', '--check'], {}),
     ]
     return gates
