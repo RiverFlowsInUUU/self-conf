@@ -142,7 +142,13 @@ def check_profile(path):
         errs.append("广告 policy 排在 cn 之后 —— 会先命中 cn 而拿不到空回答")
 
     # ④ tun 段（防泄露的收口装置）
-    #    本仓踩过：由脚本重建 profile 时 tun 被丢掉（脚本不生成它），
+    #
+    #    适用范围：**仅静态 profile**（profiles/*.yaml）。
+    #    ⚠️ 覆写脚本（override/*.js）的输出**不含 tun 是对的** ——
+    #       客户端（Mihomo Party / Clash Verge）自己管理 TUN，脚本只覆写
+    #       策略组与规则，不该越俎代庖。两种形态的判断标准不同，勿混用。
+    #
+    #    本仓踩过：由脚本重建静态 profile 时 tun 被丢掉（脚本输出里本就没有），
     #    四份配置全没了 dns-hijack + strict-route —— 防线破了而门禁全绿。
     tun = c.get("tun") or {}
     if not tun.get("enable"):
