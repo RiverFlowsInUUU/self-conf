@@ -205,11 +205,22 @@ def main():
     print("远程资源可达性检查 —— 共 %d 个 URL" % len(targets))
     print("-" * 78)
     dead = []
-    for url, src in targets:
+    # ⚠️ 2026-10-08：原实现是**串行** curl —— 76 个 URL × 15s 超时，
+    #    最坏要十几分钟，本地根本跑不完 ⇒ 这项长期挂账，只靠 CI 每周一兜底。
+    #    现改为并发（默认 16），并用 `ex.map` 保序 ⇒ 输出顺序与串行一致，可读。
+    todo = []
+    for i, (url, src) in enumerate(targets):
         if skip_self and url.startswith(SELF_PREFIX):
             print("  ~ 跳过(本仓) %s" % url[:70])
             continue
-        ok, note = probe(url, timeout)
+        todo.append((url, src))
+    try:
+        import concurrent.futures as _cf
+        with _cf.ThreadPoolExecutor(max_workers=16) as _ex:
+            results = list(_ex.map(lambda u: probe(u, timeout), [u for u, _ in todo]))
+    except Exception:
+        results = [probe(u, timeout) for u, _ in todo]
+    for (url, src), (ok, note) in zip(todo, results):
         print("  %s %-62s %s" % ("OK" if ok else "NG", url[:62], note if not ok else ""))
         if not ok:
             dead.append((url, src, note))
