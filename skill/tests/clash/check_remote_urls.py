@@ -38,11 +38,30 @@ for _stream in (sys.stdout, sys.stderr):
         pass
 
 def _default_root():
-    """仓库根；整合仓里 clash 配置位于 clash/ 子目录，自动识别。"""
-    r = os.path.abspath(os.path.join(os.path.dirname(os.path.abspath(__file__)), "..", "..", "..", ".."))
-    if os.path.isdir(os.path.join(r, "clash", "profiles")):
-        return os.path.join(r, "clash")
-    return r
+    """定位 clash 配置目录（含 profiles/ 与 override/）。
+
+    两种布局都支持：
+      · 整合仓 self-conf：配置在 <root>/clash/ 下
+      · 单仓 Clash：配置就在 <root> 下
+
+    探测顺序：当前工作目录 → 脚本自身位置。
+    优先用 CWD 是因为 CI 从仓库根调用，而 __file__ 在符号链接 /
+    不同调用方式下可能算错（实测 GitHub Actions 上 __file__ 探测失败）。
+    """
+    cands = []
+    cwd = os.getcwd()
+    cands.append(cwd)
+    cands.append(os.path.join(cwd, "clash"))
+    here = os.path.dirname(os.path.abspath(__file__))
+    up = here
+    for _ in range(5):
+        cands.append(up)
+        cands.append(os.path.join(up, "clash"))
+        up = os.path.dirname(up)
+    for c in cands:
+        if os.path.isdir(os.path.join(c, "profiles")) and os.path.isdir(os.path.join(c, "override")):
+            return os.path.abspath(c)
+    return os.path.abspath(cwd)
 
 ROOT = _default_root()
 sys.path.insert(0, os.path.abspath(os.path.join(os.path.dirname(os.path.abspath(__file__)), "..", "..", "scripts", "clash")))
