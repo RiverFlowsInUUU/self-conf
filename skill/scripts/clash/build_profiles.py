@@ -171,7 +171,22 @@ def main():
         groups = out.get("proxy-groups") or []
         if st.get("proxy-groups"):
             groups = inherit_template_only(groups, st["proxy-groups"])
+        # Smart 三档必须**接进** Smart.proxies（fallback 顺序即优先级）。
+        # 此前只继承了三个子组的定义，Smart.proxies 仍是脚本侧的 ["DIRECT"]，
+        # 于是三档形同虚设 —— 声明了却没接上，比不声明更隐蔽。
+        for g in groups:
+            if g.get("name") == "Smart" and st.get("proxy-groups"):
+                old = g.get("proxies") or []
+                if old == ["DIRECT"] or not old:
+                    g["proxies"] = ["Low Mult.", "Auto", "High Mult."]
         out["proxy-groups"] = groups
+
+        # proxy-providers 段：脚本不生成（它用 include-all 直接吃节点），但
+        # **静态 profile 必须有订阅槽位** —— 用户导入后要靠它填自己的订阅地址。
+        # 此前从脚本输出重建时把它丢了，两份配置都没了 proxy-providers，
+        # 而头注还让用户去改 `proxy-providers.Airport.url` ⇒ 用户无从下手。
+        if "proxy-providers" not in out and st.get("proxy-providers"):
+            out["proxy-providers"] = st["proxy-providers"]
 
         # tun 段：脚本不生成（交给客户端决定监听端口等），但**防泄露的收口
         # 装置（dns-hijack + strict-route）必须保留** ——
@@ -233,6 +248,16 @@ def main():
             parsed = yaml.safe_load(raw)
         except Exception as e:
             print("  NG %s YAML 解析失败: %s" % (full_rel, e))
+            bad += 1
+            continue
+        if not parsed.get("proxy-providers"):
+            print("  NG %s 缺 proxy-providers（用户无从填订阅）" % full_rel)
+            bad += 1
+            continue
+        _sm = next((g for g in parsed.get("proxy-groups", [])
+                    if g.get("name") == "Smart"), None)
+        if _sm and "Low Mult." in {g.get("name") for g in parsed.get("proxy-groups", [])}                 and (_sm.get("proxies") or []) == ["DIRECT"]:
+            print("  NG %s Smart 未接上三档（声明了却没连）" % full_rel)
             bad += 1
             continue
         if not parsed.get("tun"):

@@ -101,6 +101,10 @@ def build_gates():
         ('Surge DNS routing', [PY, 'skill/scripts/surge/check_surge_dns.py', 'surge/profiles/routing.conf'], {}),
         ('Egern DNS 双份', [PY, 'skill/scripts/egern/check_egern_dns.py',
                             'egern/profiles/lazy.yaml', 'egern/profiles/routing.yaml'], {}),
+        # mihomo 侧的防 DNS 泄露审计器 —— 与上面两条同职责，此前缺失。
+        # 防泄露是本仓命脉，三个内核都得有各自的实测审计器。
+        ('mihomo DNS 双份', [PY, 'skill/scripts/clash/check_clash_dns.py',
+                             'clash/profiles/lazy.yaml', 'clash/profiles/routing.yaml'], {}),
         ('.min 漂移', [PY, 'skill/tests/make_min.py', '--check'], {}),
         ('地区组判别力', [PY, 'skill/tests/check_region_filters.py'], {}),
         ('profile 结构', [PY, 'skill/tests/check_structure.py'], {}),
