@@ -97,7 +97,19 @@ python skill/tests/clash/check_remote_urls.py
 `check_structure` · `check_min_pair` · `check_script_sync` ·
 `check_remote_urls` · `check_secrets`
 
-## 7 · 红线
+## 7 · 踩过的坑（CI 暴露，本地全绿也没用）
+
+| 现象 | 根因 | 处理 |
+|:-----|:-----|:-----|
+| Linux CI 上 clash 门禁报「缺文件」，本地全过 | `_default_root()` 基于 `__file__` 向上推算，在 Actions 的调用方式下算错目录 | 改为 CWD 优先 + 逐级向上探测，找到同时含 `profiles/` 与 `override/` 的目录 |
+| V7「一天一版」判负：一天升了 21 个版本 | 复制文件时 mtime 丢失，历史归档全变成复制当天 | `cp -p` 保留 mtime；另加 `SKIP_V7` 开关应对"本就不继承 git 历史" |
+| `198.18.0.1` 被判为真实 IP | 那是 mihomo 的 fake-ip 段（RFC 6815），Surge/Egern 侧不认识 | 加入 `DOC_NETS` 白名单 |
+| CRLF 判负 | Clash 侧 3 个文件是 CRLF | 转 LF + 搬入 `.gitattributes` |
+
+第一条最值得记：**本地全绿 ≠ 线上能跑**。路径探测这类环境相关的东西，
+一定要让 CI 跑一遍才算数。
+
+## 8 · 红线
 
 - ❌ 不改 `Self-Configuration` 与 `Clash` 两个原仓
 - ❌ 不手工编辑 `rules/*.yaml`（生成物，改真源 `.list`）
