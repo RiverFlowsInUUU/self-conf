@@ -6,10 +6,11 @@
 
 三内核配置模板 · 殊途同归 · 久用如一
 
-[![Surge](https://img.shields.io/badge/Surge-iOS%20%7C%20macOS-1f6feb?style=flat-square)](#-取用)
-[![Egern](https://img.shields.io/badge/Egern-iOS%20%7C%20macOS-0969da?style=flat-square)](#-取用)
-[![mihomo](https://img.shields.io/badge/mihomo-Clash%20Meta-8250df?style=flat-square)](#-取用)
-[![Kernels](https://img.shields.io/badge/Kernels-3-dc3545?style=flat-square)](#-内核并列)
+[![Surge](https://img.shields.io/badge/Surge-iOS%20%7C%20macOS-1f6feb?style=flat-square)](#-两全其美--皆合心意)
+[![Egern](https://img.shields.io/badge/Egern-iOS%20%7C%20macOS-0969da?style=flat-square)](#-两全其美--皆合心意)
+[![mihomo](https://img.shields.io/badge/mihomo-Clash%20Meta-8250df?style=flat-square)](#-两全其美--皆合心意)
+[![Groups](https://img.shields.io/badge/Groups-23%20%7C%2023%20%7C%2022-8250df?style=flat-square)](#-内核并列)
+[![Rules](https://img.shields.io/badge/Rules-26%20%7C%2026%20%7C%2027-dc3545?style=flat-square)](#-共享与分歧)
 [![DNS](https://img.shields.io/badge/DNS-Zero%20Leak-2ea043?style=flat-square)](#-共享与分歧)
 [![License](https://img.shields.io/badge/License-MIT-dfb317?style=flat-square)](LICENSE)
 
@@ -21,7 +22,9 @@
 
 > 🤖 **AI agent 请从这里开始** → [`skill/SKILL.md`](skill/SKILL.md)
 
-## 📥 取用
+## 📥 两全其美 · 皆合心意
+
+<sub>标题沿用原仓以复用既有文档链接；此处实为**三内核**（Surge / Egern / mihomo）。</sub>
 
 | <div align="center">内核</div> | 🪶 懒人版 · 至简 | 🧭 分流版 · 可控 |
 |:--|:--|:--|
