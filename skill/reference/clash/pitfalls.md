@@ -126,7 +126,7 @@ on:
 - 判负样例：`checker.md` §9.2 第 15 条 —— 把某条 URL 改回 `mihomo-white-guard.yaml`（**即当年真实死链**），期望 `NG` + `死链 N 个` + exit 1。
 - 文档：`profile-anatomy.md` §9.5 的警告块。
 
-⚠️ **已知文档漂移（待确认）**：`clash/docs/01-规则集与来源.md:76` 至今仍写
+⚠️ **已知文档漂移（待确认）**：`skill/reference/clash/ruleset-sources.md:76` 至今仍写
 `mihomo-white-guard.yaml`。它不在 `check_remote_urls.py` 的扫描面内（是 Markdown），
 `check_selfcontained.py` 也不扫 `.md` ⇒ **没有任何闸门会发现它**。
 **改规则集 URL 时，文档表要手工同步 —— 这是个没有机器兜底的手工步骤。**
@@ -1266,7 +1266,7 @@ python skill/tests/clash/check_script_sync.py "$SB"   # 期望 0
 | 显式列出文本类型 | 避免 `text=auto` 因内容启发式把某些文件误判成二进制 |
 | 二进制资产标 `binary` | 禁止任何换行改写（`.p12` / `.pem` / `.mmdb` 改一个字节就废了）|
 
-配套：整合时把 Clash 侧 3 个 CRLF 文件（DetailsReadme / docs / `lazy.yaml`）转成 LF。
+配套：整合时把 Clash 侧 3 个 CRLF 文件（verification.md / ruleset-sources.md / `lazy.yaml`）转成 LF。
 
 ### 判据固化在哪
 

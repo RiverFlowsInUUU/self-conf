@@ -72,7 +72,7 @@ self-conf/
 
 - 现役入口使用稳定文件名 `lazy.*` / `routing.*`，订阅地址不随版本变化；
 - Surge / Egern 的历史版本进入各自 `profiles/config_old/`，历史只增不删；
-- mihomo 当前以脚本生成现役静态 profile，演进记录主要看 Git 历史与 `clash/CHANGELOG.md`；
+- mihomo 当前以脚本生成现役静态 profile，演进记录主要看 Git 历史与 `CHANGELOG.md`（本目录）；
 - 不要为了保留旧行为在现役目录里再造 `routing-new`、`routing-final`、`routing-fixed`。
 
 **判据**：能由旧配置升级得到的是“版本”；服务不同用户任务的才是“产品线”。

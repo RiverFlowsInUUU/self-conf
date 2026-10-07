@@ -1,5 +1,12 @@
 # 规则集与来源
 
+> **何时读**：想知道某个规则集为什么选它、以及选型过程中纠正过哪些错误判断时。
+> 本文件原为 `clash/docs/01-规则集与来源.md`，整合进 self-conf 后并入 skill。
+>
+> ⚠️ **与 `ruleset-weight.md` 的分工**：本文件讲**来源与选型决策**
+> （§0 三级优先、纠偏记录、为什么移除 blackmatrix7、微信为什么走 `.mrs`）；
+> `ruleset-weight.md` 讲**体量与覆盖度**（份数、条目数、AI 覆盖度实测差集）。
+>
 > 首页只讲「能实现怎样的分流」。这一页是组件清单：用了哪些规则集、各自从哪来、按什么顺序生效。
 
 ## 0 · 选型原则：三级优先
@@ -175,7 +182,7 @@ Apple 则由 `GEOSITE,apple`（1792 条）做**全量直连**（懒人版只要�
 8. **国内部分「域名集在前、IP 集在后」** —— 域名命中优先，避免先做一次 IP 判定。
 9. **兜底 `MATCH` 必须在最后** —— 它是唯一不带条件的规则，排在前面会吞掉后面全部。
 
-> ⚠️ 两条 `GEOIP` **不带 `no-resolve`**：走到它们的域名会多触发一次本地解析。本地解析走的是加密解析器，不产生明文，代价只是首个请求多一次解析耗时。取舍依据见 [`../DetailsReadme/DetailsReadme.md`](../DetailsReadme/DetailsReadme.md)（`GEOIP` 行）。
+> ⚠️ 两条 `GEOIP` **不带 `no-resolve`**：走到它们的域名会多触发一次本地解析。本地解析走的是加密解析器，不产生明文，代价只是首个请求多一次解析耗时。取舍依据见 [`verification.md`](verification.md)（`GEOIP` 行）。
 
 ## 4 · 素材与许可
 
@@ -184,8 +191,8 @@ Apple 则由 `GEOSITE,apple`（1792 条）做**全量直连**（懒人版只要�
 | 策略组图标 | 面板图标（引用姊妹仓 [Self-Configuration](https://github.com/RiverFlowsInUUU/Self-Configuration) 的 `icons/`，29 个，两仓组名一一对应） | [Self-Configuration · icons](https://github.com/RiverFlowsInUUU/self-conf/tree/main/icons) |
 | 微信规则集 | `WeChat` 组的域名清单（30 条） | [Lanlan13-14/Rules](https://github.com/Lanlan13-14/Rules) · `rules/Domain/WeChat.mrs` |
 | `GEOIP` / `GEOSITE` 数据库 | 原生规则的地域判定 | [MetaCubeX/meta-rules-dat](https://github.com/MetaCubeX/meta-rules-dat) |
-| 许可 | 本仓库 | MIT · 见 [`../LICENSE`](../../LICENSE) |
+| 许可 | 本仓库 | MIT · 见 [`../LICENSE`](../../../LICENSE) |
 
 ---
 
-相关：[`../DetailsReadme/DetailsReadme.md`](../DetailsReadme/DetailsReadme.md) · [`../README.md`](../../README.md)
+相关：[`verification.md`](verification.md) · [`README.md`](../../../README.md)

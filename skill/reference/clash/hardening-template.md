@@ -274,7 +274,7 @@ IP 类规则（geoip-\*）原则上应带 `no-resolve`，避免为判定而触�
 | 分流版 | `geoip-google` / `geoip-telegram` / `geoip-cn` **未带** |
 | 懒人版 | 两条都**带** |
 
-`clash/DetailsReadme/DetailsReadme.md` 里声称「两条 GEOIP 都不带」，
+`skill/reference/clash/verification.md` 里声称「两条 GEOIP 都不带」，
 与懒人版实际写法矛盾。本仓尚未统一，改动前先确认 mihomo 对 `RULE-SET`
 规则级 `no-resolve` 的语义。
 

@@ -53,8 +53,8 @@ self-conf/                                    # 三内核整合仓
 │   │   ├── my_clash.js                       # → 分流版结构
 │   │   ├── my_clash_lazy.js                  # → 懒人版结构
 │   │   └── README.md                         # 与静态模板的差别、用法、实测
-│   ├── docs/01-规则集与来源.md                # 规则集清单与选型（门面层）
-│   ├── DetailsReadme/DetailsReadme.md        # dns / tun 两段的防泄露推导
+│   ├── ruleset-sources.md                # 规则集清单与选型（门面层）
+│   └── （文档已并入 skill/reference/clash/）
 │   └── CHANGELOG.md
 ├── rules/                                    # 共享规则集真源（.list）+ 生成物（.yaml）
 ├── icons/                                    # 38 个图标 PNG，三内核共用
@@ -269,7 +269,7 @@ if dns.get("ipv6") is not False:    errs.append("dns.ipv6 未显式关闭")
 
 > 如果你有自己的固定节点，直接写进 `proxies`，它们与订阅节点合并进各组。
 > 节点 `server` 写 IP 字面量 ⇒ 不产生「解析节点域名」这一次查询（出口 ③，见
-> [`../clash 侧 DetailsReadme`](../../../clash/DetailsReadme/DetailsReadme.md) §2.3）。
+> [`verification.md`](../../../skill/reference/clash/verification.md) §2.3）。
 
 ## 5 · 节点来源：`proxies` · `proxy-providers`
 
@@ -608,7 +608,7 @@ rule-providers:
 - `ipcidr` 集合里混了域名 ⇒ 域名不是合法 CIDR，整份集解析失败或退化成空集。
 
 ⇒ 判据：**先落一份样本看内容形态，再定 `behavior`**，不要照抄别人的配置。
-`docs/01-规则集与来源.md` §0.1 记过一次这类纠偏（「Gemini / Claude 没有独立类别」是错的）。
+`ruleset-sources.md` §0.1 记过一次这类纠偏（「Gemini / Claude 没有独立类别」是错的）。
 
 ### 9.5 `path` 与 `interval`：为什么必须给
 
@@ -648,7 +648,7 @@ rule-providers:
 
 ⚠️ 因此 §10.1 的「三级优先」描述的是**选型思想**，不是当前文件的字面形态。
 当前形态是「远程 MRS 为主 + 5 份自定义 classical + 1 条内联」。
-这条差异也写进了 [`docs/01-规则集与来源.md`](../../../clash/docs/01-规则集与来源.md) §1.3。
+这条差异也写进了 [`ruleset-sources.md`](../../../skill/reference/clash/ruleset-sources.md) §1.3。
 
 ### 10.3 `interval: 86400`（一天）
 
@@ -835,7 +835,7 @@ mihomo 的解析器不是一个，而是**各管一段路**。混用会让「本
 > 🔎 本段真正需要它的只有 `dns.cloudflare.com` 与 `dns.google` 两条
 > （`nameserver` / `fallback` 写成主机名端点）。其余键都写成 IP 端点，不需要任何引导。
 > ⇒ 把 `nameserver` 换成 IP 形式的端点（`https://1.1.1.1/dns-query`）即可做到**零明文**
-> （实测见 `DetailsReadme.md` §5：34 条明文 → 0 条）。
+> （实测见 `verification.md` §5：34 条明文 → 0 条）。
 
 ### 13.2 `respect-rules: true` 的连带要求
 
@@ -1234,6 +1234,6 @@ python skill/tests/clash/check_secrets.py        # 占位符纪律
 相关：[`../shared/cross-kernel-diff.md`](../shared/cross-kernel-diff.md) ·
 [`../shared/no-resolve-pairing.md`](../shared/no-resolve-pairing.md) ·
 [`../../../clash/override/README.md`](../../../clash/override/README.md) ·
-[`../../../clash/docs/01-规则集与来源.md`](../../../clash/docs/01-规则集与来源.md) ·
-[`../../../clash/DetailsReadme/DetailsReadme.md`](../../../clash/DetailsReadme/DetailsReadme.md) ·
+[`../../../skill/reference/clash/ruleset-sources.md`](../../../skill/reference/clash/ruleset-sources.md) ·
+[`../../../skill/reference/clash/verification.md`](../../../skill/reference/clash/verification.md) ·
 [`../../SKILL.md`](../../SKILL.md)
