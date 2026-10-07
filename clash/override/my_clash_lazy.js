@@ -229,16 +229,24 @@ function main(config) {
     ],
     // 主解析器
     nameserver: [
-      "https://dns.cloudflare.com/dns-query",
-      "https://dns.google/dns-query",
+      // 写 IP 字面量而非主机名：省掉一次「解析解析器」的明文引导查询（泄露面①）。
+      // 官方要求 default-nameserver 必须为 IP 就是干这个用的。
+      "https://1.1.1.1/dns-query",
+      "https://8.8.8.8/dns-query",
     ],
 
     "nameserver-policy": {
-      // 广告两项**必须排在** geosite:private,cn 之前 —— 否则先命中 cn 就拿不到空回答；
+      // 广告两项**必须排在** rule-set:private / rule-set:cn 之前 —— 否则先命中 cn 就拿不到空回答；
       // 且必须同时在 fake-ip-filter 里列一遍（见下），否则拦截不生效。
       "rule-set:AWAvenue-Ads": "rcode://success",
       "rule-set:Jinx-Ads": "rcode://success",
-      "geosite:private,cn": [
+      // 官方示例是单名（geosite:xxx）。逗号多值无依据，拆成两条；
+      // 同时统一用 rule-set: 前缀（与分流版一致，本仓规则集都是 rule-provider）。
+      "rule-set:private": [
+        "https://223.5.5.5/dns-query",
+        "https://120.53.53.53/dns-query",
+      ],
+      "rule-set:cn": [
         "https://223.5.5.5/dns-query",
         "https://120.53.53.53/dns-query",
       ],

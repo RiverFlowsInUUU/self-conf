@@ -412,10 +412,10 @@ rules:
   - RULE-SET,microsoft,Microsoft
   - RULE-SET,apple-cn,DIRECT
   - RULE-SET,telegram,Telegram
-  - RULE-SET,geoip-google,Google
-  - RULE-SET,geoip-telegram,Telegram
+  - RULE-SET,geoip-google,Google,no-resolve
+  - RULE-SET,geoip-telegram,Telegram,no-resolve
   - RULE-SET,cn,DIRECT
-  - RULE-SET,geoip-cn,DIRECT
+  - RULE-SET,geoip-cn,DIRECT,no-resolve
   - MATCH,Proxy
 dns:
   enable: true
@@ -436,17 +436,20 @@ dns:
     - https://doh.18bit.cn/dns-query
     - https://dns.alidns.com/dns-query
   nameserver:
-    - https://dns.cloudflare.com/dns-query
-    - https://dns.google/dns-query
+    - https://1.1.1.1/dns-query
+    - https://8.8.8.8/dns-query
   fallback:
-    - https://dns.cloudflare.com/dns-query
-    - https://dns.google/dns-query
+    - https://1.1.1.1/dns-query
+    - https://8.8.8.8/dns-query
   fallback-filter:
     geoip: true
   nameserver-policy:
     rule-set:AWAvenue-Ads: rcode://success
     rule-set:Jinx-Ads: rcode://success
-    rule-set:private,cn:
+    rule-set:private:
+      - https://doh.18bit.cn/dns-query
+      - https://dns.alidns.com/dns-query
+    rule-set:cn:
       - https://doh.18bit.cn/dns-query
       - https://dns.alidns.com/dns-query
   fake-ip-filter:

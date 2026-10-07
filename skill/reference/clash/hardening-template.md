@@ -104,7 +104,7 @@ mihomo 的 dns 段比 Surge / Egern 分得细，**四个键不要混用**：
 | `default-nameserver` | **引导解析器**：只用于解析 DoH 端点自身的域名 | `223.5.5.5` / `119.29.29.29`（纯 IP） |
 | `proxy-server-nameserver` | 只解析**代理节点域名**（连节点前还没有代理可用，鸡生蛋） | `doh.18bit.cn` / `dns.alidns.com` |
 | `direct-nameserver` | 只解析 **DIRECT 出站**的域名 —— 直连流量也不碰系统 DNS | 同上 |
-| `nameserver` | **主解析器**：需要本地解析出真实 IP 的域名 | `dns.cloudflare.com` / `dns.google` |
+| `nameserver` | **主解析器**：需要本地解析出真实 IP 的域名 | `1.1.1.1` / `8.8.8.8`（**IP 字面量**，见 §5）|
 
 ### 3.1 `enhanced-mode: fake-ip`
 
@@ -135,11 +135,13 @@ DNS 查询自己也受路由规则管辖 —— 发往境外 DoH 的查询会按
 
 ```yaml
 fallback:
-  - https://dns.cloudflare.com/dns-query
-  - https://dns.google/dns-query
+  - https://1.1.1.1/dns-query
+  - https://8.8.8.8/dns-query
 fallback-filter:
   geoip: true
 ```
+
+（与 `nameserver` 相同，同样写 IP 字面量 —— 理由见 §5。）
 
 主解析器失败时的退路。`geoip: true` 让回退只在 geoip 判定需要时才用。
 
@@ -174,21 +176,29 @@ default-nameserver:
 
 ## 5 · `nameserver` / `fallback`：主解析
 
+## 5 · `nameserver` / `fallback`：主解析
+
 ```yaml
 nameserver:
-  - https://dns.cloudflare.com/dns-query
-  - https://dns.google/dns-query
+  - https://1.1.1.1/dns-query      # Cloudflare
+  - https://8.8.8.8/dns-query      # Google
 ```
 
-⚠️ **如实标注待确认项**：这里用的是**主机名**而非 IP 字面量
-（与 §4「端点一律写 IP」的纪律不一致）。
+✅ **已确认并修正（2026-10-07）**：必须写 **IP 字面量**，不能写主机名。
 
-它成立的前提是 `default-nameserver` 能解析这两个主机名 ——
-本仓 `default-nameserver` 是国内解析器（223.5.5.5 / 119.29.29.29），
-解析 `dns.cloudflare.com` 与 `dns.google` **会走一次明文引导查询**。
+为什么：官方明确 `default-nameserver`「必须为 IP」，它的用途就是
+**解析 DNS 服务器的域名**。若 `nameserver` 写成主机名（如
+`https://dns.cloudflare.com/dns-query`），就要靠 `default-nameserver`
+去解析它 —— 那是一次**必然发生**的明文引导查询（泄露面①：
+冷启动 100% 触发，虽然只发生一次，但它是「必然通路」不是「可能通路」）。
 
-这是已知代价（冷启动一次），修改需连带评估 `nameserver` 的可用性，
-本仓尚未改成 IP 字面量。详见 §12 FAQ。
+写成 IP 字面量即消除该面。现由 `check_structure.py` 第 ⑥ 项守着
+（注入主机名会判负）。
+
+`fallback` 同理，本仓设为与 `nameserver` 相同的两个端点，
+配 `fallback-filter.geoip: true`。
+
+## 6 · `nameserver-policy`：按域换解析器
 
 ## 6 · `nameserver-policy`：按域换解析器
 
@@ -196,7 +206,10 @@ nameserver:
 nameserver-policy:
   "rule-set:AWAvenue-Ads": rcode://success
   "rule-set:Jinx-Ads": rcode://success
-  "rule-set:private,cn":
+  "rule-set:private":
+    - https://doh.18bit.cn/dns-query
+    - https://dns.alidns.com/dns-query
+  "rule-set:cn":
     - https://doh.18bit.cn/dns-query
     - https://dns.alidns.com/dns-query
 ```
@@ -204,12 +217,16 @@ nameserver-policy:
 - 私有域 + 中国大陆域名交回**国内 DoH**（解析结果准、延迟低）
 - 两条广告清单返回 `rcode://success`（空回答）—— 见 §8
 
-⚠️ **顺序有语义**：广告项**必须排在 `private,cn` 之前**，
+⚠️ **顺序有语义**：广告项**必须排在 `rule-set:private` / `rule-set:cn` 之前**，
 否则先命中 `cn` 就拿不到空回答。
 
-⚠️ **两版写法不一致（待确认）**：分流版是 `rule-set:private,cn`，
-懒人版是 `geosite:private,cn`。逗号分隔的多个 provider 名是否被内核
-当作集合处理，本仓未取得源码级证据。判据以配置文件实际行为为准。
+✅ **已确认并统一（2026-10-07）**：键用**单名**形式，不用逗号多值。
+
+依据：官方文档的示例只有单名（`'rule-set:cn'`、`geosite:xxx`），
+**逗号分隔多值没有任何官方依据**。此前分流版写 `rule-set:private,cn`、
+懒人版写 `geosite:private,cn`，两版既不一致也无据可依。
+拆成两条后语义明确，且两版统一用 `rule-set:` 前缀
+（本仓规则集都是 rule-provider，`geosite:` 无对应）。
 
 ## 7 · `fake-ip-filter`：谁必须跳过假 IP
 
@@ -267,16 +284,26 @@ DNS 层拦截比规则层早（连接根本建立不起来），但要**两个�
 IP 类规则（geoip-\*）原则上应带 `no-resolve`，避免为判定而触发一次本地解析。
 纯域名规则集**不写**（没有 IP 规则，写了无意义）。
 
-⚠️ **本仓现状不一致（待确认）**：
+✅ **已确认并统一（2026-10-07）**：两版 `geoip-*` **全部带** `no-resolve`。
 
-| 配置 | `geoip-*` 是否带 `no-resolve` |
-|:--|:--|
-| 分流版 | `geoip-google` / `geoip-telegram` / `geoip-cn` **未带** |
-| 懒人版 | 两条都**带** |
+**RULE-SET 是否支持该参数** —— 此前存疑，现已取到源码级证据：
 
-`skill/reference/clash/verification.md` 里声称「两条 GEOIP 都不带」，
-与懒人版实际写法矛盾。本仓尚未统一，改动前先确认 mihomo 对 `RULE-SET`
-规则级 `no-resolve` 的语义。
+```go
+// rules/parser.go
+case "RULE-SET":
+    isSrc, noResolve := RC.ParseParams(params)
+    parsed, parseErr = RP.NewRuleSet(payload, target, isSrc, noResolve)
+```
+
+即 RULE-SET 确实解析 `no-resolve` 并传给 `NewRuleSet`。
+而 `geoip-*` 的 behavior 是 `ipcidr`（IP 规则），不带就会为判定
+「目标 IP 是否命中」先触发一次本地解析（泄露面④）。
+
+现由 `check_structure.py` 第 ⑤ 项守着（缺了会判负）。
+
+> 附带纠正：`verification.md`（原 DetailsReadme）曾声称
+> 「两条 GEOIP 都不带 no-resolve」，与懒人版实际写法矛盾 —— 已统一。
+
 
 ## 10 · 订阅槽位：导入前必改的一处
 

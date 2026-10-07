@@ -407,10 +407,14 @@ function main(config) {
     "RULE-SET,microsoft,Microsoft",
     "RULE-SET,apple-cn,DIRECT",
     "RULE-SET,telegram,Telegram",
-    "RULE-SET,geoip-google,Google",
-    "RULE-SET,geoip-telegram,Telegram",
+    // geoip-* 是 IP 规则（behavior: ipcidr），一律带 no-resolve：
+    // 否则为判定「目标 IP 是否命中」会先触发一次本地解析。
+    // 源码依据：rules/parser.go `case "RULE-SET": isSrc, noResolve := RC.ParseParams(params)`
+    // —— RULE-SET 确实解析该参数并传给 NewRuleSet。
+    "RULE-SET,geoip-google,Google,no-resolve",
+    "RULE-SET,geoip-telegram,Telegram,no-resolve",
     "RULE-SET,cn,DIRECT",
-    "RULE-SET,geoip-cn,DIRECT",
+    "RULE-SET,geoip-cn,DIRECT,no-resolve",
     "MATCH,Proxy",
   ];
 
@@ -445,19 +449,32 @@ function main(config) {
     ],
 
     nameserver: [
-      "https://dns.cloudflare.com/dns-query",
-      "https://dns.google/dns-query",
+      // 写 IP 字面量而非主机名：省掉一次「解析解析器」的明文引导查询。
+      // 官方要求 default-nameserver 必须为 IP（就是干这个用的），
+      // 但 nameserver 写主机名时，仍要靠它去解析 cloudflare/google 的域名 ——
+      // 那是一次 100% 会发生的明文查询（泄露面①）。改成 IP 即消除。
+      "https://1.1.1.1/dns-query",
+      "https://8.8.8.8/dns-query",
     ],
     fallback: [
-      "https://dns.cloudflare.com/dns-query",
-      "https://dns.google/dns-query",
+      // 写 IP 字面量而非主机名：省掉一次「解析解析器」的明文引导查询。
+      // 官方要求 default-nameserver 必须为 IP（就是干这个用的），
+      // 但 nameserver 写主机名时，仍要靠它去解析 cloudflare/google 的域名 ——
+      // 那是一次 100% 会发生的明文查询（泄露面①）。改成 IP 即消除。
+      "https://1.1.1.1/dns-query",
+      "https://8.8.8.8/dns-query",
     ],
     "fallback-filter": { geoip: true },
 
     "nameserver-policy": {
       "rule-set:AWAvenue-Ads": "rcode://success",
       "rule-set:Jinx-Ads": "rcode://success",
-      "rule-set:private,cn": [
+      // 官方示例是单名（rule-set:cn）。逗号多值无依据，拆成两条。
+      "rule-set:private": [
+        "https://doh.18bit.cn/dns-query",
+        "https://dns.alidns.com/dns-query",
+      ],
+      "rule-set:cn": [
         "https://doh.18bit.cn/dns-query",
         "https://dns.alidns.com/dns-query",
       ],

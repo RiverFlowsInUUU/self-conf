@@ -28,6 +28,7 @@
 """
 
 import os
+import re
 import sys
 
 for _stream in (sys.stdout, sys.stderr):
@@ -157,7 +158,28 @@ def check_profile(path):
         if not tun.get(k):
             errs.append("tun 缺 %s" % k)
 
-    # ⑤ IPv6
+    # ⑤ geoip-* 规则必须带 no-resolve
+    #    geoip-* 的 behavior 是 ipcidr（IP 规则），不带就会为判定「目标 IP 是否
+    #    命中」先触发一次本地解析（泄露面④）。
+    #    源码依据：rules/parser.go `case "RULE-SET": isSrc, noResolve := RC.ParseParams(params)`
+    #    —— RULE-SET 确实解析该参数并传给 NewRuleSet，故对 RULE-SET 写法有效。
+    for r in c.get("rules") or []:
+        p_ = [x.strip() for x in r.split(",")]
+        if p_ and p_[0] == "RULE-SET" and p_[1].startswith("geoip-"):
+            if "no-resolve" not in [x.lower() for x in p_[2:]]:
+                errs.append("geoip 规则缺 no-resolve: %s" % r)
+
+    # ⑥ nameserver 必须写 IP 字面量（不能用主机名）
+    #    官方：default-nameserver「必须为 IP」，用途就是解析 DNS 服务器的域名。
+    #    nameserver 写成主机名时，要靠 default-nameserver 去解析它 ——
+    #    那是一次 100% 会发生的明文引导查询（泄露面①）。写 IP 即可消除。
+    for ep in (dns.get("nameserver") or []):
+        host = str(ep).replace("https://", "").replace("http://", "")
+        host = host.split("/")[0].split("#")[0]
+        if host and not re.match(r"^\d+\.\d+\.\d+\.\d+$", host) and not host.startswith("["):
+            errs.append("nameserver 用了主机名（应为 IP 字面量）: %s" % ep)
+
+    # ⑦ IPv6
     if c.get("ipv6") is not False:
         errs.append("顶层 ipv6 未显式关闭")
     if dns.get("ipv6") is not False:
