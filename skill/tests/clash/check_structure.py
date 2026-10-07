@@ -141,7 +141,17 @@ def check_profile(path):
     if cn_idx and ads_idx and min(ads_idx) > min(cn_idx):
         errs.append("广告 policy 排在 cn 之后 —— 会先命中 cn 而拿不到空回答")
 
-    # ④ IPv6
+    # ④ tun 段（防泄露的收口装置）
+    #    本仓踩过：由脚本重建 profile 时 tun 被丢掉（脚本不生成它），
+    #    四份配置全没了 dns-hijack + strict-route —— 防线破了而门禁全绿。
+    tun = c.get("tun") or {}
+    if not tun.get("enable"):
+        errs.append("tun 未启用")
+    for k in ("dns-hijack", "auto-route", "strict-route"):
+        if not tun.get(k):
+            errs.append("tun 缺 %s" % k)
+
+    # ⑤ IPv6
     if c.get("ipv6") is not False:
         errs.append("顶层 ipv6 未显式关闭")
     if dns.get("ipv6") is not False:

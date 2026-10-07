@@ -467,4 +467,12 @@ dns:
     - +.market.xiaomi.com
     - rule-set:AWAvenue-Ads
     - rule-set:Jinx-Ads
+tun:
+  enable: true
+  stack: mips
+  dns-hijack:
+    - any:53
+  auto-route: true
+  auto-detect-interface: true
+  strict-route: true
 proxies: []

@@ -173,6 +173,12 @@ def main():
             groups = inherit_template_only(groups, st["proxy-groups"])
         out["proxy-groups"] = groups
 
+        # tun 段：脚本不生成（交给客户端决定监听端口等），但**防泄露的收口
+        # 装置（dns-hijack + strict-route）必须保留** ——
+        # 此前从脚本输出重建时把它丢了，四份 profile 全没了 tun，属真回归。
+        if "tun" not in out and st.get("tun"):
+            out["tun"] = st["tun"]
+
         order = ["ipv6", "proxy-providers", "proxy-groups", "rule-providers", "rules", "dns", "tun"]
         rest = [k for k in out if k not in order]
         final = {k: out[k] for k in order if k in out}
@@ -227,6 +233,10 @@ def main():
             parsed = yaml.safe_load(raw)
         except Exception as e:
             print("  NG %s YAML 解析失败: %s" % (full_rel, e))
+            bad += 1
+            continue
+        if not parsed.get("tun"):
+            print("  NG %s 缺 tun 段（防泄露收口装置）" % full_rel)
             bad += 1
             continue
         if len(parsed.get("proxy-groups") or []) != ng or len(parsed.get("rules") or []) != nrl:
