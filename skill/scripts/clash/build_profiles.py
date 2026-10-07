@@ -188,13 +188,13 @@ def main():
         if "proxy-providers" not in out and st.get("proxy-providers"):
             out["proxy-providers"] = st["proxy-providers"]
 
-        # tun 段：脚本不生成（交给客户端决定监听端口等），但**防泄露的收口
-        # 装置（dns-hijack + strict-route）必须保留** ——
-        # 此前从脚本输出重建时把它丢了，四份 profile 全没了 tun，属真回归。
-        if "tun" not in out and st.get("tun"):
-            out["tun"] = st["tun"]
+        # tun 段：**不生成也不继承** —— 本仓只管 DNS 防泄露（dns 段）；
+        # 是否开 TUN 与怎么设置（stack / 路由 / 劫持端口）交给客户端决定。
+        # 覆写脚本形态本就没有 tun（客户端自管），静态 profile 保持一致，
+        # 避免替用户做决定或与客户端设置冲突。
+        out.pop("tun", None)
 
-        order = ["ipv6", "proxy-providers", "proxy-groups", "rule-providers", "rules", "dns", "tun"]
+        order = ["ipv6", "proxy-providers", "proxy-groups", "rule-providers", "rules", "dns"]
         rest = [k for k in out if k not in order]
         final = {k: out[k] for k in order if k in out}
         for k in rest:
@@ -260,8 +260,8 @@ def main():
             print("  NG %s Smart 未接上三档（声明了却没连）" % full_rel)
             bad += 1
             continue
-        if not parsed.get("tun"):
-            print("  NG %s 缺 tun 段（防泄露收口装置）" % full_rel)
+        if parsed.get("tun"):
+            print("  NG %s 仍带 tun 段（应由客户端决定）" % full_rel)
             bad += 1
             continue
         if len(parsed.get("proxy-groups") or []) != ng or len(parsed.get("rules") or []) != nrl:

@@ -142,26 +142,12 @@ def check_profile(path):
     if cn_idx and ads_idx and min(ads_idx) > min(cn_idx):
         errs.append("广告 policy 排在 cn 之后 —— 会先命中 cn 而拿不到空回答")
 
-    # ④ tun 段：流量接管与 :53 劫持
-    #    它收的是**泄露面③**（旁路设备：应用不理 DNS 设置、直接发明文 :53）。
-    #    ⚠️ 别把它说成「防 DNS 泄露的收口」—— 防泄露的本体是 dns 段
-    #      （加密解析 / fake-ip / IPv6 关闭 / no-resolve / 广告拦截双条件），
-    #      脚本形态没有 tun 但 dns 段齐全，照样防泄露。
-    #
-    #    适用范围：**仅静态 profile**（profiles/*.yaml）。
-    #    ⚠️ 覆写脚本（override/*.js）的输出**不含 tun 是对的** ——
-    #       客户端（Mihomo Party / Clash Verge）自己管理 TUN，脚本只覆写
-    #       策略组与规则，不该越俎代庖。两种形态的判断标准不同，勿混用。
-    #
-    #    本仓踩过：由脚本重建静态 profile 时 tun 被丢掉（脚本输出里本就没有），
-    #    四份静态配置全没了 dns-hijack + strict-route —— 泄露面③ 失去收口，
-    #    而门禁全绿（静态形态确实需要 tun；脚本形态由客户端负责，不需要）。
-    tun = c.get("tun") or {}
-    if not tun.get("enable"):
-        errs.append("tun 未启用")
-    for k in ("dns-hijack", "auto-route", "strict-route"):
-        if not tun.get(k):
-            errs.append("tun 缺 %s" % k)
+    # ④ tun 段：本仓**不带** —— 只管 DNS 防泄露（dns 段），
+    #    TUN 是否开启与怎么设置（stack / 路由 / 劫持端口）交给客户端决定。
+    #    静态 profile 与覆写脚本输出一致，都不含 tun。
+    #    （泄露面③「旁路设备」因此由客户端的 TUN 接管，不由本仓配置负责。）
+    if c.get("tun"):
+        errs.append("仍带 tun 段（应由客户端决定，本仓只管 DNS 防泄露）")
 
     # ⑤ geoip-* 规则必须带 no-resolve
     #    geoip-* 的 behavior 是 ipcidr（IP 规则），不带就会为判定「目标 IP 是否

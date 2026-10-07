@@ -504,19 +504,19 @@ def check_7_tun(doc, override_form):
     :53 的地址空间是无限的，逐个列举**永远不可能列全**（姊妹仓 check_surge_dns.py
     第 3 项踩过同一个坑：按条数判负是错的）。只有 `any:53` / `0.0.0.0:53` 才叫收口。
 
-    ⚠️ 形态差异（hardening-template §2）：覆写脚本（override/*.js）的输出**不该有**
-    tun 段 —— 客户端自己管 TUN。故 `--override` 下本项整体跳过。
+    ⚠️ 2026-10-07 修正：**tun 不是防 DNS 泄露的必要条件，也不是接管 :53 的唯一方式。**
+    本仓只管 DNS 防泄露（dns 段），TUN 交由客户端决定，故配置里**不带 tun 段**。
+    面③ 的接管可以是：
+      · TUN 模式：`tun.dns-hijack` 劫持（客户端默认形态）
+      · 透明代理模式：iptables/nftables 把 :53 重定向到 mihomo 的 DNS 监听端口
+        —— 实测案例：软路由 OpenClash 透明代理模式、未开 TUN，仅靠 dns 段即防泄露。
+    两者都不在本仓配置内（属客户端 / 系统层），故本项**不判负**，只做提示。
     """
     tun = doc.get("tun")
     if not isinstance(tun, dict) or not tun:
-        if override_form:
-            add(OK, 7, "本文件按覆写脚本输出形态审计（--override）⇒ 不要求 tun 段",
-                "客户端（Mihomo Party / Clash Verge）自己管理 TUN，脚本只覆写策略组与规则。")
-            return
-        add(HIGH, 7, "没有 tun 段 ⇒ 面③（旁路设备直发 :53）完全没有收口装置",
-            "智能音箱 / Apple TV / 游戏机不认你的 DNS 设置，它们按 DHCP 下发的解析器"
-            "（通常是运营商的）直接发 :53 —— 只有 TUN 层劫持拦得住。"
-            "若本文件是 override/*.js 的输出，请加 --override。")
+        add(OK, 7, "不带 tun 段（本仓只管 DNS 防泄露，TUN 交由客户端决定）",
+            "面③（旁路设备直发 :53）需由客户端侧的接管完成 —— TUN 劫持或透明代理重定向；"
+            "两者均不在本仓配置内。防 DNS 泄露的本体是 dns 段，本文件已覆盖。")
         return
     if not tun.get("enable"):
         add(HIGH, 7, "tun.enable 不是 true ⇒ TUN 不工作，dns-hijack 写了也不生效")
