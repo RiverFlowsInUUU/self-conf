@@ -630,6 +630,30 @@ python skill/tests/check_portability.py
 所以写在这里，而不是让它默默躺在某个脚本头注里。
 **新增任何不进闸门的脚本时，同步更新本节。**
 
+### 6.8.2 `skill/scripts/` 是工具区，不是判据区
+
+`skill/scripts/{surge,egern,clash}/` 下的**审计 / 探测 / 生成**脚本，大多**不进 26 道**，
+也不在 CI 里 —— 它们是**人用的分析工具**，按需手动跑（都要传 `profile` 参数，
+直接无参跑会打印 usage 并以 exit 2 结束，那不是崩溃）。
+
+⚠️ 2026-10-07 零信任自查清点：以下 **6 个从未被任何闸门或 CI 调用**
+（在 `.md` 里被提到不算真调用）：
+
+| 脚本 | 干什么 | 什么时候该跑 |
+|:-----|:-------|:-------------|
+| `clash/audit_region_filters.py` | 地区组正则一致性（负向断言漏词 / 组间重叠） | 改地区正则后 |
+| `egern/audit_region_filters.py` | 同上（Egern 侧） | 同上 |
+| `egern/audit_ruleset_refresh.py` | 规则集刷新周期审计 | 改 `interval` / 新增远程集后 |
+| `egern/audit_dns_forward.py` | DNS 转发泄露审计 | 改 DNS 段后 |
+| `clash/weigh_ruleset.py` | 规则集体量/权重测算 | 评估规则集时 |
+| `egern/probe_doh.py` · `probe_dns_endpoints.py` · `profile_ruleset.py` | 探测类工具 | 排查具体问题时 |
+
+为什么不做成判据：它们多为**度量/诊断**性质（输出供人判断，不天然是"过/不过"），
+硬套判据会得到一堆需要人工解读的"红"。保持工具定位，但**必须被看见** —— 故登记于此。
+
+📌 已被闸门调用的（不用手动跑）：`audit_routing_coverage` · `audit_ruleset_content` ·
+`audit_ruleset_noresolve` · `check_clash_dns` —— 这些**已进 26 道**。
+
 📌 **本仓的 CI 不受此影响**：`.github/workflows/ci.yml` 已固定 `fetch-depth: 0`（该处注释亦写明"shallow clone 会把所有日期退化成 push 当天"）。这条纪律管的是**本地与人工审查**场景。
 
 🔍 **判据的通用姿势**：断言报红时，先问「它依赖的输入是否齐全」（历史深度 / 网络 / 凭据 / 前置文件），再问「是不是真的不过」。⚠️ 但**反向也成立**：不得因为"可能是前置问题"就把红当噪声放过 —— 判据与 CI 结论冲突时（如 CI 绿、本地红），先查**两边跑法差异**（历史深度、工作目录、环境变量），再下结论。上面的实证里，审查者一度把该冲突解释成"CI 只验当前状态、本地更全"，方向正好相反。
