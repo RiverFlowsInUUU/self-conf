@@ -89,6 +89,34 @@ def build_gates():
     _skip_v7 = {'SKIP_V7': '1'}
     gates = [
         ('secrets 扫描', [PY, 'skill/tests/check_secrets.py'], {}),
+        # ── 审计工具进闸门（2026-10-08）
+        # 此前这 12 项**从未被任何闸门或 CI 调用**（只在 ops.md §6.8.2 登记，
+        # 靠人记得跑）。原以为它们是「度量/诊断性质，不适合硬套判据」——
+        # 实测推翻了这个判断：它们都给出明确的过/不过（exit 0/1）。
+        ('地区组判别力·Surge',
+         [PY, 'skill/scripts/surge/audit_region_filters.py', 'surge/profiles/routing.conf'], {}),
+        ('地区组判别力·Egern',
+         [PY, 'skill/scripts/egern/audit_region_filters.py', 'egern/profiles/routing.yaml'], {}),
+        ('地区组判别力·mihomo',
+         [PY, 'skill/scripts/clash/audit_region_filters.py', 'clash/profiles/routing.yaml'], {}),
+        ('分流覆盖·Surge',
+         [PY, 'skill/scripts/surge/audit_routing_coverage.py', 'surge/profiles/routing.conf'], {}),
+        ('分流覆盖·mihomo',
+         [PY, 'skill/scripts/clash/audit_routing_coverage.py', 'clash/profiles/routing.yaml'], {}),
+        ('规则集内容·Surge',
+         [PY, 'skill/scripts/surge/audit_ruleset_content.py', 'surge/profiles/routing.conf'], {}),
+        ('规则集内容·mihomo',
+         [PY, 'skill/scripts/clash/audit_ruleset_content.py', 'clash/profiles/routing.yaml'], {}),
+        ('规则集刷新周期·Surge',
+         [PY, 'skill/scripts/surge/audit_ruleset_refresh.py', 'surge/profiles/routing.conf'], {}),
+        ('规则集刷新周期·Egern',
+         [PY, 'skill/scripts/egern/audit_ruleset_refresh.py', 'egern/profiles/routing.yaml'], {}),
+        ('DNS 转发泄露·Egern',
+         [PY, 'skill/scripts/egern/audit_dns_forward.py', 'egern/profiles/routing.yaml'], {}),
+        ('no-resolve 配对·Egern',
+         [PY, 'skill/scripts/egern/audit_ruleset_noresolve.py', 'egern/profiles/routing.yaml'], {}),
+        ('规则集来源文档同步',
+         [PY, 'skill/tests/clash/check_ruleset_doc_sync.py'], {}),
         # 闸门清单对账：ci.yml 与 verify_all 跑的是不是同一套（消掉 checker.md §12.2 的挂账）
         ('闸门清单对账', [PY, 'skill/tests/check_gate_manifest.py'], {}),
         # 2026-10-08：本仓已发布首个 Release ⇒ R1–R5 判据启用。

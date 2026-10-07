@@ -31,7 +31,6 @@
 |:-----|:-----|:--:|:-----|
 | Gemini | `google-gemini` | 46 | `GEOSITE,google-gemini` |
 | Claude / Anthropic | `anthropic` | 8 | `GEOSITE,anthropic` |
-| 微信 | **无独立类别** | — | 远程 `.mrs` → `Lanlan-WeChat`（详见 §0.3） |
 | 腾讯全家桶 | `tencent` | 682 | **不用** —— 会把 QQ / 腾讯云 / 腾讯视频一并收进来 |
 | YouTube Music | **无此类别** | — | 内联 `DOMAIN-SUFFIX,music.youtube.com`（详见 §1.2） |
 
@@ -80,10 +79,9 @@ WeChat 换到上游活跃维护的 `.mrs`（原因见 §0.3）。
 
 | 规则集 | 格式 | 行为 | 去向 | 用在哪 | 来源 |
 |:-------|:-----|:-----|:-----|:--:|:-----|
-| `jinx-white-guard` | YAML | `classical` | `DIRECT` | 两份 | [Jinx](https://github.com/RiverFlowsInUUU/Jinx) · `mihomo-direct.yaml`（上游 2026-10-04 由 `*-white-guard.*` 改名而来，旧名已 404） |
-| `jinx-ads` | YAML | `classical` | `AD` | 两份 | [Jinx](https://github.com/RiverFlowsInUUU/Jinx) · `mihomo-ads.yaml` |
-| `AWAvenue-Ads` | `.mrs` | `domain` | `AD` | 两份 | [TG-Twilight/AWAvenue-Ads-Rule](https://github.com/TG-Twilight/AWAvenue-Ads-Rule) · `AWAvenue-Ads-Rule-Clash.mrs` |
-| `Lanlan-WeChat` | `.mrs` | `domain` | `WeChat` | 仅分流版 | [Lanlan13-14/Rules](https://github.com/Lanlan13-14/Rules) · `rules/Domain/WeChat.mrs` |
+| `Jinx-CN` | YAML | `classical` | `DIRECT` | 两份 | [Jinx](https://github.com/RiverFlowsInUUU/Jinx) · `mihomo-direct.yaml`（上游 2026-10-04 由 `*-white-guard.*` 改名而来，旧名已 404） |
+| `Jinx-Ads` | YAML | `classical` | `AD` | 两份 | [Jinx](https://github.com/RiverFlowsInUUU/Jinx) · `mihomo-ads.yaml` |
+| `AWAvenue-Ads` | `.mrs` | `domain` | `AD` | 两份 | [TG-Twilight/AWAvenue-Ads-Rule](https://github.com/TG-Twilight/AWAvenue-Ads-Rule) · `Filters/AWAvenue-Ads-Rule-Clash.mrs` |
 | `AI-Domains` | text | `classical` | `AI` | 仅懒人版 | [self-conf](https://github.com/RiverFlowsInUUU/self-conf) · `rules/AI.list` |
 | `apple-system` | text | `classical` | `DIRECT` | 仅懒人版 | [self-conf](https://github.com/RiverFlowsInUUU/self-conf) · `rules/apple_system.list` |
 
@@ -166,7 +164,6 @@ Apple 则由 `GEOSITE,apple`（1792 条）做**全量直连**（懒人版只要�
 | ⑬–⑮ | `github` / `google` / `microsoft` | 开发与系统 | 各自应用组 |
 | ⑯–⑰ | `telegram` / `twitter` | 社交 | 各自应用组 |
 | ⑱ | `GEOSITE,apple` | Apple 全量 | `DIRECT` |
-| ⑲ | `RULE-SET,Lanlan-WeChat` | 微信 | `WeChat` |
 | ⑳–㉑ | `GEOSITE,cn` / `GEOIP,cn` | 国内 | `DIRECT` |
 | ㉒ | `MATCH` | 兜底 | `Final` |
 

@@ -211,5 +211,44 @@ def main():
     return 0
 
 
+def self_test():
+    """末尾自检 —— `diff()` 的判负 fixture。
+
+    为什么需要：docstring 曾承诺「在末尾加自检」但代码里没有 ⇒
+    `diff()` 的**判负能力**从没被机器验过（现役配置恒一致时它根本不会被调用）。
+    一旦它哪天被改坏（比如递归写错、只比长度不比内容），门禁不会红 ——
+    因为漂移时它也许仍能报「长度不同」这种粗诊断，看不出已退化。
+
+    ⚠️ 自检**只在直接运行本文件时跑**（`--self-test` 或作为 __main__ 的一部分），
+    不走闸门的正常判负路径 —— 否则每次跑闸门都要多几条无关输出。
+    """
+    cases = [
+        # (说明, a, b, 期望 diff 至少含有的关键字)
+        ("列表长度不同", ["x"], ["x", "y"], "长度不同"),
+        ("字典缺键", {"k": 1}, {}, "仅脚本有"),
+        ("标量值不同", {"k": 1}, {"k": 2}, "k"),
+    ]
+    bad = []
+    for desc, a, b, want in cases:
+        got = diff(a, b)
+        if not got:
+            bad.append("%s ⇒ diff() 返回空，判不出差异" % desc)
+        elif want not in " ".join(got):
+            bad.append("%s ⇒ diff() 输出 %r，未含 %r" % (desc, got, want))
+    # 反向：完全相同的对象必须返回空（否则会假红）
+    if diff({"k": [1, 2]}, {"k": [1, 2]}):
+        bad.append("相同对象 ⇒ diff() 非空，会把一致判成漂移（假红）")
+    return bad
+
+
 if __name__ == "__main__":
+    if "--self-test" in sys.argv:
+        print("diff() 自检（判负 fixture）")
+        print("-" * 78)
+        b = self_test()
+        for x in b:
+            print("  NG %s" % x)
+        print("-" * 78)
+        print("自检 %s" % ("通过" if not b else "失败 %d 处" % len(b)))
+        sys.exit(1 if b else 0)
     sys.exit(main())
