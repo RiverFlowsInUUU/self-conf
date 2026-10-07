@@ -21,6 +21,8 @@
 """
 
 import os
+import shutil
+import re
 import sys
 import json
 import subprocess
@@ -139,8 +141,55 @@ def inherit_template_only(script_groups, static_groups):
     return out
 
 
+def archive(root):
+    """把 mihomo 当前版本快照存入 clash/profiles/config_old/。
+
+    语义：config_old 只存**历史**版本，不含现役（与姊妹仓口径一致）。
+
+    用法：
+        python skill/scripts/clash/build_profiles.py --archive
+
+    ⚠️ 归档该在**升号之后**跑（把上一版存进来）。若当前版本号与已归档的某版相同则跳过（不覆盖历史）。
+    """
+    OLD_DIR = os.path.join(root, "profiles", "config_old")
+    os.makedirs(OLD_DIR, exist_ok=True)
+    n = 0
+    for full_rel, min_rel in (("routing.yaml", "routing.min.yaml"), ("lazy.yaml", "lazy.min.yaml")):
+        fp = os.path.join(root, "profiles", full_rel)
+        if not os.path.isfile(fp):
+            continue
+        hv = ""
+        with open(fp, encoding="utf-8") as fh:
+            hv = fh.readline().strip()
+        m = re.match(r"^#! version=(routing|lazy)_v(.+)$", hv or "")
+        if not m:
+            print("  ?? %s 无版本头，跳过归档" % full_rel)
+            continue
+        ver = m.group(2)
+        for src, tag in ((full_rel, ""), (min_rel, ".min")):
+            sp2 = os.path.join(root, "profiles", src)
+            if not os.path.isfile(sp2):
+                continue
+            name = "%s_v%s%s.yaml" % (m.group(1), ver, tag)
+            dp = os.path.join(OLD_DIR, name)
+            if os.path.exists(dp):
+                print("  ⏭  已归档过 %s，跳过（不覆盖历史）" % name)
+                continue
+            shutil.copyfile(sp2, dp)
+            print("  ✅ 归档 %s" % name)
+            n += 1
+    return n
+
+
 def main():
     check = "--check" in sys.argv
+    if "--archive" in sys.argv:
+        print("mihomo 归档（config_old）")
+        print("-" * 78)
+        n = archive(ROOT)
+        print("-" * 78)
+        print("归档 %d 份" % n)
+        return 0 if n else 1
     root = ROOT
     bad = 0
 

@@ -27,6 +27,7 @@ AUTO 段语法（HTML 注释，GitHub 渲染时不可见）
   group-count     分组数（同上，内联数字）
   rule-count      规则条数（同上，内联数字）
   ruleset-refs    `rulesets.md` 的分流版规则集引用数
+  clash-group-count / clash-rule-count  mihomo 静态分流版的**可见**组数 / 规则条数（clash 文档）
 
 ⚠️ 换行策略（`group-list`）：按 ` · ` 边界打包到不超过 **82 字符**。
    首次 `--apply` 会把现有清单**重排一次**（现状是人工语义分段、无固定规则）；
@@ -155,6 +156,14 @@ def build_values():
         "rule-count": str(_rule_count_conf(R_CONF)),
         "ruleset-refs": str(_ruleset_refs_conf(R_CONF)),
     }
+    # mihomo（clash）侧规模 —— 文档里原本手抄，改了配置不会自动变 ⇒ 会静默说谎，故纳入 AUTO。
+    # 字典字面量里不能放语句，故在字典构造完成后追加。
+    _cpro = os.path.join(ROOT, "clash", "profiles", "routing.yaml")
+    if os.path.isfile(_cpro):
+        import yaml as _y
+        dc = _y.safe_load(io.open(_cpro, encoding="utf-8")) or {}
+        vals["clash-group-count"] = str(len([g for g in (dc.get("proxy-groups") or []) if not g.get("hidden")]))
+        vals["clash-rule-count"] = str(len(dc.get("rules") or []))
     return vals, surf_ok
 
 
@@ -201,6 +210,8 @@ TARGETS = [
     "skill/reference/shared/cross-kernel-diff.md",
     "README.md",
     "skill/reference/shared/rulesets.md",
+    # clash 文档：mihomo 规模此前手抄 ⇒ 改配置会静默说谎，纳入 AUTO 同步
+    "skill/reference/clash/branch.md",
 ]
 
 

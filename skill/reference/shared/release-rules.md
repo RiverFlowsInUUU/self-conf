@@ -74,12 +74,25 @@
 | 规矩 | 判据 |
 |:--|:--|
 | 头注版本格式合法、跨内核同号、`.min` 一致 | `skill/tests/check_min_pair.py`（V1 / V2 / X 判据） |
-| 一天一版 | `skill/tests/check_min_pair.py`（V7，需完整 git 历史） |
+| 一天一版 | `skill/tests/check_min_pair.py`（V7）—— **本仓以 `SKIP_V7=1` 豁免，见下 |
 | 现役版本与归档序列一致 | `skill/tests/check_min_pair.py`（V3–V6） |
 | 徽章承诺的组数 / 规则数与实际一致 | `skill/tests/check_badges.py` |
 
+### 4.1 已知豁免（豁免 ≠ 通过，输出会明写「未验证」）
+
+- **V7「一天一版」在本仓以 `SKIP_V7=1` 豁免**（`verify_all.py` 传该环境变量）。
+  为什么：V7 判据依赖「版本诞生日期分组」，而归档文件在整合时 **mtime 丢失** ——
+  历史归档全被算成同一天诞生 ⇒ 分组不成立，会误报「一天升了 21 个版本」。
+  这是**整合方式的局限**，不是配置违规。
+  ⚠️ 其余判据（V1 头注格式 / V2 跨内核同号 / V3–V6 归档序列 / X 版本一致）**仍然生效**。
+
+- **归档序列（V3–V6）对 mihomo 不适用** —— clash 侧尚无 `config_old`，
+  它的版本一致性由 `check_version_header.py` 守着，归档待建立后启用。
+
+
+
 ⚠️ `check_releases.py`（远端 Release 断言 R1–R5）在本仓**暂不适用** ——
-本仓尚发布过 Release。等首次发布后启用，判据如下：
+本仓**尚未**发布过 Release。等首次发布后启用，判据如下：
 
 - R1 tag 匹配 `^v\d{4}-\d{2}-\d{2}$` 且无重复
 - R2 资产名属于固定名集合且不含版本号样式
