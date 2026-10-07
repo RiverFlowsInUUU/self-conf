@@ -1,0 +1,49 @@
+name: ci
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+  schedule:
+    # 每周一 03:17 UTC —— 抓「上游规则集悄悄改名/删档」这类本仓无从感知的变化
+    - cron: '17 3 * * 1'
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  gate:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0   # min-pair 的归档判据需要历史；整合仓虽豁免 V7 仍保留完整历史
+
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+
+      - name: Install deps
+        run: |
+          python -m pip install --upgrade pip
+          pip install pyyaml
+
+      - name: Gates (Surge + Egern + mihomo)
+        run: python skill/tests/verify_all.py
+
+      - name: Encoding gate (cp936)
+        # 中文 Windows 下 print 非 GBK 字符会 UnicodeEncodeError 并以退出码 1 结束，
+        # 而 1 恰是判负码 ⇒ 崩溃会被读成「判负」，整轮看着对其实判据没跑。
+        run: python skill/tests/verify_all.py
+        env:
+          PYTHONIOENCODING: cp936
+
+      - name: Remote ruleset reachability (mihomo)
+        # 慢；push 时严格，PR 时网络抖动不阻塞
+        run: python skill/tests/clash/check_remote_urls.py --timeout 20
+        continue-on-error: ${{ github.event_name == 'pull_request' }}
