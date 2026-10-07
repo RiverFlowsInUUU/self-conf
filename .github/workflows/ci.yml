@@ -47,3 +47,9 @@ jobs:
         # 慢；push 时严格，PR 时网络抖动不阻塞
         run: python skill/tests/clash/check_remote_urls.py --timeout 20
         continue-on-error: ${{ github.event_name == 'pull_request' }}
+
+      - name: Encrypted DNS endpoints reachability (Egern)
+        # 需联网实测每个加密 DNS 端点 ⇒ 不进 42 道（抖动会假红），放在这里兜底。
+        # 判负语义：脚本末尾会报「失效端点：N / 总数」。
+        run: python skill/scripts/egern/probe_dns_endpoints.py egern/profiles/routing.yaml
+        continue-on-error: ${{ github.event_name == 'pull_request' }}

@@ -117,6 +117,14 @@ def build_gates():
          [PY, 'skill/scripts/egern/audit_ruleset_noresolve.py', 'egern/profiles/routing.yaml'], {}),
         ('规则集来源文档同步',
          [PY, 'skill/tests/clash/check_ruleset_doc_sync.py'], {}),
+        # 自托管清单的裸 IP 检测：rules/ 下每份 .list 都不该有「裸 IP 条目」
+        # （会为匹配域名而触发解析 ⇒ 泄露）。离线、快，可进闸门。
+        ('自托管清单·裸IP检测(AI)',
+         [PY, 'skill/scripts/egern/profile_ruleset.py', '--offline', 'rules/AI.list'], {}),
+        ('自托管清单·裸IP检测(apple-system)',
+         [PY, 'skill/scripts/egern/profile_ruleset.py', '--offline', 'rules/apple_system.list'], {}),
+        ('自托管清单·裸IP检测(emby)',
+         [PY, 'skill/scripts/egern/profile_ruleset.py', '--offline', 'rules/emby.list'], {}),
         # 闸门清单对账：ci.yml 与 verify_all 跑的是不是同一套（消掉 checker.md §12.2 的挂账）
         ('闸门清单对账', [PY, 'skill/tests/check_gate_manifest.py'], {}),
         # 2026-10-08：本仓已发布首个 Release ⇒ R1–R5 判据启用。
