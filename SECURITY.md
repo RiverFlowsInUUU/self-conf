@@ -90,7 +90,7 @@ vulnerability），不要公开发 issue：
 ### mihomo
 
 mihomo 同时覆盖 `clash/profiles/` 静态配置与 `clash/override/` 覆写脚本；两种形态分开判，
-不能把客户端负责的 TUN 设置强塞进覆写脚本，也不能让静态 profile 缺少 TUN 收口。
+不能把客户端负责的 TUN 设置强塞进覆写脚本，也不能让静态 profile 缺少 TUN（流量接管与 :53 劫持）。
 
 [`skill/tests/clash/check_structure.py`](skill/tests/clash/check_structure.py) 守 8 项结构红线：
 

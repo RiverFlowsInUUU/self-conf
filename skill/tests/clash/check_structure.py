@@ -142,7 +142,11 @@ def check_profile(path):
     if cn_idx and ads_idx and min(ads_idx) > min(cn_idx):
         errs.append("广告 policy 排在 cn 之后 —— 会先命中 cn 而拿不到空回答")
 
-    # ④ tun 段（防泄露的收口装置）
+    # ④ tun 段：流量接管与 :53 劫持
+    #    它收的是**泄露面③**（旁路设备：应用不理 DNS 设置、直接发明文 :53）。
+    #    ⚠️ 别把它说成「防 DNS 泄露的收口」—— 防泄露的本体是 dns 段
+    #      （加密解析 / fake-ip / IPv6 关闭 / no-resolve / 广告拦截双条件），
+    #      脚本形态没有 tun 但 dns 段齐全，照样防泄露。
     #
     #    适用范围：**仅静态 profile**（profiles/*.yaml）。
     #    ⚠️ 覆写脚本（override/*.js）的输出**不含 tun 是对的** ——
@@ -150,7 +154,8 @@ def check_profile(path):
     #       策略组与规则，不该越俎代庖。两种形态的判断标准不同，勿混用。
     #
     #    本仓踩过：由脚本重建静态 profile 时 tun 被丢掉（脚本输出里本就没有），
-    #    四份配置全没了 dns-hijack + strict-route —— 防线破了而门禁全绿。
+    #    四份静态配置全没了 dns-hijack + strict-route —— 泄露面③ 失去收口，
+    #    而门禁全绿（静态形态确实需要 tun；脚本形态由客户端负责，不需要）。
     tun = c.get("tun") or {}
     if not tun.get("enable"):
         errs.append("tun 未启用")

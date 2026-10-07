@@ -234,7 +234,7 @@ proxy-groups:        # 策略组
 rule-providers:      # 规则集
 rules:               # 分流规则
 dns:                 # DNS（含 ipv6: false ← 第 ② 处）
-tun:                 # TUN 收口装置
+tun:                 # 流量接管 + :53 劫持（泄露面③）
 ```
 
 ### 4.2 IPv6 必须关两处
