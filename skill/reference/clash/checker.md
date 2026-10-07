@@ -12,7 +12,7 @@
 | 1 | 环境要求 | 8 | 生成物新鲜度（`build_rules.py`） |
 | 2 | 命令 | 9 | 判别力：怎么证明门禁真的会判负 |
 | 3 | 退出码约定 | 10 | 已知豁免项（豁免 ≠ 通过） |
-| 4 | 结构判据（`clash/check_structure.py`） | 11 | 16 道总览表 |
+| 4 | 结构判据（`clash/check_structure.py`） | 11 | 24 道总览表 |
 | 5 | 两形态对拍（`clash/check_min_pair.py`） | 12 | CI 怎么跑 |
 | 6 | 脚本 ↔ 静态对拍（`clash/check_script_sync.py`） | 13 | 判据演进史 |
 | 7 | 远程集可达性（`clash/check_remote_urls.py`） | 14 | 全绿 ≠ 可用 · FAQ · 维护者须知 |
@@ -69,7 +69,7 @@ def _default_root():
 ## 2 · 命令
 
 ```bash
-# ── 一键总入口（16 道并行，含三内核）────────────────────────────
+# ── 一键总入口（24 道并行，含三内核）────────────────────────────
 python skill/tests/verify_all.py                  # 期望 exit 0
 python skill/tests/verify_all.py -v               # 无论红绿都打印每个闸门输出尾部
 python skill/tests/verify_all.py --index          # 只读列闸门清单（不跑、不判负、exit 0）
@@ -97,7 +97,7 @@ python skill/tests/check_selfcontained.py         # 整合仓自洽性
 
 | 脚本 | 扫描面 | 判据 |
 |:-----|:-------|:-----|
-| `skill/tests/check_secrets.py`（跨内核，进 16 道）| 全仓 walk 到的 `.conf` / `.yaml` / `.yml`，**跳过 `icons/`** | 禁串 `tange365.com` / `wangxinyu`；IPv4 白名单；`YAML_CRED_KEYS` 值必须占位 |
+| `skill/tests/check_secrets.py`（跨内核，进 24 道）| 全仓 walk 到的 `.conf` / `.yaml` / `.yml`，**跳过 `icons/`** | 禁串 `tange365.com` / `wangxinyu`；IPv4 白名单；`YAML_CRED_KEYS` 值必须占位 |
 | `skill/tests/clash/check_secrets.py`（mihomo 版）| 全仓 walk 到的 `.js` / `.yaml` / `.yml` / `.md` / `.conf` / `.list` / `.txt` / `.json`，**跳过 `icons/` 与 `rules/` 的主机扫描** | 凭据字段非占位即报；IPv4 白名单；主机白名单；私钥头无条件报 |
 
 两者互不可替代：mihomo 版能扫 `.js`（脚本里也有订阅 URL），跨内核版带禁串黑名单
@@ -644,7 +644,7 @@ python skill/tests/clash/check_script_sync.py "$SB"   # 期望 0
 | `check_remote_urls.py` | ⚠️ 联网依赖，未逐个固定 | ❌ 无 |
 | `check_region_filters.py`（跨内核）| ✅ | ✅ **有**（唯一定期跑判负 fixture 的闸门）|
 
-> 📌 跨内核的 `check_region_filters.py` 是**唯一**把「判负 fixture」做进 16 道的闸门，
+> 📌 跨内核的 `check_region_filters.py` 是**唯一**把「判负 fixture」做进 24 道的闸门，
 > 且它对每个判负用例断言**退出码 + 输出标记**两条。mihomo 侧**还没有对应的自动化回归** ——
 > 上表前五行的"已实测"是**本次文档编写时人工跑出来的**，不是常驻 CI 的保证。
 >
@@ -700,7 +700,7 @@ _skip_v7 = {'SKIP_V7': '1'}
 3. **豁免项要么进 `build_gates()` 带 SKIP 标记、要么显式注释掉**。
    绝不允许"跑一遍然后无视结果" —— 那是静默假绿。
 
-## 11 · 16 道总览表
+## 11 · 24 道总览表
 
 `python skill/tests/verify_all.py --index` 现抓（**不要手抄成死表**）：
 
@@ -722,8 +722,16 @@ _skip_v7 = {'SKIP_V7': '1'}
 | 14 | **clash min 版一致** | `skill/tests/clash/check_min_pair.py` | **mihomo** |
 | 15 | **clash 脚本/静态对拍** | `skill/tests/clash/check_script_sync.py` | **mihomo** |
 | 16 | **clash 规则集生成物** | `skill/scripts/clash/build_rules.py --check` | **mihomo** |
+| 17 | **clash 头注数字新鲜度** | `skill/tests/clash/check_header_numbers.py` | **mihomo** |
+| 18 | **clash 分流覆盖** | — | **mihomo** |
+| 19 | **clash 规则集内容** | — | **mihomo** |
+| 20 | **clash 静态 profile 新鲜度** | `skill/scripts/clash/build_profiles.py --check` | **mihomo** |
+| 21 | **自洽性**（不引用原仓在线资源） | — | 跨内核 |
+| 22 | **smart 权重口径** | — | 跨内核 |
+| 23 | **版本头注**（三内核） | — | 跨内核 |
+| 24 | **地区组审计器判别力回归** | 判负 fixture + 现役正向对照 | 跨内核 |
 
-另有**不进 16 道**的两项：
+另有**不进 24 道**的两项：
 
 | 项 | 位置 | 为什么不进 |
 |:---|:-----|:-----------|
@@ -894,7 +902,7 @@ mihomo 侧的实例：
 
 **Q：`skill/tests/clash/check_secrets.py` 和 `skill/tests/check_secrets.py` 该跑哪个？**
 
-两个都跑 —— 16 道里进的是**跨内核版**（`skill/tests/check_secrets.py`，带禁串黑名单）。
+两个都跑 —— 24 道里进的是**跨内核版**（`skill/tests/check_secrets.py`，带禁串黑名单）。
 mihomo 版（`skill/tests/clash/check_secrets.py`）覆盖 `.js`、且跳过 `rules/` 的主机扫描
 （那目录内容本身就是域名清单，扫了全是误报）。**两者判据不同，互不可替代，别合并。**
 
@@ -965,7 +973,7 @@ python skill/tests/clash/check_min_pair.py
 python skill/tests/clash/check_script_sync.py
 python skill/scripts/clash/build_rules.py --check
 
-# 4. 总入口（16 道）
+# 4. 总入口（24 道）
 python skill/tests/verify_all.py
 
 # 5. 慢门，按需（联网）

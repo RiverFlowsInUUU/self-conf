@@ -526,7 +526,7 @@ python skill/scripts/clash/build_profiles.py --check    # CI 用：过期即判�
 | 脚本 ↔ 静态 | `skill/tests/clash/check_script_sync.py` | ✅ 第 15 道 |
 | 完整版 ↔ `.min` | `skill/tests/clash/check_min_pair.py` | ✅ 第 14 道 |
 | 静态是否过期（脚本有更新未重生成）| `skill/scripts/clash/build_profiles.py --check` | ✅ 第 17 道 |
-| `rules/*.yaml` 是否过期（真源 `.list` 有更新）| `skill/scripts/clash/build_rules.py --check` | ✅ 第 16 道 |
+| `rules/*.yaml` 是否过期（真源 `.list` 有更新）| `skill/scripts/clash/build_rules.py --check` | ✅ 第 24 道 |
 
 - 判负样例：`checker.md` §9.2 第 11 / 12 / 14 条。
 

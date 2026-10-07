@@ -5,7 +5,7 @@
 ## 1 · 交付物清单
 
 ```
-Self-Configuration/
+self-conf/
 ├── README.md                    # 门面（人类看的唯一文档）：订阅地址 / 组表 / 隐私对照 / AI 指路
 ├── LICENSE                      # MIT
 ├── .gitattributes · .gitignore
@@ -140,7 +140,7 @@ README（及任何 GitHub 渲染的 markdown）的**最终长相由 GitHub 的�
 ```bash
 MSYS_NO_PATHCONV=1 gh api --method POST /markdown \
   -f mode=gfm \
-  -f context=RiverFlowsInUUU/Self-Configuration \
+  -f context=RiverFlowsInUUU/self-conf \
   -f text='| | <div align="center">Surge</div> | <div align="center">Egern</div> |
 |:--|:------|:------|'
 ```

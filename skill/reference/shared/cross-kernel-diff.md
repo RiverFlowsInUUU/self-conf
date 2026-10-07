@@ -7,7 +7,10 @@
 > `clash/profiles/routing.yaml` 与 `clash/override/my_clash.js`。计数只算启用项，不算注释：
 > Surge **23 组 / 26 条规则**，Egern **23 组 / 26 条规则**，mihomo 静态分流版
 > **25 组 / 27 条规则 / 25 份 rule-provider**；mihomo 覆写脚本实际生成
-> **<!-- auto:group-count -->23<!-- /auto:group-count --> 组 / <!-- auto:rule-count -->26<!-- /auto:rule-count --> 条规则 / 25 份 rule-provider**。
+> **<!-- auto:script-group-count -->22<!-- /auto:script-group-count --> 组 /
+> <!-- auto:script-rule-count -->27<!-- /auto:script-rule-count --> 条规则 / 25 份 rule-provider**。
+> （⚠️ 这三个数指**mihomo 覆写脚本**；Surge / Egern 是 <!-- auto:group-count -->23<!-- /auto:group-count --> 组 /
+> <!-- auto:rule-count -->26<!-- /auto:rule-count --> 条 —— 两者不是一回事，别混用。）
 
 ## 1 · 语法与机制映射
 

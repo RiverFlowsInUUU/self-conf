@@ -84,8 +84,8 @@ WeChat 换到上游活跃维护的 `.mrs`（原因见 §0.3）。
 | `jinx-ads` | YAML | `classical` | `AD` | 两份 | [Jinx](https://github.com/RiverFlowsInUUU/Jinx) · `mihomo-ads.yaml` |
 | `AWAvenue-Ads` | `.mrs` | `domain` | `AD` | 两份 | [TG-Twilight/AWAvenue-Ads-Rule](https://github.com/TG-Twilight/AWAvenue-Ads-Rule) · `AWAvenue-Ads-Rule-Clash.mrs` |
 | `Lanlan-WeChat` | `.mrs` | `domain` | `WeChat` | 仅分流版 | [Lanlan13-14/Rules](https://github.com/Lanlan13-14/Rules) · `rules/Domain/WeChat.mrs` |
-| `AI-Domains` | text | `classical` | `AI` | 仅懒人版 | [Self-Configuration](https://github.com/RiverFlowsInUUU/Self-Configuration) · `rules/AI.list` |
-| `apple-system` | text | `classical` | `DIRECT` | 仅懒人版 | [Self-Configuration](https://github.com/RiverFlowsInUUU/Self-Configuration) · `rules/apple_system.list` |
+| `AI-Domains` | text | `classical` | `AI` | 仅懒人版 | [self-conf](https://github.com/RiverFlowsInUUU/self-conf) · `rules/AI.list` |
+| `apple-system` | text | `classical` | `DIRECT` | 仅懒人版 | [self-conf](https://github.com/RiverFlowsInUUU/self-conf) · `rules/apple_system.list` |
 
 **分流版走的是另一条路**：它不用 `AI-Domains` 与 `apple-system` 这两份自托管清单，
 改用数据库里的替代品 —— AI 伴生域由 `GEOSITE,category-ai-chat-!cn` + 各厂商专属类承接，

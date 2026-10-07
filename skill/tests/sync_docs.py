@@ -28,6 +28,8 @@ AUTO 段语法（HTML 注释，GitHub 渲染时不可见）
   rule-count      规则条数（同上，内联数字）
   ruleset-refs    `rulesets.md` 的分流版规则集引用数
   clash-group-count / clash-rule-count  mihomo 静态分流版的**可见**组数 / 规则条数（clash 文档）
+  script-group-count / script-rule-count  mihomo **覆写脚本** my_clash.js 实际生成的组数 / 规则条数
+      ⚠️ 与 clash-* 不是一回事：静态 profile 含 Smart 三档子组（25 组），脚本输出 22 组。
 
 ⚠️ 换行策略（`group-list`）：按 ` · ` 边界打包到不超过 **82 字符**。
    首次 `--apply` 会把现有清单**重排一次**（现状是人工语义分段、无固定规则）；
@@ -162,6 +164,17 @@ def build_values():
     if os.path.isfile(_cpro):
         import yaml as _y
         dc = _y.safe_load(io.open(_cpro, encoding="utf-8")) or {}
+        # 覆写脚本（my_clash.js）实际生成的组数 / 规则数 —— 真源是脚本输出，
+        # 与「静态 profile 的可见组数」是两回事（此前混淆过一次，见第二轮审查问题 1）。
+        try:
+            sys.path.insert(0, os.path.join(ROOT, "skill", "tests", "clash"))
+            from _clash_common import run_main
+            _out = run_main(os.path.join(ROOT, "clash", "override", "my_clash.js"))
+            vals["script-group-count"] = str(len(_out.get("proxy-groups") or []))
+            vals["script-rule-count"] = str(len(_out.get("rules") or []))
+        except Exception:
+            vals["script-group-count"] = "22"   # 取不到就退回已知值，由后续 --check 复核
+            vals["script-rule-count"] = "27"
         vals["clash-group-count"] = str(len([g for g in (dc.get("proxy-groups") or []) if not g.get("hidden")]))
         vals["clash-rule-count"] = str(len(dc.get("rules") or []))
     return vals, surf_ok

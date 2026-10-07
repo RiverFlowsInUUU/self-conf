@@ -13,7 +13,7 @@
 |:-:|:-----|:-----|
 | 1 | **固定名四件**：每侧现役只有 `routing` / `lazy` × 完整版 / `.min` 共四件，订阅地址不随版本改名 | 三侧一致，见 §6.1 |
 | 2 | **`.min` 不手工编辑**：它是"同一份配置去掉注释"，漂了肉眼看不出来 | Surge / Egern → `make_min.py`；mihomo → `build_profiles.py`（见下表） |
-| 3 | **改完跑全套闸门**：`python skill/tests/verify_all.py`（现 18 道，其中 mihomo 占 6 道） | §6.2 动线⑤ |
+| 3 | **改完跑全套闸门**：`python skill/tests/verify_all.py`（现 24 道，其中 mihomo 占 6 道） | §6.2 动线⑤ |
 | 4 | **不提交真实地址 / 凭据 / token** | `check_secrets.py` 两份都跑（跨内核版 + mihomo 版，见 §5.9） |
 | 5 | **改配置去适配判据，不是改判据去适配配置** | §6.8 |
 
@@ -334,7 +334,7 @@ clash/
 ② 重生成 profile： python skill/scripts/clash/build_profiles.py
                   # 一次性写好 routing/lazy 的 .yaml 与 .min.yaml 四件
 ③ 若动了规则集内容：python skill/scripts/clash/build_rules.py   # rules/*.list → *.yaml
-④ 跑全套闸门：      python skill/tests/verify_all.py            # 现 18 道，含 mihomo 六道
+④ 跑全套闸门：      python skill/tests/verify_all.py            # 现 24 道，含 mihomo 六道
 ```
 
 > ⚠️ **步骤 ② 不可跳过，也不可用手工同步替代。** 脚本与静态是同一套配置的两个形态，
@@ -342,14 +342,14 @@ clash/
 > `proxy-groups` / `dns` / `ipv6`）。只改一边 ⇒ 用户遇到「照文档用脚本订阅，
 > 效果跟直接导入配置不一样」，而两边都能正常跑、都不报错 —— 只能靠对拍发现。
 >
-> ⚠️ **步骤 ② 的 `--check` 是门禁**（`build_profiles.py --check` 进 18 道中的第 18 道）：
+> ⚠️ **步骤 ② 的 `--check` 是门禁**（`build_profiles.py --check` 是 24 道之一）：
 > 脚本有更新而静态 profile 没重生成 ⇒ 判负。想只看看有没有漂移，跑这个。
 
 三个只在这一侧存在的环节，逐个说清：
 
 | 环节 | 脚本 | 判据 |
 |:-----|:-----|:-----|
-| 静态 profile 新鲜度 | `skill/scripts/clash/build_profiles.py --check` | 脚本输出 ≠ 静态文件即判负（18 道之第 18 道） |
+| 静态 profile 新鲜度 | `skill/scripts/clash/build_profiles.py --check` | 脚本输出 ≠ 静态文件即判负（24 道之第 24 道） |
 | 规则集生成物新鲜度 | `skill/scripts/clash/build_rules.py --check` | `.yaml` 与 `.list` 真源不一致即判负 |
 | 脚本 ↔ 静态对拍 | `skill/tests/clash/check_script_sync.py` | 需 **node**（Windows 下由 `_clash_common.find_node()` 显式探测；Git Bash 的 PATH 不继承给 subprocess） |
 
@@ -385,12 +385,12 @@ clash/
 
 ```bash
 python skill/scripts/clash/build_rules.py            # 生成
-python skill/scripts/clash/build_rules.py --check    # CI 用：过期即判负（18 道之第 17 道）
+python skill/scripts/clash/build_rules.py --check    # CI 用：过期即判负（24 道之第 23 道）
 ```
 
 改内容**只改 `.list`**，重跑脚本 —— 物理上不可能漂移。
 ❌ **不手工编辑 `rules/*.yaml`**（生成物；`SKILL.md` 的红线之一）。
-mihomo 其余 **20 份 `.mrs` 远程集 + 2 份第三方 YAML** 不在此链上，由 `rule-providers` 自己管理。
+mihomo 其余 **20 份 `.mrs` 远程集 + 5 份 YAML** 不在此链上，由 `rule-providers` 自己管理。
 
 ### 5.5 日常验什么、用哪个脚本
 
@@ -483,7 +483,7 @@ python skill/tests/clash/check_min_pair.py
 python skill/tests/clash/check_script_sync.py          # 需 node
 python skill/scripts/clash/build_profiles.py --check
 python skill/scripts/clash/build_rules.py --check
-python skill/tests/verify_all.py                       # 全套 18 道
+python skill/tests/verify_all.py                       # 全套 24 道
 python skill/tests/clash/check_remote_urls.py          # 慢，联网，按需
 ```
 
@@ -496,7 +496,7 @@ python skill/tests/clash/check_remote_urls.py          # 慢，联网，按需
 
 | 脚本 | 扫描面 | 判据 |
 |:-----|:-------|:-----|
-| `skill/tests/check_secrets.py`（跨内核，进 18 道） | 全仓 `.conf` / `.yaml` / `.yml`，**跳过 `icons/`** | 禁串 `tange365.com` / `wangxinyu`；IPv4 白名单；`YAML_CRED_KEYS` 值必须占位 |
+| `skill/tests/check_secrets.py`（跨内核，进 24 道） | 全仓 `.conf` / `.yaml` / `.yml`，**跳过 `icons/`** | 禁串 `tange365.com` / `wangxinyu`；IPv4 白名单；`YAML_CRED_KEYS` 值必须占位 |
 | `skill/tests/clash/check_secrets.py`（mihomo 版） | 全仓 **`.js`** / `.yaml` / `.md` / `.conf` / `.list` / `.txt` / `.json`，跳过 `icons/` 与 `rules/` 的主机扫描 | 凭据字段非占位即报；IPv4 白名单；主机白名单；私钥头无条件报 |
 
 两者互不可替代：mihomo 版能扫 **`.js`**（脚本里也有订阅 URL），跨内核版带禁串黑名单。
@@ -616,6 +616,19 @@ python skill/tests/check_portability.py
 | `check_min_pair` V7（一天一版） | **完整 git 历史**（版本诞生日期 = **现役版**取版本号首现日 `number_birth`；**归档版**取快照 blob 诞生日 `version_date`；均由 `release_publish.build_days` 现算） | 浅克隆 / 历史缺失 → 日期分组退化成「未知日期」，那些分组按**未验证**跳过并在该条说明里点名（不冒充通过）。该说明在**通过时也会打印**，正是为了不把它藏起来 |
 
 ⚠️ **浅克隆的实证（2026-10-04，一次外部审查踩的坑）**：审查者用 `gh repo clone -- --depth 50` 取了本仓（实际 **248** 个提交），跑 `check_releases` 得 `81 passed, 28 failed`；改用完整克隆（`git clone` 不加 `--depth`）后同一份代码得 **`113 passed, 0 failed`（exit 0）**。四条「tag 不在 plan 里」与 23 条「正文缺条目」全部消失 —— 它们只反映历史缺失，不反映任何真实缺陷。
+
+### 6.8.1 无 CI 兜底的工具（用了才知道，别指望 CI 替你验）
+
+以下脚本**不在 24 道闸门里**，CI 对它们**没有任何自动化兜底** —— 绿不绿都跟它们无关。
+它们必须**人工在本地跑**，且各有硬前置（真内核 / 真网络 / 真订阅）。
+
+| 脚本 | 为什么进不了 CI | 怎么跑 |
+|:-----|:----------------|:-------|
+| `skill/tests/clash/check_real_kernel.py` | 需要**真实 mihomo 内核二进制 + 真实网络**。GitHub Actions 沙箱里两者都没有，塞进去只会得到一条**永远失败或永远跳过**的判据 —— 那比不跑更有害（会污染计数，正是 V3 那条修掉的老毛病） | 在有内核的机器上手动跑；它验的是「真机上到底通不通」，与静态判据互补 |
+
+⚠️ 这条是**有意的设计，不是疏漏**。但「无兜底」这件事本身必须被看见 ——
+所以写在这里，而不是让它默默躺在某个脚本头注里。
+**新增任何不进闸门的脚本时，同步更新本节。**
 
 📌 **本仓的 CI 不受此影响**：`.github/workflows/ci.yml` 已固定 `fetch-depth: 0`（该处注释亦写明"shallow clone 会把所有日期退化成 push 当天"）。这条纪律管的是**本地与人工审查**场景。
 

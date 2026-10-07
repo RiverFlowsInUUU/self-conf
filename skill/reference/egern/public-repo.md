@@ -6,7 +6,7 @@
 
 自用配置已脱敏发布为公开模板 + 本 skill：
 
-**https://github.com/RiverFlowsInUUU/Self-Configuration**（Egern 分支在 `egern/`，与 Surge 版同仓）
+**https://github.com/RiverFlowsInUUU/self-conf**（Egern 分支在 `egern/`，与 Surge / mihomo 同仓）
 
 ```
 README.md                                   # 门面（人类看的唯一文档）：订阅地址 + 分组表 + 隐私对照 + AI 指路

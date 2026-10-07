@@ -57,12 +57,12 @@ self-conf/                                    # 三内核整合仓
 │   └── （文档已并入 skill/reference/clash/）
 │   └── CHANGELOG.md
 ├── rules/                                    # 共享规则集真源（.list）+ 生成物（.yaml）
-├── icons/                                    # 38 个图标 PNG，三内核共用
+├── icons/                                    # 39 个图标 PNG + 1 个 SVG，三内核共用
 └── skill/                                    # AI 知识库
     ├── SKILL.md                              # 维护手册（分歧 / 踩过的坑）
     ├── reference/shared/ · surge/ · egern/ · clash/（本文）
     ├── scripts/clash/build_rules.py          # .list → .yaml 生成器
-    └── tests/clash/                          # mihomo 专属门禁 5 个
+    └── tests/clash/                          # mihomo 专属门禁 8 个
 ```
 
 **两份 profile 是分工关系，不是版本关系**：
@@ -527,7 +527,7 @@ AD   : select,   proxies: [REJECT]                                 # 单成员�
 
 > ⚠️ 这份「抄一遍」是**结构上消灭不掉的拷贝**（`filter` 只吃字面正则、不支持变量）。
 > 姊妹仓的兜底做法是**给拷贝配一个比对器**（`audit_region_filters.py`）。
-> mihomo 侧**已有**这个比对器（`skill/tests/clash/audit_region_filters.py`，2026-10-07 补）——
+> mihomo 侧**已有**这个比对器（`skill/scripts/clash/audit_region_filters.py`，2026-10-07 补）——
 > 改地区正则时两侧各自六处，由它判一致，见 §18.2。
 
 ### 8.4 `hidden: true` 只用于三档子组

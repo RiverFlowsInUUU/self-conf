@@ -42,7 +42,7 @@
 ## 1 · 文件结构与两份形态
 
 ```
-Self-Configuration/                          # 两内核合并后同仓（2026-09-23）
+self-conf/                                   # Surge · Egern · mihomo 三内核同仓（2026-10-07）
 ├── surge/                                   # 本文档讲的这一侧
 │   ├── profiles/                            # 固定名四件（当前版恒为 lazy / routing，升版不改名）
 │   │   ├── lazy.conf · lazy.min.conf        # 懒人版（带注释 / 纯配置，注释剥掉那份）
@@ -50,7 +50,8 @@ Self-Configuration/                          # 两内核合并后同仓（2026-0
 │   │   └── config_old/                      # 历史版本归档（成对快照，永不删除）
 │   ├── （原 docs/ 与 DetailsReadme/ 已并入 skill/，2026-09-27，git 历史可查）
 ├── egern/                                   # 姊妹内核一侧（同构：profiles / skill/reference/egern）
-├── icons/                                   # 策略组图标 PNG + 两个图标订阅 JSON —— 仓库根，两内核共用、不跨项目引用
+├── clash/                                   # mihomo 一侧（profiles / override / profiles/config_old）
+├── icons/                                   # 策略组图标 PNG + SVG —— 仓库根，三内核共用、不跨项目引用
 ├── LICENSE · SECURITY.md · README.md        # 许可证 · 安全披露 · 门面（订阅入口 + 指路）
 └── skill/                                   # AI 知识库（本仓唯一文档区）
     ├── SKILL.md                             # AI 唯一入口：六条底线 / 归档机制 / 动线 / 分支索引
