@@ -121,7 +121,10 @@ def build_gates():
                             'clash/profiles/routing.yaml', 'clash/profiles/lazy.yaml'], {}),
         # 规则集内容审计 —— surge 有 audit_ruleset_content、egern 有
         # audit_ruleset_noresolve，clash 侧此前为零（最后一个对标缺口）。
-        ('clash 规则集内容', [PY, 'skill/scripts/clash/audit_ruleset_content.py', '--offline',
+        # ⚠️ 用**联网档**而非 --offline：离线档依赖 7 天缓存，
+        #    CI 是全新环境没有缓存，--offline 必然「取不到」退 2 判负 ——
+        #    那是环境限制不是配置问题（2026-10-07 CI 首红即此因）。
+        ('clash 规则集内容', [PY, 'skill/scripts/clash/audit_ruleset_content.py',
                               'clash/profiles/routing.yaml', 'clash/profiles/lazy.yaml'], {}),
         ('clash 静态 profile 新鲜度', [PY, 'skill/scripts/clash/build_profiles.py', '--check'], {}),
     ]
