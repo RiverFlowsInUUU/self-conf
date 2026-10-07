@@ -12,7 +12,7 @@
 | 1 | 环境要求 | 8 | 生成物新鲜度（`build_rules.py`） |
 | 2 | 命令 | 9 | 判别力：怎么证明门禁真的会判负 |
 | 3 | 退出码约定 | 10 | 已知豁免项（豁免 ≠ 通过） |
-| 4 | 结构判据（`clash/check_structure.py`） | 11 | 24 道总览表 |
+| 4 | 结构判据（`clash/check_structure.py`） | 11 | 26 道总览表 |
 | 5 | 两形态对拍（`clash/check_min_pair.py`） | 12 | CI 怎么跑 |
 | 6 | 脚本 ↔ 静态对拍（`clash/check_script_sync.py`） | 13 | 判据演进史 |
 | 7 | 远程集可达性（`clash/check_remote_urls.py`） | 14 | 全绿 ≠ 可用 · FAQ · 维护者须知 |
@@ -69,7 +69,7 @@ def _default_root():
 ## 2 · 命令
 
 ```bash
-# ── 一键总入口（24 道并行，含三内核）────────────────────────────
+# ── 一键总入口（26 道并行，含三内核）────────────────────────────
 python skill/tests/verify_all.py                  # 期望 exit 0
 python skill/tests/verify_all.py -v               # 无论红绿都打印每个闸门输出尾部
 python skill/tests/verify_all.py --index          # 只读列闸门清单（不跑、不判负、exit 0）
@@ -97,7 +97,7 @@ python skill/tests/check_selfcontained.py         # 整合仓自洽性
 
 | 脚本 | 扫描面 | 判据 |
 |:-----|:-------|:-----|
-| `skill/tests/check_secrets.py`（跨内核，进 24 道）| 全仓 walk 到的 `.conf` / `.yaml` / `.yml`，**跳过 `icons/`** | 禁串 `tange365.com` / `wangxinyu`；IPv4 白名单；`YAML_CRED_KEYS` 值必须占位 |
+| `skill/tests/check_secrets.py`（跨内核，进 26 道）| 全仓 walk 到的 `.conf` / `.yaml` / `.yml`，**跳过 `icons/`** | 禁串 `tange365.com` / `wangxinyu`；IPv4 白名单；`YAML_CRED_KEYS` 值必须占位 |
 | `skill/tests/clash/check_secrets.py`（mihomo 版）| 全仓 walk 到的 `.js` / `.yaml` / `.yml` / `.md` / `.conf` / `.list` / `.txt` / `.json`，**跳过 `icons/` 与 `rules/` 的主机扫描** | 凭据字段非占位即报；IPv4 白名单；主机白名单；私钥头无条件报 |
 
 两者互不可替代：mihomo 版能扫 `.js`（脚本里也有订阅 URL），跨内核版带禁串黑名单
@@ -365,7 +365,7 @@ SKIP_DNS_KEYS = {"listen"}
 ⚠️ 别把 `EXPECTED_DIFF` 当成"可以往里加东西的豁免清单"。它只有一条，
 理由是**机制不可能对齐**。任何"写起来麻烦"的差异都应该改脚本，不是加白名单。
 
-### 6.2 ⚠️ 已知挂账：漂移分支会 `NameError`
+### 6.2 ✅ 已修（原挂账：漂移分支会 `NameError`）
 
 ```python
 # line 130
@@ -389,10 +389,14 @@ if out.get("rules") != (st.get("rules") or []):
 > **闸门不会假绿，但它给不出任何诊断信息**：没有「第几条规则不同」、没有「哪个 dns 键不同」，
 > 只有一段 traceback。
 >
-> 修法（未做，待维护者决定）：把 `check_min_pair.py` 的 `diff()` 提进
-> `skill/scripts/clash/_clash_common.py`，两个脚本共用；或在本文件内 `from check_min_pair import diff`。
+> ✅ **已修（commit `7d7250c`）**：`diff()` 现已定义在本文件第 94 行，判负时能给出
+> 精确诊断（实测：注入一条额外规则 ⇒ 输出 `rules 长度不同: 脚本 12 vs 静态 11`），
+> 不再是 `NameError` traceback。
 >
-> **在修好之前，判负后的定位要人工做**：手工 diff 脚本输出与静态 profile 的
+> ⚠️ 文档滞后提示（2026-10-07 零信任自查）：本节标题与「修法（未做）」曾长期未同步，
+> 让维护者误以为此坑仍在。改代码后请同步回头改这里的挂账记录。
+>
+> **如需进一步定位**（哪一条规则不同而不是只报长度）：手工 diff 脚本输出与静态 profile 的
 > `rules` / `dns` 两段（见 §6.3）。
 
 ### 6.3 失败怎么修
@@ -644,7 +648,7 @@ python skill/tests/clash/check_script_sync.py "$SB"   # 期望 0
 | `check_remote_urls.py` | ⚠️ 联网依赖，未逐个固定 | ❌ 无 |
 | `check_region_filters.py`（跨内核）| ✅ | ✅ **有**（唯一定期跑判负 fixture 的闸门）|
 
-> 📌 跨内核的 `check_region_filters.py` 是**唯一**把「判负 fixture」做进 24 道的闸门，
+> 📌 跨内核的 `check_region_filters.py` 是**唯一**把「判负 fixture」做进 26 道的闸门，
 > 且它对每个判负用例断言**退出码 + 输出标记**两条。mihomo 侧**还没有对应的自动化回归** ——
 > 上表前五行的"已实测"是**本次文档编写时人工跑出来的**，不是常驻 CI 的保证。
 >
@@ -700,7 +704,7 @@ _skip_v7 = {'SKIP_V7': '1'}
 3. **豁免项要么进 `build_gates()` 带 SKIP 标记、要么显式注释掉**。
    绝不允许"跑一遍然后无视结果" —— 那是静默假绿。
 
-## 11 · 24 道总览表
+## 11 · 26 道总览表
 
 `python skill/tests/verify_all.py --index` 现抓（**不要手抄成死表**）：
 
@@ -730,8 +734,10 @@ _skip_v7 = {'SKIP_V7': '1'}
 | 22 | **smart 权重口径** | — | 跨内核 |
 | 23 | **版本头注**（三内核） | — | 跨内核 |
 | 24 | **地区组审计器判别力回归** | 判负 fixture + 现役正向对照 | 跨内核 |
+| 25 | **clash secrets 扫描** | `skill/tests/clash/check_secrets.py` | **mihomo** |
+| 26 | **闸门清单对账** | `skill/tests/check_gate_manifest.py` | 跨内核（ci.yml ↔ verify_all） |
 
-另有**不进 24 道**的两项：
+另有**不进 26 道**的两项：
 
 | 项 | 位置 | 为什么不进 |
 |:---|:-----|:-----------|
@@ -827,8 +833,17 @@ push 时严格，PR 时网络抖动不阻塞。⚠️ 这是**有意的非对称
 
 > **与 CI 同源是铁律** —— 本地绿但 CI 红属于竞态 / 环境差，不允许有"第三套判据"。
 
-⚠️ **已知挂账**：闸门清单靠人工双写（`ci.yml` ↔ `verify_all.py`），机器对账未做。
-引用清单时用 `--index` 现抓，**别手抄成第三份死表**。
+✅ **挂账已消（2026-10-07）**：新增 `skill/tests/check_gate_manifest.py` 做机器对账，
+**已进 26 道**（`闸门清单对账`）。它判三件事：
+① `ci.yml` 里被调用的判据必须在 `verify_all` 清单里（豁免项逐条点名）；
+② `verify_all` 列出的每一道，文件必须真实存在；
+③ `skill/tests/` 下既没进闸门、也没登记在 `ops.md` §6.8.1 的脚本 ⇒ 报「永远不会跑」。
+
+⚠️ 豁免项**必须显式登记**，不能静默放行：现为 `check_remote_urls.py`（CI 独立 step，慢）、
+`check_real_kernel.py`（需真内核 + 真网络）、`check_releases.py`（本仓未发布 Release）、
+`verify_all.py`（它自己就是入口）。
+
+引用清单时仍建议用 `--index` 现抓 —— 但即使手抄，这份对账会兜住漂移。
 
 > **推翻挂账的触发条件**：一旦出现「一侧增删闸门、另一侧未同步」且事后确认是人工漏同步
 > 造成的本地/CI 结论分歧，就必须补上清单对账断言。
@@ -902,7 +917,7 @@ mihomo 侧的实例：
 
 **Q：`skill/tests/clash/check_secrets.py` 和 `skill/tests/check_secrets.py` 该跑哪个？**
 
-两个都跑 —— 24 道里进的是**跨内核版**（`skill/tests/check_secrets.py`，带禁串黑名单）。
+两个都跑 —— 26 道里进的是**跨内核版**（`skill/tests/check_secrets.py`，带禁串黑名单）。
 mihomo 版（`skill/tests/clash/check_secrets.py`）覆盖 `.js`、且跳过 `rules/` 的主机扫描
 （那目录内容本身就是域名清单，扫了全是误报）。**两者判据不同，互不可替代，别合并。**
 
@@ -973,7 +988,7 @@ python skill/tests/clash/check_min_pair.py
 python skill/tests/clash/check_script_sync.py
 python skill/scripts/clash/build_rules.py --check
 
-# 4. 总入口（24 道）
+# 4. 总入口（26 道）
 python skill/tests/verify_all.py
 
 # 5. 慢门，按需（联网）

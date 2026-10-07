@@ -126,10 +126,12 @@ on:
 - 判负样例：`checker.md` §9.2 第 15 条 —— 把某条 URL 改回 `mihomo-white-guard.yaml`（**即当年真实死链**），期望 `NG` + `死链 N 个` + exit 1。
 - 文档：`profile-anatomy.md` §9.5 的警告块。
 
-⚠️ **已知文档漂移（待确认）**：`skill/reference/clash/ruleset-sources.md:76` 至今仍写
-`mihomo-white-guard.yaml`。它不在 `check_remote_urls.py` 的扫描面内（是 Markdown），
-`check_selfcontained.py` 也不扫 `.md` ⇒ **没有任何闸门会发现它**。
-**改规则集 URL 时，文档表要手工同步 —— 这是个没有机器兜底的手工步骤。**
+✅ **已核（2026-10-07 零信任自查）**：`ruleset-sources.md` 里**已无** `mihomo-white-guard.yaml`
+（现存提及只在 `egern/profiles/config_old/` 的历史归档里，属沿革）。
+
+⚠️ **但这段警告的机理仍然成立**：改规则集 URL 时，Markdown 文档表**确实没有机器兜底** ——
+`check_remote_urls.py` 扫的是配置里的 URL，不扫 `.md`；`check_selfcontained.py` 同样不扫 `.md`。
+⇒ 这仍是**手工同步步骤**，改 URL 时请一并核 `ruleset-sources.md` 的表。
 
 ---
 
@@ -307,12 +309,12 @@ def diff(a, b, path=""):
 - 判负样例：`checker.md` §9.2 第 13 条 —— 从 `my_clash_lazy.js` 删掉一条规则
   ⇒ exit 1，且（修好后）输出含 `rules[…] 长度不同` 之类的定位标记。
 
-⚠️ **两处文档滞后（待确认，改动时请一并核对）**：
+✅ **已核并修（2026-10-07 零信任自查）**：
 
-1. `checker.md` §6.2 仍把这条记为「⚠️ 已知挂账 … **修法（未做，待维护者决定）**」——
-   commit `7d7250c` 已修，文档未同步。
-2. 函数 docstring 写「并在末尾加自检」，但文件末尾只有 `if __name__ == "__main__": sys.exit(main())`，
-   **未见自检代码**。即「判负样例」仍需人工跑，不是常驻保证。
+1. `checker.md` §6.2 的滞后**已同步**：该挂账标记为「✅ 已修（commit `7d7250c`）」，
+   并附实测证据（注入一条规则 ⇒ 输出 `rules 长度不同: 脚本 12 vs 静态 11`，不再是 `NameError`）。
+2. `diff()` 现定义于 `check_script_sync.py` 第 94 行 —— 判负时能给出精确诊断。
+   ⚠️ 仍**未做到的**：docstring 提到的「末尾自检」确实没有，判负样例仍需人工跑。
 
 ---
 
@@ -526,7 +528,7 @@ python skill/scripts/clash/build_profiles.py --check    # CI 用：过期即判�
 | 脚本 ↔ 静态 | `skill/tests/clash/check_script_sync.py` | ✅ 第 15 道 |
 | 完整版 ↔ `.min` | `skill/tests/clash/check_min_pair.py` | ✅ 第 14 道 |
 | 静态是否过期（脚本有更新未重生成）| `skill/scripts/clash/build_profiles.py --check` | ✅ 第 17 道 |
-| `rules/*.yaml` 是否过期（真源 `.list` 有更新）| `skill/scripts/clash/build_rules.py --check` | ✅ 第 24 道 |
+| `rules/*.yaml` 是否过期（真源 `.list` 有更新）| `skill/scripts/clash/build_rules.py --check` | ✅ 第 26 道 |
 
 - 判负样例：`checker.md` §9.2 第 11 / 12 / 14 条。
 
@@ -1034,12 +1036,17 @@ for m in TOKEN_RE.finditer(txt):
 - 判负样例：`checker.md` §9.2 —— 任意 `.yaml` 里写 `password: MyRealP…` ⇒ `非占位凭据:`。
 - 文档：`public-repo.md` §5.1「两道 secrets 扫描不要混为一个」。
 
-⚠️ **两处挂账（待确认）**：
+✅ **已核并修（2026-10-07 零信任自查）**：
 
-1. `HIGH_ENTROPY` 常量**仍在文件里、仍未被使用** —— 建议删除或接上，别留着误导。
-2. **`skill/tests/clash/check_secrets.py` 不在 `verify_all.build_gates()` 里**
-   （17 道里只有**跨内核**的 `skill/tests/check_secrets.py`）。
-   ⇒ Clash 侧的凭据扫描**目前靠人记得跑**。
+1. `HIGH_ENTROPY` 已加注释说明其定位（此前定义了但从未使用，属死代码，
+   容易让人误以为「高熵密码已被扫描」）。
+2. **`skill/tests/clash/check_secrets.py` 现已进 `verify_all`（26 道之第 25 道）**。
+   此前它有 289 处误报，根因有三，均已修：
+   · `ROOT` 只往上三级 ⇒ 落在 `skill/` 文档区 ⇒ 改成往上四级（仓库根）并排除 `skill/`；
+   · 已在 `ALLOWED_IPS` 里的 IP（如 `1.1.1.1`）被 `HOST_RE` 再当主机报一次；
+   · 注释里的 IP / 域名也被扫（`# 刻意不放 10.0.0.0/8` 这类）⇒ IP/HOST 判据改为只扫非注释行
+     （凭据字段与私钥头仍扫全文 —— 注释里写真密码同样该报警）。
+   修后误报归零，注错验证有效（注入 `token=AbcDef123456789` ⇒ 报警；还原 ⇒ 干净）。
 
 ---
 

@@ -57,7 +57,7 @@ self-conf/                                   # Surge · Egern · mihomo 三内�
     ├── SKILL.md                             # AI 唯一入口：六条底线 / 归档机制 / 动线 / 分支索引
     ├── reference/                           # 逐条判据（shared/ 七篇 + surge/ · egern/ 各七篇）
     ├── scripts/                             # surge/ 5 个审计脚本 + 1 个共享模块 · egern/ 10 个 + 1 个
-    └── tests/                               # 闸门脚本（secrets / portability / min_pair / links / make_min / …，共 24 道）
+    └── tests/                               # 闸门脚本（secrets / portability / min_pair / links / make_min / …，共 26 道）
 ```
 
 **两份配置是分工关系，不是版本关系**：`lazy` 是懒人版（4 组 / 10 条，全量一个出口），
