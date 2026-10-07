@@ -28,3 +28,25 @@
 
 本仓不提供运行中的服务，也没有依赖包管理清单。
 「漏洞」在本仓的语境里主要是**泄露**与**判据失效**两类，上面两条通道按此划分。
+
+## 判据清单（本仓的纪律全部落成机器判据，不靠文档自觉）
+
+与姊妹仓一致的做法 —— 它的 `check_surge_dns.py` 里就有一整条判
+「加密 DNS 端点必须 IP 字面量」，同一条纪律在那里也是判据而非文档里的一句话。
+
+mihomo 侧（`skill/tests/clash/check_structure.py`）现守 8 项：
+
+| 项 | 守什么 |
+|:--|:--|
+| ① | 无悬空引用（组成员必须存在） |
+| ② | 规则指向的 provider 与策略组必须存在 |
+| ③ | DNS 广告拦截双条件 + 广告项排在 `cn` 之前 |
+| ④ | `tun` 四键齐全（**仅静态 profile**；覆写脚本不该有 tun） |
+| ⑤ | `geoip-*` 规则必须带 `no-resolve` |
+| ⑥ | `nameserver` 必须写 IP 字面量，不能写主机名 |
+| ⑦ | **零 dat 依赖**：不得用 `geox-url` / `geo-auto-update` / `geo-update-interval`，<br>不得写 `GEOSITE,` / `GEOIP,` 原生规则，<br>`nameserver-policy` 键不得用 `geosite:` |
+| ⑧ | IPv6 两处显式关闭（顶层 + `dns.ipv6`） |
+
+⚠️ 第 ⑦ 项**不排斥 `.mrs`**：`geoip-private` / `geoip-cn` 等是 MetaCubeX 的
+独立远程集文件（`format: mrs`），与 `GeoSite.dat` / `GeoIP.dat` 数据库无关，
+是本仓想要的形式。判据只拦 dat，不拦 mrs —— 已实测不会误伤。

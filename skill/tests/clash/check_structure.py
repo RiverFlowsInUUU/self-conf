@@ -179,7 +179,32 @@ def check_profile(path):
         if host and not re.match(r"^\d+\.\d+\.\d+\.\d+$", host) and not host.startswith("["):
             errs.append("nameserver 用了主机名（应为 IP 字面量）: %s" % ep)
 
-    # ⑦ IPv6
+    # ⑦ 零 dat 依赖：不得引入 geosite.dat / geoip.dat
+    #
+    #    为什么单列一条（与姊妹仓「纪律落成判据」的做法一致 ——
+    #    它的 check_surge_dns.py 里就有一整条判「加密 DNS 端点必须 IP 字面量」，
+    #    同一条纪律在那里也是判据，不是文档里的一句话）：
+    #
+    #    · 顶层出现 `geox-url` / `geo-auto-update` / `geo-update-interval`
+    #      ⇒ mihomo 会去下载并加载 GeoSite.dat / GeoIP.dat
+    #    · 规则里出现 `GEOSITE,xxx` / `GEOIP,xxx` ⇒ 直接查那两个数据库
+    #    · `nameserver-policy` 的键用 `geosite:xxx` ⇒ 同上
+    #
+    #    ⚠️ 这不排斥 `.mrs`：geoip-private / geoip-cn 等是 MetaCubeX 的
+    #       **独立远程集文件**（format: mrs），与 dat 数据库无关，是本仓想要的。
+    #       判据只拦 dat，不拦 mrs。
+    for k in ("geox-url", "geo-auto-update", "geo-update-interval"):
+        if k in c:
+            errs.append("引入了 dat 依赖（顶层键 %s）" % k)
+    for r in c.get("rules") or []:
+        tp = r.split(",")[0].strip()
+        if tp in ("GEOSITE", "GEOIP"):
+            errs.append("规则用了原生 %s（应改 RULE-SET 远程集）: %s" % (tp, r))
+    for k in (dns.get("nameserver-policy") or {}):
+        if str(k).startswith("geosite:"):
+            errs.append("nameserver-policy 键用了 geosite:（应改 rule-set:）: %s" % k)
+
+    # ⑧ IPv6
     if c.get("ipv6") is not False:
         errs.append("顶层 ipv6 未显式关闭")
     if dns.get("ipv6") is not False:
