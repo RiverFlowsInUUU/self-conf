@@ -181,6 +181,16 @@ def main():
                     g["proxies"] = ["Low Mult.", "Auto", "High Mult."]
         out["proxy-groups"] = groups
 
+        # ⚠️ 静态形态**强制** include-all（而非 include-all-proxies）：
+        #    静态 profile 自带 proxy-providers，而 include-all-proxies **不含
+        #    provider 节点** ⇒ 地区组会一个节点都拿不到（用户填了订阅也不出节点）。
+        #    脚本形态由 HAS_PROVIDERS 动态判断，静态形态无输入可判断，故固定取
+        #    include-all（= proxies + providers，两种来源都能进组）。
+        for g in out.get("proxy-groups") or []:
+            if g.get("include-all-proxies"):
+                g.pop("include-all-proxies", None)
+                g["include-all"] = True
+
         # proxy-providers 段：脚本不生成（它用 include-all 直接吃节点），但
         # **静态 profile 必须有订阅槽位** —— 用户导入后要靠它填自己的订阅地址。
         # 此前从脚本输出重建时把它丢了，两份配置都没了 proxy-providers，

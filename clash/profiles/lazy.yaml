@@ -27,21 +27,21 @@ proxy-providers:
 proxy-groups:
   - name: Proxy
     type: url-test
-    include-all-proxies: true
     filter: '^((?!(直连|DIRECT)).)*$'
     exclude-filter: 剩余|流量|到期|过期|官网|订阅|重置|续费|Traffic|Expire|GB
     url: https://www.gstatic.com/generate_204
     interval: 300
     tolerance: 50
     icon: https://raw.githubusercontent.com/RiverFlowsInUUU/self-conf/main/icons/Proxy.png
+    include-all: true
   - name: AI
     type: select
     proxies:
       - Proxy
-    include-all-proxies: true
     filter: '^((?!(直连|DIRECT)).)*$'
     exclude-filter: 剩余|流量|到期|过期|官网|订阅|重置|续费|Traffic|Expire|GB
     icon: https://raw.githubusercontent.com/RiverFlowsInUUU/self-conf/main/icons/grok.png
+    include-all: true
   - name: AD
     type: select
     proxies:
