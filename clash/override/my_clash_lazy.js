@@ -183,11 +183,13 @@ function main(config) {
     // ② 广告拦截 —— 两条并列清单，同一出口 AD
     "RULE-SET,Jinx-Ads,AD",
     "RULE-SET,AWAvenue-Ads,AD",
-    // ③ 内网：私有 IP 段 + 私有域名，一律直连
+    // ③ Apple 系统服务（激活 / 推送 / 定位 / 配对）—— 排在内网之前，
+    //    与分流版（apple-update → apple-system → 内网）及姊妹仓
+    //    （System 在 Lan / Private 之前）同序
+    "RULE-SET,apple-system,DIRECT",
+    // ④ 内网：私有 IP 段 + 私有域名，一律直连
     "RULE-SET,geoip-private,DIRECT,no-resolve",
     "RULE-SET,private,DIRECT",
-    // ④ Apple 系统服务（激活 / 推送 / 定位 / 配对）
-    "RULE-SET,apple-system,DIRECT",
     // ⑤ AI 分流：通用 AI 类目兜底在前，伴生域/宽后缀随后整域收编
     "RULE-SET,category-ai-chat-!cn,AI",
     "RULE-SET,AI_Domains,AI",

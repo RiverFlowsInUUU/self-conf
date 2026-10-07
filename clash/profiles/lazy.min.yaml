@@ -97,9 +97,9 @@ rules:
   - RULE-SET,Jinx-CN,DIRECT
   - RULE-SET,Jinx-Ads,AD
   - RULE-SET,AWAvenue-Ads,AD
+  - RULE-SET,apple-system,DIRECT
   - RULE-SET,geoip-private,DIRECT,no-resolve
   - RULE-SET,private,DIRECT
-  - RULE-SET,apple-system,DIRECT
   - RULE-SET,category-ai-chat-!cn,AI
   - RULE-SET,AI_Domains,AI
   - RULE-SET,cn,DIRECT
