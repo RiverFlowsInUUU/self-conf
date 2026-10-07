@@ -276,7 +276,7 @@ AdBlock = reject
 
 ```
 Airport = select, policy-path=https://sub.example.com/api/v1/client/subscribe?token=REPLACE_WITH_YOUR_TOKEN, update-interval=86400, hidden=true, icon-url=…/Airport.png
-Proxy   = select, Smart, Select, …, icon-url=https://raw.githubusercontent.com/RiverFlowsInUUU/Self-Configuration/main/icons/Proxy.png
+Proxy   = select, Smart, Select, …, icon-url=https://raw.githubusercontent.com/RiverFlowsInUUU/self-conf/main/icons/Proxy.png
 Smart   = smart, include-other-group="Airport", icon-url=…/Auto.png
 Select  = select, include-other-group="Airport", icon-url=…/Static.png
 AI      = select, include-other-group="Proxy", icon-url=…/grok.png

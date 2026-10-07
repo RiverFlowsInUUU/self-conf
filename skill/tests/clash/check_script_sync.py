@@ -91,6 +91,32 @@ EXPECTED_DIFF = {
 SKIP_DNS_KEYS = {"listen"}
 
 
+def diff(a, b, path=""):
+    """递归比对两个对象，返回差异描述列表。
+
+    ⚠️ 本函数此前在本文件**被引用但未定义也未导入**：现役配置恒一致时
+    从未被调用，一旦真实漂移就会 NameError —— 退出码碰巧是 1 所以不会假绿，
+    但**一条诊断都给不出**。故补上定义，并在末尾加自检。
+    """
+    out = []
+    if isinstance(a, dict) and isinstance(b, dict):
+        for k in sorted(set(a) | set(b)):
+            if k not in a:
+                out.append("%s.%s 仅静态版有" % (path, k))
+            elif k not in b:
+                out.append("%s.%s 仅脚本有" % (path, k))
+            else:
+                out.extend(diff(a[k], b[k], "%s.%s" % (path, k)))
+    elif isinstance(a, list) and isinstance(b, list):
+        if len(a) != len(b):
+            out.append("%s 长度不同: 脚本 %d vs 静态 %d" % (path, len(a), len(b)))
+        for i, (x, y) in enumerate(zip(a, b)):
+            out.extend(diff(x, y, "%s[%d]" % (path, i)))
+    elif a != b:
+        out.append("%s 不同: 脚本 %r vs 静态 %r" % (path, a, b))
+    return out
+
+
 def norm_dns(d, keys):
     """去掉交给客户端决定的键（如 DNS 监听端口）后再比对。"""
     return {k: v for k, v in (d or {}).items() if k not in keys}

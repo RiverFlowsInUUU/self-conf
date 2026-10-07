@@ -140,7 +140,7 @@ policy_groups:
     urls:
     - https://sub.example.com/api/v1/client/subscribe?token=REPLACE_WITH_YOUR_TOKEN
     hidden: true
-    icon: https://raw.githubusercontent.com/RiverFlowsInUUU/Self-Configuration/main/icons/Airport.png
+    icon: https://raw.githubusercontent.com/RiverFlowsInUUU/self-conf/main/icons/Airport.png
 # 自动选优出口：smart 按真实连接的首字节延迟、TCP 重传丢包、UDP 响应延迟给成员
 # 打分（5 分钟一轮重测），自动择优。成员 = 自己那条占位节点在前 + 订阅里的节点；
 # `flatten: true` 把 Airport 的成员摊进本组逐个打分，而不是把整组当一个成员
@@ -151,7 +151,7 @@ policy_groups:
     - Node-A
     - Airport
     flatten: true
-    icon: https://raw.githubusercontent.com/RiverFlowsInUUU/Self-Configuration/main/icons/Proxy.png
+    icon: https://raw.githubusercontent.com/RiverFlowsInUUU/self-conf/main/icons/Proxy.png
 # AI 流量出口：另一条占位节点 + 订阅里的节点。
 # routing_v2.4 里还并列着 ChatGPT / Gemini / Claude 三个独立组，
 # 本配置只保留这一个总入口，它们全部并入此处。
@@ -166,7 +166,7 @@ policy_groups:
     - Node-B
     - Airport
     flatten: true
-    icon: https://raw.githubusercontent.com/RiverFlowsInUUU/Self-Configuration/main/icons/openai.png
+    icon: https://raw.githubusercontent.com/RiverFlowsInUUU/self-conf/main/icons/openai.png
 # 广告拦截。只有一个子策略：REJECT（拦截）。
 # 本配置不再提供 DIRECT 兜底 —— 想临时放行某个广告域名，在 rules 里加一条更靠前的
 # domain / domain_suffix 规则指向 DIRECT 即可（别整组切走，那等于关掉全部拦截）。
@@ -174,7 +174,7 @@ policy_groups:
     name: AD
     policies:
     - REJECT
-    icon: https://raw.githubusercontent.com/RiverFlowsInUUU/Self-Configuration/main/icons/AdBlock.png
+    icon: https://raw.githubusercontent.com/RiverFlowsInUUU/self-conf/main/icons/AdBlock.png
 # ============================================================================
 # 规则：顺序就是一切（自上而下第一条命中即决定去向）
 #   ① 白名单   ② 广告拦截   ③ 内网直连   ④ Apple 系统服务
@@ -219,7 +219,7 @@ rules:
 #    定位 / CDN 定位那几类）；重复无害 —— 两条规则同为 DIRECT。
 - rule_set:
     name: System
-    match: https://raw.githubusercontent.com/RiverFlowsInUUU/Self-Configuration/main/rules/apple_system.list
+    match: https://raw.githubusercontent.com/RiverFlowsInUUU/self-conf/main/rules/apple_system.list
     policy: DIRECT
     update_interval: 604800
 # ⑤ AI 分流 —— 命中即走 AI 组（→ Proxy）。集源 Repcz/Tool（2026-09-28 自 ACL4SSR 换入：
@@ -237,7 +237,7 @@ rules:
 # 伴生域/宽后缀整合集（本仓自托管静态快照，与上行 Repcz 同指 AI 组；分工见上）
 - rule_set:
     name: AI_Domains
-    match: https://raw.githubusercontent.com/RiverFlowsInUUU/Self-Configuration/main/rules/AI.list
+    match: https://raw.githubusercontent.com/RiverFlowsInUUU/self-conf/main/rules/AI.list
     policy: AI
     update_interval: 604800
 # ⑥ 直连集合 —— 以下 2 条共同承担「国内流量直连」。

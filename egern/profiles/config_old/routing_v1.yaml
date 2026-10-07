@@ -180,87 +180,87 @@ policy_groups:
     - Japan
     - Korea
     - Other Regions
-    icon: https://raw.githubusercontent.com/RiverFlowsInUUU/Self-Configuration/main/icons/Proxy.png
+    icon: https://raw.githubusercontent.com/RiverFlowsInUUU/self-conf/main/icons/Proxy.png
 - smart:
     name: Smart
     policies:
     - Airport-Free
     - Airport-C
-    icon: https://raw.githubusercontent.com/RiverFlowsInUUU/Self-Configuration/main/icons/Auto.png
+    icon: https://raw.githubusercontent.com/RiverFlowsInUUU/self-conf/main/icons/Auto.png
 - fallback:
     name: ChatGPT
     policies: []
-    icon: https://raw.githubusercontent.com/RiverFlowsInUUU/Self-Configuration/main/icons/openai.png
+    icon: https://raw.githubusercontent.com/RiverFlowsInUUU/self-conf/main/icons/openai.png
 - fallback:
     name: Gemini
     policies: []
-    icon: https://raw.githubusercontent.com/RiverFlowsInUUU/Self-Configuration/main/icons/gemini-color.png
+    icon: https://raw.githubusercontent.com/RiverFlowsInUUU/self-conf/main/icons/gemini-color.png
 - smart:
     name: Claude
     policies:
     - Taiwan
-    icon: https://raw.githubusercontent.com/RiverFlowsInUUU/Self-Configuration/main/icons/claude-color.png
+    icon: https://raw.githubusercontent.com/RiverFlowsInUUU/self-conf/main/icons/claude-color.png
 - smart:
     name: AI
     policies:
     - Proxy
-    icon: https://raw.githubusercontent.com/RiverFlowsInUUU/Self-Configuration/main/icons/grok.png
+    icon: https://raw.githubusercontent.com/RiverFlowsInUUU/self-conf/main/icons/grok.png
 - select:
     name: Spotify
     policies:
     - Proxy
     flatten: true
-    icon: https://raw.githubusercontent.com/RiverFlowsInUUU/Self-Configuration/main/icons/Spotify.png
+    icon: https://raw.githubusercontent.com/RiverFlowsInUUU/self-conf/main/icons/Spotify.png
 - select:
     name: YouTubeMusic
     policies:
     - Proxy
     flatten: true
-    icon: https://raw.githubusercontent.com/RiverFlowsInUUU/Self-Configuration/main/icons/YouTubeMusic.png
+    icon: https://raw.githubusercontent.com/RiverFlowsInUUU/self-conf/main/icons/YouTubeMusic.png
 - select:
     name: YouTube
     policies:
     - Proxy
     flatten: true
-    icon: https://raw.githubusercontent.com/RiverFlowsInUUU/Self-Configuration/main/icons/YouTube.png
+    icon: https://raw.githubusercontent.com/RiverFlowsInUUU/self-conf/main/icons/YouTube.png
 - select:
     name: GitHub
     policies:
     - Proxy
     flatten: true
-    icon: https://raw.githubusercontent.com/RiverFlowsInUUU/Self-Configuration/main/icons/GitHub.png
+    icon: https://raw.githubusercontent.com/RiverFlowsInUUU/self-conf/main/icons/GitHub.png
 - select:
     name: Google
     policies:
     - Gemini
     - Proxy
-    icon: https://raw.githubusercontent.com/RiverFlowsInUUU/Self-Configuration/main/icons/Google.png
+    icon: https://raw.githubusercontent.com/RiverFlowsInUUU/self-conf/main/icons/Google.png
 - select:
     name: Microsoft
     policies:
     - DIRECT
     - Proxy
     flatten: true
-    icon: https://raw.githubusercontent.com/RiverFlowsInUUU/Self-Configuration/main/icons/Microsoft.png
+    icon: https://raw.githubusercontent.com/RiverFlowsInUUU/self-conf/main/icons/Microsoft.png
 - select:
     name: Telegram
     policies:
     - Proxy
     flatten: true
-    icon: https://raw.githubusercontent.com/RiverFlowsInUUU/Self-Configuration/main/icons/Telegram.png
+    icon: https://raw.githubusercontent.com/RiverFlowsInUUU/self-conf/main/icons/Telegram.png
 - select:
     name: Twitter
     policies:
     - Proxy
     flatten: true
-    icon: https://raw.githubusercontent.com/RiverFlowsInUUU/Self-Configuration/main/icons/Twitter.png
+    icon: https://raw.githubusercontent.com/RiverFlowsInUUU/self-conf/main/icons/Twitter.png
 - external:
     name: Airport-A
     type: smart
     urls:
     - https://sub.example.com/api/v1/client/subscribe?token=REPLACE_WITH_YOUR_TOKEN
     - https://sub.example.com/api/v1/client/subscribe?token=REPLACE_WITH_YOUR_TOKEN
-    icon: https://raw.githubusercontent.com/RiverFlowsInUUU/Self-Configuration/main/icons/Airport.png
+    icon: https://raw.githubusercontent.com/RiverFlowsInUUU/self-conf/main/icons/Airport.png
 - external:
     name: Airport-B
     type: smart
@@ -269,31 +269,31 @@ policy_groups:
     - https://sub.example.com/api/v1/client/subscribe?token=REPLACE_WITH_YOUR_TOKEN
     urls_disabled:
     - https://sub.example.com/api/v1/client/subscribe?token=REPLACE_WITH_YOUR_TOKEN
-    icon: https://raw.githubusercontent.com/RiverFlowsInUUU/Self-Configuration/main/icons/Airport.png
+    icon: https://raw.githubusercontent.com/RiverFlowsInUUU/self-conf/main/icons/Airport.png
 - external:
     name: Airport-C
     type: smart
     urls:
     - https://sub.example.com/api/v1/client/subscribe?token=REPLACE_WITH_YOUR_TOKEN
-    icon: https://raw.githubusercontent.com/RiverFlowsInUUU/Self-Configuration/main/icons/Airport.png
+    icon: https://raw.githubusercontent.com/RiverFlowsInUUU/self-conf/main/icons/Airport.png
 - smart:
     name: Airport-Free
     policies: []
     urls:
     - https://sub.example.com/api/v1/client/subscribe?token=REPLACE_WITH_YOUR_TOKEN
-    icon: https://raw.githubusercontent.com/RiverFlowsInUUU/Self-Configuration/main/icons/Airport.png
+    icon: https://raw.githubusercontent.com/RiverFlowsInUUU/self-conf/main/icons/Airport.png
 - select:
     name: WeChat
     policies:
     - DIRECT
     flatten: true
-    icon: https://raw.githubusercontent.com/RiverFlowsInUUU/Self-Configuration/main/icons/WeChat.png
+    icon: https://raw.githubusercontent.com/RiverFlowsInUUU/self-conf/main/icons/WeChat.png
 - select:
     name: AD
     policies:
     - REJECT
     - DIRECT
-    icon: https://raw.githubusercontent.com/RiverFlowsInUUU/Self-Configuration/main/icons/AdBlock.png
+    icon: https://raw.githubusercontent.com/RiverFlowsInUUU/self-conf/main/icons/AdBlock.png
 - smart:
     name: Hong Kong
     policies:
@@ -301,7 +301,7 @@ policy_groups:
     - Airport-B
     flatten: true
     filter: (?i)🇭🇰|香港|Hong\s*Kong|\bHKG?\b|(?:深|沪|京|广)港
-    icon: https://raw.githubusercontent.com/RiverFlowsInUUU/Self-Configuration/main/icons/HongKong.png
+    icon: https://raw.githubusercontent.com/RiverFlowsInUUU/self-conf/main/icons/HongKong.png
 - smart:
     name: USA
     policies:
@@ -309,7 +309,7 @@ policy_groups:
     - Airport-B
     flatten: true
     filter: (?i)🇺🇸|美国|United\s*States|America|\bUSA?\b|洛杉矶|硅谷|西雅图|芝加哥|达拉斯|凤凰城|阿什本|纽约|迈阿密|波士顿|休斯顿|亚特兰大|拉斯维加斯|圣地亚哥|盐湖城|奥斯汀|波特兰|丹佛|奥克兰|安大略|圣安娜|\b(?:LAX|SJC|SFO|SEA|ORD|JFK|DFW|IAD|PHX|ATL|BOS|MIA|EWR|LGA|IAH|HOU|DEN|OAK|ONT|SNA|LAS|PDX|DAL|SAN|SLC|MSP)\b
-    icon: https://raw.githubusercontent.com/RiverFlowsInUUU/Self-Configuration/main/icons/UnitedStates.png
+    icon: https://raw.githubusercontent.com/RiverFlowsInUUU/self-conf/main/icons/UnitedStates.png
 - smart:
     name: Japan
     policies:
@@ -318,7 +318,7 @@ policy_groups:
     - Airport-B
     flatten: true
     filter: (?i)🇯🇵|日本|东京|大阪|Japan|\b(?:JPN?|NRT|HND|KIX|FUK|NGO|OSA|CTS|SDJ|OKA)\b
-    icon: https://raw.githubusercontent.com/RiverFlowsInUUU/Self-Configuration/main/icons/Japan.png
+    icon: https://raw.githubusercontent.com/RiverFlowsInUUU/self-conf/main/icons/Japan.png
 - smart:
     name: Taiwan
     policies:
@@ -326,7 +326,7 @@ policy_groups:
     - Airport-B
     flatten: true
     filter: (?i)🇹🇼|台湾|Taiwan|\b(?:TWN?|TPE|Taipei)\b
-    icon: https://raw.githubusercontent.com/RiverFlowsInUUU/Self-Configuration/main/icons/Taiwan.png
+    icon: https://raw.githubusercontent.com/RiverFlowsInUUU/self-conf/main/icons/Taiwan.png
 - smart:
     name: Singapore
     policies:
@@ -334,7 +334,7 @@ policy_groups:
     - Airport-B
     flatten: true
     filter: (?i)🇸🇬|新加坡|狮城|Singapore|\b(?:SGP?|SIN)\b
-    icon: https://raw.githubusercontent.com/RiverFlowsInUUU/Self-Configuration/main/icons/Singapore.png
+    icon: https://raw.githubusercontent.com/RiverFlowsInUUU/self-conf/main/icons/Singapore.png
 - smart:
     name: Korea
     policies:
@@ -343,7 +343,7 @@ policy_groups:
     - Airport-B
     flatten: true
     filter: (?i)🇰🇷|韩国|首尔|仁川|Korea|South\s*Korea|\b(?:KOR|KR|ICN|SEL)\b
-    icon: https://raw.githubusercontent.com/RiverFlowsInUUU/Self-Configuration/main/icons/Korea.png
+    icon: https://raw.githubusercontent.com/RiverFlowsInUUU/self-conf/main/icons/Korea.png
 - smart:
     name: Other Regions
     policies:
@@ -362,7 +362,7 @@ policy_groups:
         \b(?:LAX|SJC|SFO|SEA|ORD|JFK|DFW|IAD|PHX|ATL|BOS|MIA|EWR|LGA|IAH|HOU|DEN|OAK|ONT|SNA|LAS|PDX|DAL|SAN|SLC|MSP)\b|
         倍率|剩余|到期|流量|官网|订阅|测试|有效|禁止|邮箱|客服|地址|网站|群组
       ) ) .+ $
-    icon: https://raw.githubusercontent.com/RiverFlowsInUUU/Self-Configuration/main/icons/WorldMap.png
+    icon: https://raw.githubusercontent.com/RiverFlowsInUUU/self-conf/main/icons/WorldMap.png
 - smart:
     name: MAX
     policies:
@@ -375,12 +375,12 @@ policy_groups:
     urls_disabled:
     - https://sub.example.com/api/v1/client/subscribe?token=REPLACE_WITH_YOUR_TOKEN
     - https://sub.example.com/api/v1/client/subscribe?token=REPLACE_WITH_YOUR_TOKEN
-    icon: https://raw.githubusercontent.com/RiverFlowsInUUU/Self-Configuration/main/icons/Nfcloud.png
+    icon: https://raw.githubusercontent.com/RiverFlowsInUUU/self-conf/main/icons/Nfcloud.png
 - select:
     name: Final
     policies:
     - Proxy
-    icon: https://raw.githubusercontent.com/RiverFlowsInUUU/Self-Configuration/main/icons/Final.png
+    icon: https://raw.githubusercontent.com/RiverFlowsInUUU/self-conf/main/icons/Final.png
 rules:
 # 注：原「DNS 端点固定路由」规则（alidns / doh.pub / dns.google / cloudflare-dns 及若干 DNS 服务器 IP）
 # 已全部移除 —— 本模板 dns.upstreams / proxy_nameservers / bootstrap 均为 IP 字面量，解析器直接以 IP 访问，

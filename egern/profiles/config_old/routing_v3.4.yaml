@@ -234,7 +234,7 @@ policy_groups:
     - Korea
     - Other Regions
     - Node-A
-    icon: https://raw.githubusercontent.com/RiverFlowsInUUU/Self-Configuration/main/icons/Proxy.png
+    icon: https://raw.githubusercontent.com/RiverFlowsInUUU/self-conf/main/icons/Proxy.png
 - smart:
     name: Smart
     # 【routing_v2.4】合并 Airport-A / Airport-B 为单一订阅入口 Airport。
@@ -244,7 +244,7 @@ policy_groups:
     policies:
     - Airport
     flatten: true
-    icon: https://raw.githubusercontent.com/RiverFlowsInUUU/Self-Configuration/main/icons/Auto.png
+    icon: https://raw.githubusercontent.com/RiverFlowsInUUU/self-conf/main/icons/Auto.png
 # ================================================================ 应用组（本段 12 个）
 # ⚠️ 本段 12 个全部是 `select` + `flatten: true` —— 与 Surge 的 `select, include-other-group="Proxy"` 逐个等价。
 #   （`WeChat` 同为应用组，但已是纯 `select, policies:[DIRECT]` —— 不带 `flatten`、不引用任何其它组，
@@ -270,14 +270,14 @@ policy_groups:
     policies:
     - Proxy
     flatten: true
-    icon: https://raw.githubusercontent.com/RiverFlowsInUUU/Self-Configuration/main/icons/openai.png
+    icon: https://raw.githubusercontent.com/RiverFlowsInUUU/self-conf/main/icons/openai.png
 - select:
     name: Gemini
     # 规则 5（Gemini.list → Gemini）直接指向本组；且 `Google` 组首项即本组。
     policies:
     - Proxy
     flatten: true
-    icon: https://raw.githubusercontent.com/RiverFlowsInUUU/Self-Configuration/main/icons/gemini-color.png
+    icon: https://raw.githubusercontent.com/RiverFlowsInUUU/self-conf/main/icons/gemini-color.png
 - select:
     name: Claude
     # 默认走台湾（Claude 对台湾线路较友好）；Taiwan 之后是 Proxy 的全节点池。
@@ -285,7 +285,7 @@ policy_groups:
     - Taiwan
     - Proxy
     flatten: true
-    icon: https://raw.githubusercontent.com/RiverFlowsInUUU/Self-Configuration/main/icons/claude-color.png
+    icon: https://raw.githubusercontent.com/RiverFlowsInUUU/self-conf/main/icons/claude-color.png
 - select:
     name: AI
     # 默认走本文件的 `Node-B`（占位节点），其后才是 `Proxy` 摊平的整池节点。
@@ -295,7 +295,7 @@ policy_groups:
     - Node-B
     - Proxy
     flatten: true
-    icon: https://raw.githubusercontent.com/RiverFlowsInUUU/Self-Configuration/main/icons/grok.png
+    icon: https://raw.githubusercontent.com/RiverFlowsInUUU/self-conf/main/icons/grok.png
 - select:
     name: Spotify
     # 默认走 `USA`（与 `YouTubeMusic` 同）；Spotify 的解锁地区以美区为准。
@@ -303,7 +303,7 @@ policy_groups:
     - USA
     - Proxy
     flatten: true
-    icon: https://raw.githubusercontent.com/RiverFlowsInUUU/Self-Configuration/main/icons/Spotify.png
+    icon: https://raw.githubusercontent.com/RiverFlowsInUUU/self-conf/main/icons/Spotify.png
 - select:
     name: YouTubeMusic
     # 默认走 `USA`。
@@ -311,19 +311,19 @@ policy_groups:
     - USA
     - Proxy
     flatten: true
-    icon: https://raw.githubusercontent.com/RiverFlowsInUUU/Self-Configuration/main/icons/YouTubeMusic.png
+    icon: https://raw.githubusercontent.com/RiverFlowsInUUU/self-conf/main/icons/YouTubeMusic.png
 - select:
     name: YouTube
     policies:
     - Proxy
     flatten: true
-    icon: https://raw.githubusercontent.com/RiverFlowsInUUU/Self-Configuration/main/icons/YouTube.png
+    icon: https://raw.githubusercontent.com/RiverFlowsInUUU/self-conf/main/icons/YouTube.png
 - select:
     name: GitHub
     policies:
     - Proxy
     flatten: true
-    icon: https://raw.githubusercontent.com/RiverFlowsInUUU/Self-Configuration/main/icons/GitHub.png
+    icon: https://raw.githubusercontent.com/RiverFlowsInUUU/self-conf/main/icons/GitHub.png
 - select:
     name: Google
     # 首项 `Gemini` ⇒「Google 走 Gemini → Proxy」。
@@ -331,7 +331,7 @@ policy_groups:
     - Gemini
     - Proxy
     flatten: true
-    icon: https://raw.githubusercontent.com/RiverFlowsInUUU/Self-Configuration/main/icons/Google.png
+    icon: https://raw.githubusercontent.com/RiverFlowsInUUU/self-conf/main/icons/Google.png
 - select:
     name: Microsoft
     # 首项 `DIRECT`：微软服务直连优先（走代理反而慢）。
@@ -339,19 +339,19 @@ policy_groups:
     - DIRECT
     - Proxy
     flatten: true
-    icon: https://raw.githubusercontent.com/RiverFlowsInUUU/Self-Configuration/main/icons/Microsoft.png
+    icon: https://raw.githubusercontent.com/RiverFlowsInUUU/self-conf/main/icons/Microsoft.png
 - select:
     name: Telegram
     policies:
     - Proxy
     flatten: true
-    icon: https://raw.githubusercontent.com/RiverFlowsInUUU/Self-Configuration/main/icons/Telegram.png
+    icon: https://raw.githubusercontent.com/RiverFlowsInUUU/self-conf/main/icons/Telegram.png
 - select:
     name: Twitter
     policies:
     - Proxy
     flatten: true
-    icon: https://raw.githubusercontent.com/RiverFlowsInUUU/Self-Configuration/main/icons/Twitter.png
+    icon: https://raw.githubusercontent.com/RiverFlowsInUUU/self-conf/main/icons/Twitter.png
 # 【routing_v2.4】合并原 Airport-A / Airport-B 为单一订阅入口，对齐 Surge 的单个隐藏 Airport。
 #   所有原引用 Airport-A / Airport-B 的组，现统一引用 Airport（下方地区组 / Smart / MAX 均已更新）。
 - external:
@@ -363,7 +363,7 @@ policy_groups:
     urls_disabled:
     - https://sub.example.com/api/v1/client/subscribe?token=REPLACE_WITH_YOUR_TOKEN
     hidden: true
-    icon: https://raw.githubusercontent.com/RiverFlowsInUUU/Self-Configuration/main/icons/Airport.png
+    icon: https://raw.githubusercontent.com/RiverFlowsInUUU/self-conf/main/icons/Airport.png
 # 【routing_v2.2 删除】Airport-C 与 Airport-Free 两个订阅槽位原本在这里；【routing_v2.4】Airport-A / Airport-B 也已合并为单一 Airport。
 #   Airport-C / Free 只服务 Smart，删掉后 Smart 仍有 Airport 可用；A/B 合并为 Airport 后，所有地区组与 Smart / MAX 统一引用它。
 - select:
@@ -372,13 +372,13 @@ policy_groups:
     #   刻意不给其它出口 —— 不带 `flatten`、不引用任何其它分流组（与 Surge 的 `select, DIRECT` 一致）。
     policies:
     - DIRECT
-    icon: https://raw.githubusercontent.com/RiverFlowsInUUU/Self-Configuration/main/icons/WeChat.png
+    icon: https://raw.githubusercontent.com/RiverFlowsInUUU/self-conf/main/icons/WeChat.png
 - select:
     name: AD
     policies:
     - REJECT
     - DIRECT
-    icon: https://raw.githubusercontent.com/RiverFlowsInUUU/Self-Configuration/main/icons/AdBlock.png
+    icon: https://raw.githubusercontent.com/RiverFlowsInUUU/self-conf/main/icons/AdBlock.png
 # ================================================================ 地区组（7 个）
 # ⚠️ 这 6 个地区组（+ 末尾的 Other Regions）的关键词是**两份拷贝**：
 #    每个地区组写自己的 filter，而 Other Regions 的负向断言把它们的全部关键词又抄了一遍。
@@ -391,35 +391,35 @@ policy_groups:
     - Airport
     flatten: true
     filter: (?i)🇭🇰|香港|Hong\s*Kong|\bHKG?\b|(?:深|沪|京|广)港
-    icon: https://raw.githubusercontent.com/RiverFlowsInUUU/Self-Configuration/main/icons/HongKong.png
+    icon: https://raw.githubusercontent.com/RiverFlowsInUUU/self-conf/main/icons/HongKong.png
 - smart:
     name: USA
     policies:
     - Airport
     flatten: true
     filter: (?i)🇺🇸|美国|United\s*States|America|\bUSA?\b|洛杉矶|硅谷|西雅图|芝加哥|达拉斯|凤凰城|阿什本|纽约|迈阿密|波士顿|休斯顿|亚特兰大|拉斯维加斯|圣地亚哥|盐湖城|奥斯汀|波特兰|丹佛|奥克兰|安大略|圣安娜|\b(?:LAX|SJC|SFO|SEA|ORD|JFK|DFW|IAD|PHX|ATL|BOS|MIA|EWR|LGA|IAH|HOU|DEN|OAK|ONT|SNA|LAS|PDX|DAL|SAN|SLC|MSP)\b
-    icon: https://raw.githubusercontent.com/RiverFlowsInUUU/Self-Configuration/main/icons/UnitedStates.png
+    icon: https://raw.githubusercontent.com/RiverFlowsInUUU/self-conf/main/icons/UnitedStates.png
 - smart:
     name: Japan
     policies:
     - Airport
     flatten: true
     filter: (?i)🇯🇵|日本|东京|大阪|Japan|\b(?:JPN?|NRT|HND|KIX|FUK|NGO|OSA|CTS|SDJ|OKA)\b
-    icon: https://raw.githubusercontent.com/RiverFlowsInUUU/Self-Configuration/main/icons/Japan.png
+    icon: https://raw.githubusercontent.com/RiverFlowsInUUU/self-conf/main/icons/Japan.png
 - smart:
     name: Taiwan
     policies:
     - Airport
     flatten: true
     filter: (?i)🇹🇼|台湾|Taiwan|\b(?:TWN?|TPE|Taipei)\b
-    icon: https://raw.githubusercontent.com/RiverFlowsInUUU/Self-Configuration/main/icons/Taiwan.png
+    icon: https://raw.githubusercontent.com/RiverFlowsInUUU/self-conf/main/icons/Taiwan.png
 - smart:
     name: Singapore
     policies:
     - Airport
     flatten: true
     filter: (?i)🇸🇬|新加坡|狮城|Singapore|\b(?:SGP?|SIN)\b
-    icon: https://raw.githubusercontent.com/RiverFlowsInUUU/Self-Configuration/main/icons/Singapore.png
+    icon: https://raw.githubusercontent.com/RiverFlowsInUUU/self-conf/main/icons/Singapore.png
 - smart:
     name: Korea
     # 【routing_v2.3 修 2】上游去掉 Smart —— routing_v2.2 起 Smart = [Airport-A, Airport-B]，
@@ -429,7 +429,7 @@ policy_groups:
     - Airport
     flatten: true
     filter: (?i)🇰🇷|韩国|首尔|仁川|Korea|South\s*Korea|\b(?:KOR|KR|ICN|SEL)\b
-    icon: https://raw.githubusercontent.com/RiverFlowsInUUU/Self-Configuration/main/icons/Korea.png
+    icon: https://raw.githubusercontent.com/RiverFlowsInUUU/self-conf/main/icons/Korea.png
 - smart:
     name: Other Regions
     # ================================================================ ⚠️ 维护陷阱（routing_v2.3 起标注）
@@ -459,7 +459,7 @@ policy_groups:
         \b(?:LAX|SJC|SFO|SEA|ORD|JFK|DFW|IAD|PHX|ATL|BOS|MIA|EWR|LGA|IAH|HOU|DEN|OAK|ONT|SNA|LAS|PDX|DAL|SAN|SLC|MSP)\b|
         倍率|剩余|到期|流量|官网|订阅|测试|有效|禁止|邮箱|客服|地址|网站|群组
       ) ) .+ $
-    icon: https://raw.githubusercontent.com/RiverFlowsInUUU/Self-Configuration/main/icons/WorldMap.png
+    icon: https://raw.githubusercontent.com/RiverFlowsInUUU/self-conf/main/icons/WorldMap.png
 - smart:
     name: MAX
     # 【routing_v2.3 修 1】filter 改为「收录所有倍率 < 1 的节点」。
@@ -479,12 +479,12 @@ policy_groups:
     - Airport
     flatten: true
     filter: (?<![\d.])0\.\d*[1-9]
-    icon: https://raw.githubusercontent.com/RiverFlowsInUUU/Self-Configuration/main/icons/Nfcloud.png
+    icon: https://raw.githubusercontent.com/RiverFlowsInUUU/self-conf/main/icons/Nfcloud.png
 - select:
     name: Final
     policies:
     - Proxy
-    icon: https://raw.githubusercontent.com/RiverFlowsInUUU/Self-Configuration/main/icons/Final.png
+    icon: https://raw.githubusercontent.com/RiverFlowsInUUU/self-conf/main/icons/Final.png
 rules:
 # 注：原「DNS 端点固定路由」规则（alidns / doh.pub / dns.google / cloudflare-dns 及若干 DNS 服务器 IP）
 # 已全部移除 —— 本模板 dns.upstreams / proxy_nameservers / bootstrap 均为 IP 字面量，解析器直接以 IP 访问，
@@ -600,7 +600,7 @@ rules:
 #   .push-apple.com.akadns.net / .ess.apple.com / .lcdn-locator / .lcdn-registration。
 - rule_set:
     name: System
-    match: https://raw.githubusercontent.com/RiverFlowsInUUU/Self-Configuration/main/egern/apple_system.list
+    match: https://raw.githubusercontent.com/RiverFlowsInUUU/self-conf/main/egern/apple_system.list
     policy: DIRECT
     update_interval: 604800
 # ★ f7 核心改动：Apple_All.list -> Apple_All_No_Resolve.list

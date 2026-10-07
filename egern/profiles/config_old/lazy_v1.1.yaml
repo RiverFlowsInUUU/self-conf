@@ -117,7 +117,7 @@ policy_groups:
 - select:
     name: Proxy
     policies: []
-    icon: https://raw.githubusercontent.com/RiverFlowsInUUU/Self-Configuration/main/icons/Proxy.png
+    icon: https://raw.githubusercontent.com/RiverFlowsInUUU/self-conf/main/icons/Proxy.png
 # AI 流量出口。routing_v2.4 里还并列着 ChatGPT / Gemini / Claude 三个独立组，
 # 本配置只保留这一个总入口，它们全部并入此处。
 # flatten: true —— 把 Proxy 的**成员**摊进本组逐个打分，而不是把 Proxy 整组当一个成员；
@@ -127,7 +127,7 @@ policy_groups:
     policies:
     - Proxy
     flatten: true
-    icon: https://raw.githubusercontent.com/RiverFlowsInUUU/Self-Configuration/main/icons/openai.png
+    icon: https://raw.githubusercontent.com/RiverFlowsInUUU/self-conf/main/icons/openai.png
 # 广告拦截。只有一个子策略：REJECT（拦截）。
 # 本配置不再提供 DIRECT 兜底 —— 想临时放行某个广告域名，在 rules 里加一条更靠前的
 # domain / domain_suffix 规则指向 DIRECT 即可（别整组切走，那等于关掉全部拦截）。
@@ -135,7 +135,7 @@ policy_groups:
     name: AD
     policies:
     - REJECT
-    icon: https://raw.githubusercontent.com/RiverFlowsInUUU/Self-Configuration/main/icons/AdBlock.png
+    icon: https://raw.githubusercontent.com/RiverFlowsInUUU/self-conf/main/icons/AdBlock.png
 # ============================================================================
 # 规则：顺序就是一切（自上而下第一条命中即决定去向）
 #   ① 白名单   ② 广告拦截   ③ 内网直连   ④ Apple 系统服务
@@ -180,7 +180,7 @@ rules:
 #    定位 / CDN 定位那几类）；重复无害 —— 两条规则同为 DIRECT。
 - rule_set:
     name: System
-    match: https://raw.githubusercontent.com/RiverFlowsInUUU/Self-Configuration/main/egern/apple_system.list
+    match: https://raw.githubusercontent.com/RiverFlowsInUUU/self-conf/main/egern/apple_system.list
     policy: DIRECT
     update_interval: 604800
 # ⑤ AI 分流 —— 命中即走 AI 组（→ Proxy）。

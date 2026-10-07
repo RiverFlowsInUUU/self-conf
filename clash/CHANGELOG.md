@@ -192,7 +192,7 @@
   **404 在面板上表现为破图，内核语法校验发现不了**。
 - 🖼️ **图标收归本仓库 `icons/`** —— 原先自用版从 Qure / edigitalagency / AIsouler 等**外部源**
   直链图标（3 个来源、4 处外链），与懒人版 / 分流版「统一引用姊妹仓」的约定不一致，且外部源
-  随时可能失效。现改为：从姊妹仓 [Self-Configuration](https://github.com/RiverFlowsInUUU/Self-Configuration/tree/main/icons)
+  随时可能失效。现改为：从姊妹仓 [Self-Configuration](https://github.com/RiverFlowsInUUU/self-conf/tree/main/icons)
   同步 30 个图标到本仓 `icons/`，并补齐 3 个自用版独有的（`Emby` / `Apple` / `AppleUpdate`），
   共 33 个；`profiles/my_clash.yaml` 与 `override/my_clash.js` 的 23 处图标全部改指本仓库。
   - 顺带压缩 `AppleUpdate.png`（1254² 165 KB → 256² 29 KB）；
@@ -247,7 +247,7 @@
   （`password` ≙ Egern 的 `auth` ≙ Surge 的 `password`），占位节点数 1 → 2
   （Node-A 归 Proxy、Node-B 归 AI）。
 - 🖼️ **策略组图标统一引用姊妹仓的 `icons/`** —— 27 处（分流 24 + 懒人 3）从
-  Qure / lobe-icons 的外链改为 [Self-Configuration · icons](https://github.com/RiverFlowsInUUU/Self-Configuration/tree/main/icons)
+  Qure / lobe-icons 的外链改为 [Self-Configuration · icons](https://github.com/RiverFlowsInUUU/self-conf/tree/main/icons)
   （29 个图标，与两仓组名一一对应）。换的三个原因：
   ① 原先外链里 `UnitedStates.png` / `WorldMap.png` 两个文件名在 Qure 目录**不存在**（实测 404，
   面板上显示破图），正确名是 `United_States.png` / `World_Map.png`；

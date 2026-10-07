@@ -62,26 +62,26 @@ policy_groups:
     - https://sub.example.com/api/v1/client/subscribe?token=REPLACE_WITH_YOUR_TOKEN
     interval: 86400
     hidden: true
-    icon: https://raw.githubusercontent.com/RiverFlowsInUUU/Self-Configuration/main/icons/Airport.png
+    icon: https://raw.githubusercontent.com/RiverFlowsInUUU/self-conf/main/icons/Airport.png
 - smart:
     name: Proxy
     policies:
     - Node-A
     - Airport
     flatten: true
-    icon: https://raw.githubusercontent.com/RiverFlowsInUUU/Self-Configuration/main/icons/Proxy.png
+    icon: https://raw.githubusercontent.com/RiverFlowsInUUU/self-conf/main/icons/Proxy.png
 - select:
     name: AI
     policies:
     - Node-B
     - Airport
     flatten: true
-    icon: https://raw.githubusercontent.com/RiverFlowsInUUU/Self-Configuration/main/icons/openai.png
+    icon: https://raw.githubusercontent.com/RiverFlowsInUUU/self-conf/main/icons/openai.png
 - select:
     name: AD
     policies:
     - REJECT
-    icon: https://raw.githubusercontent.com/RiverFlowsInUUU/Self-Configuration/main/icons/AdBlock.png
+    icon: https://raw.githubusercontent.com/RiverFlowsInUUU/self-conf/main/icons/AdBlock.png
 rules:
 - rule_set:
     name: Jinx-CN
@@ -100,7 +100,7 @@ rules:
     update_interval: 604800
 - rule_set:
     name: System
-    match: https://raw.githubusercontent.com/RiverFlowsInUUU/Self-Configuration/main/rules/apple_system.list
+    match: https://raw.githubusercontent.com/RiverFlowsInUUU/self-conf/main/rules/apple_system.list
     policy: DIRECT
     update_interval: 604800
 - rule_set:
@@ -120,7 +120,7 @@ rules:
     update_interval: 604800
 - rule_set:
     name: AI_Domains
-    match: https://raw.githubusercontent.com/RiverFlowsInUUU/Self-Configuration/main/rules/AI.list
+    match: https://raw.githubusercontent.com/RiverFlowsInUUU/self-conf/main/rules/AI.list
     policy: AI
     update_interval: 604800
 - rule_set:

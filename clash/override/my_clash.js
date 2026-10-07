@@ -72,9 +72,9 @@ function main(config) {
   const HC_INT = 300;
 
   // 图标基址（本仓库自带 icons/，与姊妹仓 Self-Configuration 同源）
-  const ICON = "https://raw.githubusercontent.com/RiverFlowsInUUU/Clash/main/icons/";
+  const ICON = "https://raw.githubusercontent.com/RiverFlowsInUUU/self-conf/main/icons/";
   // 本仓 raw 基址（自托管清单 rules/ 用）
-  const RAW = "https://raw.githubusercontent.com/RiverFlowsInUUU/Clash/main/";
+  const RAW = "https://raw.githubusercontent.com/RiverFlowsInUUU/self-conf/main/";
 
   // 节点来源开关：
   //   include-all-proxies 引入内联 proxies（订阅转换后的常见形态）；

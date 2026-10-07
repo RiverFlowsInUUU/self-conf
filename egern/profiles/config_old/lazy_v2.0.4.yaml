@@ -131,7 +131,7 @@ policy_groups:
     #    （仓规见 skill/reference/shared/troubleshoot-faq.md「规则集刷新统一一周」）。
     interval: 86400
     hidden: true
-    icon: https://raw.githubusercontent.com/RiverFlowsInUUU/Self-Configuration/main/icons/Airport.png
+    icon: https://raw.githubusercontent.com/RiverFlowsInUUU/self-conf/main/icons/Airport.png
 # 自动选优出口：smart 按真实连接的首字节延迟、TCP 重传丢包、UDP 响应延迟给成员
 # 打分（5 分钟一轮重测），自动择优。成员 = 自己那条占位节点在前 + 订阅里的节点；
 # `flatten: true` 把 Airport 的成员摊进本组逐个打分，而不是把整组当一个成员
@@ -142,7 +142,7 @@ policy_groups:
     - Node-A
     - Airport
     flatten: true
-    icon: https://raw.githubusercontent.com/RiverFlowsInUUU/Self-Configuration/main/icons/Proxy.png
+    icon: https://raw.githubusercontent.com/RiverFlowsInUUU/self-conf/main/icons/Proxy.png
 # AI 流量出口：另一条占位节点 + 订阅里的节点。
 # 本配置只保留这一个总入口，分流版的 ChatGPT / Gemini / Claude 等专用组全部并入此处。
 # ⚠️ 本组**不引用 Proxy**（刻意与分流版一样的分工：两条节点各归一组，订阅节点两组共用）。
@@ -156,7 +156,7 @@ policy_groups:
     - Node-B
     - Airport
     flatten: true
-    icon: https://raw.githubusercontent.com/RiverFlowsInUUU/Self-Configuration/main/icons/openai.png
+    icon: https://raw.githubusercontent.com/RiverFlowsInUUU/self-conf/main/icons/openai.png
 # 广告拦截。只有一个子策略：REJECT（拦截）。
 # 本配置不再提供 DIRECT 兜底 —— 想临时放行某个广告域名，在 rules 里加一条更靠前的
 # domain / domain_suffix 规则指向 DIRECT 即可（别整组切走，那等于关掉全部拦截）。
@@ -164,7 +164,7 @@ policy_groups:
     name: AD
     policies:
     - REJECT
-    icon: https://raw.githubusercontent.com/RiverFlowsInUUU/Self-Configuration/main/icons/AdBlock.png
+    icon: https://raw.githubusercontent.com/RiverFlowsInUUU/self-conf/main/icons/AdBlock.png
 # ⚠️ 懒人版**没有** `Apple Update` 组（2026-10-06 定）：系统更新分流只在分流版提供。
 #    懒人版的取向是「全量流量一个出口」，不为此再开一个组；
 #    OTA 域名在懒人版由下面的 `System` 接成 `DIRECT`（与旧版行为一致）。
@@ -210,7 +210,7 @@ rules:
 #    ⚠️ 懒人版**不设 `Apple Update` 组**（仅分流版有）：OTA 域名在懒人版由本集合接成 `DIRECT`。
 - rule_set:
     name: System
-    match: https://raw.githubusercontent.com/RiverFlowsInUUU/Self-Configuration/main/rules/apple_system.list
+    match: https://raw.githubusercontent.com/RiverFlowsInUUU/self-conf/main/rules/apple_system.list
     policy: DIRECT
     update_interval: 604800
 # ④ 内网 / 局域网 —— 必须直连。两条互补（与 Surge 懒人版的 LAN + private.txt 同源同策略）：
@@ -239,7 +239,7 @@ rules:
 # 伴生域/宽后缀整合集（本仓自托管静态快照，与上行 Repcz 同指 AI 组；分工见上）
 - rule_set:
     name: AI_Domains
-    match: https://raw.githubusercontent.com/RiverFlowsInUUU/Self-Configuration/main/rules/AI.list
+    match: https://raw.githubusercontent.com/RiverFlowsInUUU/self-conf/main/rules/AI.list
     policy: AI
     update_interval: 604800
 # ⑥ 直连集合 —— 以下 2 条共同承担「国内流量直连」。

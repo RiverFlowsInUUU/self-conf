@@ -66,7 +66,7 @@ policy_groups:
     - United States
     - Other Regions
     - Node-A
-    icon: https://raw.githubusercontent.com/RiverFlowsInUUU/Self-Configuration/main/icons/Proxy.png
+    icon: https://raw.githubusercontent.com/RiverFlowsInUUU/self-conf/main/icons/Proxy.png
 - smart:
     name: Smart
     policies:
@@ -74,80 +74,80 @@ policy_groups:
     flatten: true
     priorities:
       "(?<![\\d.])0\\.\\d*[1-9]": 0.15
-    icon: https://raw.githubusercontent.com/RiverFlowsInUUU/Self-Configuration/main/icons/Auto.png
+    icon: https://raw.githubusercontent.com/RiverFlowsInUUU/self-conf/main/icons/Auto.png
 - select:
     name: ChatGPT
     policies:
     - United States
     - Proxy
     flatten: true
-    icon: https://raw.githubusercontent.com/RiverFlowsInUUU/Self-Configuration/main/icons/openai.png
+    icon: https://raw.githubusercontent.com/RiverFlowsInUUU/self-conf/main/icons/openai.png
 - select:
     name: Gemini
     policies:
     - United States
     - Proxy
     flatten: true
-    icon: https://raw.githubusercontent.com/RiverFlowsInUUU/Self-Configuration/main/icons/gemini-color.png
+    icon: https://raw.githubusercontent.com/RiverFlowsInUUU/self-conf/main/icons/gemini-color.png
 - select:
     name: Claude
     policies:
     - Taiwan
     - Proxy
     flatten: true
-    icon: https://raw.githubusercontent.com/RiverFlowsInUUU/Self-Configuration/main/icons/claude-color.png
+    icon: https://raw.githubusercontent.com/RiverFlowsInUUU/self-conf/main/icons/claude-color.png
 - select:
     name: AI
     policies:
     - Node-B
     - Proxy
     flatten: true
-    icon: https://raw.githubusercontent.com/RiverFlowsInUUU/Self-Configuration/main/icons/grok.png
+    icon: https://raw.githubusercontent.com/RiverFlowsInUUU/self-conf/main/icons/grok.png
 - select:
     name: YouTube
     policies:
     - Proxy
     flatten: true
-    icon: https://raw.githubusercontent.com/RiverFlowsInUUU/Self-Configuration/main/icons/YouTube.png
+    icon: https://raw.githubusercontent.com/RiverFlowsInUUU/self-conf/main/icons/YouTube.png
 - select:
     name: Emby
     policies:
     - Proxy
     flatten: true
-    icon: https://raw.githubusercontent.com/RiverFlowsInUUU/Self-Configuration/main/icons/Emby.png
+    icon: https://raw.githubusercontent.com/RiverFlowsInUUU/self-conf/main/icons/Emby.png
 - select:
     name: Google
     policies:
     - Gemini
     - Proxy
     flatten: true
-    icon: https://raw.githubusercontent.com/RiverFlowsInUUU/Self-Configuration/main/icons/Google.png
+    icon: https://raw.githubusercontent.com/RiverFlowsInUUU/self-conf/main/icons/Google.png
 - select:
     name: Telegram
     policies:
     - Proxy
     flatten: true
-    icon: https://raw.githubusercontent.com/RiverFlowsInUUU/Self-Configuration/main/icons/Telegram.png
+    icon: https://raw.githubusercontent.com/RiverFlowsInUUU/self-conf/main/icons/Telegram.png
 - select:
     name: YouTube Music
     policies:
     - United States
     - Proxy
     flatten: true
-    icon: https://raw.githubusercontent.com/RiverFlowsInUUU/Self-Configuration/main/icons/YouTubeMusic.png
+    icon: https://raw.githubusercontent.com/RiverFlowsInUUU/self-conf/main/icons/YouTubeMusic.png
 - select:
     name: Spotify
     policies:
     - United States
     - Proxy
     flatten: true
-    icon: https://raw.githubusercontent.com/RiverFlowsInUUU/Self-Configuration/main/icons/Spotify.png
+    icon: https://raw.githubusercontent.com/RiverFlowsInUUU/self-conf/main/icons/Spotify.png
 - select:
     name: Twitter
     policies:
     - Proxy
     flatten: true
-    icon: https://raw.githubusercontent.com/RiverFlowsInUUU/Self-Configuration/main/icons/Twitter.png
+    icon: https://raw.githubusercontent.com/RiverFlowsInUUU/self-conf/main/icons/Twitter.png
 - external:
     name: Airport
     type: smart
@@ -157,20 +157,20 @@ policy_groups:
     - https://sub.example.com/api/v1/client/subscribe?token=REPLACE_WITH_YOUR_TOKEN
     interval: 86400
     hidden: true
-    icon: https://raw.githubusercontent.com/RiverFlowsInUUU/Self-Configuration/main/icons/Airport.png
+    icon: https://raw.githubusercontent.com/RiverFlowsInUUU/self-conf/main/icons/Airport.png
 - select:
     name: Microsoft
     policies:
     - DIRECT
     - Proxy
     flatten: true
-    icon: https://raw.githubusercontent.com/RiverFlowsInUUU/Self-Configuration/main/icons/Microsoft.png
+    icon: https://raw.githubusercontent.com/RiverFlowsInUUU/self-conf/main/icons/Microsoft.png
 - select:
     name: AD
     policies:
     - REJECT
     - DIRECT
-    icon: https://raw.githubusercontent.com/RiverFlowsInUUU/Self-Configuration/main/icons/AdBlock.png
+    icon: https://raw.githubusercontent.com/RiverFlowsInUUU/self-conf/main/icons/AdBlock.png
 - smart:
     name: Hong Kong
     policies:
@@ -179,7 +179,7 @@ policy_groups:
     filter: (?i)🇭🇰|香港|Hong\s*Kong|\bHKG?\b|(?:深|沪|京|广)港
     priorities:
       "(?<![\\d.])0\\.\\d*[1-9]": 0.15
-    icon: https://raw.githubusercontent.com/RiverFlowsInUUU/Self-Configuration/main/icons/HongKong.png
+    icon: https://raw.githubusercontent.com/RiverFlowsInUUU/self-conf/main/icons/HongKong.png
 - smart:
     name: Taiwan
     policies:
@@ -188,7 +188,7 @@ policy_groups:
     filter: (?i)🇹🇼|台湾|Taiwan|\b(?:TWN?|TPE|Taipei)\b
     priorities:
       "(?<![\\d.])0\\.\\d*[1-9]": 0.15
-    icon: https://raw.githubusercontent.com/RiverFlowsInUUU/Self-Configuration/main/icons/Taiwan.png
+    icon: https://raw.githubusercontent.com/RiverFlowsInUUU/self-conf/main/icons/Taiwan.png
 - smart:
     name: Japan
     policies:
@@ -197,7 +197,7 @@ policy_groups:
     filter: (?i)🇯🇵|日本|东京|大阪|Japan|\b(?:JPN?|NRT|HND|KIX|FUK|NGO|OSA|CTS|SDJ|OKA)\b
     priorities:
       "(?<![\\d.])0\\.\\d*[1-9]": 0.15
-    icon: https://raw.githubusercontent.com/RiverFlowsInUUU/Self-Configuration/main/icons/Japan.png
+    icon: https://raw.githubusercontent.com/RiverFlowsInUUU/self-conf/main/icons/Japan.png
 - smart:
     name: Singapore
     policies:
@@ -206,7 +206,7 @@ policy_groups:
     filter: (?i)🇸🇬|新加坡|狮城|Singapore|\b(?:SGP?|SIN)\b
     priorities:
       "(?<![\\d.])0\\.\\d*[1-9]": 0.15
-    icon: https://raw.githubusercontent.com/RiverFlowsInUUU/Self-Configuration/main/icons/Singapore.png
+    icon: https://raw.githubusercontent.com/RiverFlowsInUUU/self-conf/main/icons/Singapore.png
 - smart:
     name: United States
     policies:
@@ -215,7 +215,7 @@ policy_groups:
     filter: (?i)🇺🇸|美国|United\s*States|America|\bUSA?\b|洛杉矶|硅谷|西雅图|芝加哥|达拉斯|凤凰城|阿什本|纽约|迈阿密|波士顿|休斯顿|亚特兰大|拉斯维加斯|圣地亚哥|盐湖城|奥斯汀|波特兰|丹佛|奥克兰|安大略|圣安娜|\b(?:LAX|SJC|SFO|SEA|ORD|JFK|DFW|IAD|PHX|ATL|BOS|MIA|EWR|LGA|IAH|HOU|DEN|OAK|ONT|SNA|LAS|PDX|DAL|SAN|SLC|MSP)\b
     priorities:
       "(?<![\\d.])0\\.\\d*[1-9]": 0.15
-    icon: https://raw.githubusercontent.com/RiverFlowsInUUU/Self-Configuration/main/icons/UnitedStates.png
+    icon: https://raw.githubusercontent.com/RiverFlowsInUUU/self-conf/main/icons/UnitedStates.png
 - smart:
     name: Other Regions
     policies:
@@ -234,11 +234,11 @@ policy_groups:
       ) ) .+ $
     priorities:
       "(?<![\\d.])0\\.\\d*[1-9]": 0.15
-    icon: https://raw.githubusercontent.com/RiverFlowsInUUU/Self-Configuration/main/icons/WorldMap.png
+    icon: https://raw.githubusercontent.com/RiverFlowsInUUU/self-conf/main/icons/WorldMap.png
 rules:
 - rule_set:
     name: System
-    match: https://raw.githubusercontent.com/RiverFlowsInUUU/Self-Configuration/main/rules/apple_system.list
+    match: https://raw.githubusercontent.com/RiverFlowsInUUU/self-conf/main/rules/apple_system.list
     policy: DIRECT
     update_interval: 604800
 - rule_set:
@@ -293,7 +293,7 @@ rules:
     update_interval: 604800
 - rule_set:
     name: AI_Domains
-    match: https://raw.githubusercontent.com/RiverFlowsInUUU/Self-Configuration/main/rules/AI.list
+    match: https://raw.githubusercontent.com/RiverFlowsInUUU/self-conf/main/rules/AI.list
     policy: AI
     update_interval: 604800
 - rule_set:
@@ -313,7 +313,7 @@ rules:
     update_interval: 604800
 - rule_set:
     name: Emby
-    match: https://raw.githubusercontent.com/RiverFlowsInUUU/Self-Configuration/main/rules/emby.list
+    match: https://raw.githubusercontent.com/RiverFlowsInUUU/self-conf/main/rules/emby.list
     policy: Emby
     update_interval: 604800
 - rule_set:

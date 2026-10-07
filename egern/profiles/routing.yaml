@@ -149,7 +149,7 @@ policy_groups:
     - Singapore
     - United States
     - Other Regions
-    icon: https://raw.githubusercontent.com/RiverFlowsInUUU/Self-Configuration/main/icons/Proxy.png
+    icon: https://raw.githubusercontent.com/RiverFlowsInUUU/self-conf/main/icons/Proxy.png
 - smart:
     name: Smart
     # 订阅入口为单一 Airport。
@@ -164,7 +164,7 @@ policy_groups:
     #   与 Surge 的 `policy-priority` 同值同正则。
     priorities:
       "(?<![\\d.])0\\.\\d*[1-9]": 0.15
-    icon: https://raw.githubusercontent.com/RiverFlowsInUUU/Self-Configuration/main/icons/Auto.png
+    icon: https://raw.githubusercontent.com/RiverFlowsInUUU/self-conf/main/icons/Auto.png
 # ================================================================ 应用组（本段 12 个）
 # ⚠️ 本段 12 个全部是 `select` + `flatten: true` —— 与 Surge 的 `select, include-other-group="Proxy"` 逐个等价。
 #
@@ -203,7 +203,7 @@ policy_groups:
     - Taiwan
     - Japan
     - Singapore
-    icon: https://raw.githubusercontent.com/RiverFlowsInUUU/Self-Configuration/main/icons/openai.png
+    icon: https://raw.githubusercontent.com/RiverFlowsInUUU/self-conf/main/icons/openai.png
 - select:
     name: Gemini
     # 规则 5（Gemini.list → Gemini）直接指向本组；且 `Google` 组首项即本组。默认**美区**。
@@ -214,7 +214,7 @@ policy_groups:
     - Taiwan
     - Japan
     - Singapore
-    icon: https://raw.githubusercontent.com/RiverFlowsInUUU/Self-Configuration/main/icons/gemini-color.png
+    icon: https://raw.githubusercontent.com/RiverFlowsInUUU/self-conf/main/icons/gemini-color.png
 - select:
     name: Claude
     # 默认走台湾（Claude 对台湾线路较友好）；其后是各地区组。
@@ -225,7 +225,7 @@ policy_groups:
     - Japan
     - Singapore
     - United States
-    icon: https://raw.githubusercontent.com/RiverFlowsInUUU/Self-Configuration/main/icons/claude-color.png
+    icon: https://raw.githubusercontent.com/RiverFlowsInUUU/self-conf/main/icons/claude-color.png
 - select:
     name: AI
     # 首项 `Smart`（自动选优），其后是各地区组；**不含 `Hong Kong`**。
@@ -236,7 +236,7 @@ policy_groups:
     - Japan
     - Singapore
     - United States
-    icon: https://raw.githubusercontent.com/RiverFlowsInUUU/Self-Configuration/main/icons/grok.png
+    icon: https://raw.githubusercontent.com/RiverFlowsInUUU/self-conf/main/icons/grok.png
 - select:
     name: YouTube
     # ⚠️ 逐地区组列出（不用 `policies: [Proxy]`）：后者会把 `Other Regions` 带进来。
@@ -248,7 +248,7 @@ policy_groups:
     - Japan
     - Singapore
     - United States
-    icon: https://raw.githubusercontent.com/RiverFlowsInUUU/Self-Configuration/main/icons/YouTube.png
+    icon: https://raw.githubusercontent.com/RiverFlowsInUUU/self-conf/main/icons/YouTube.png
 - select:
     name: Emby
     # 影视服务器（自用枚举 4 个域名，见本仓自托管 `rules/emby.list`）。
@@ -261,7 +261,7 @@ policy_groups:
     - Japan
     - Singapore
     - United States
-    icon: https://raw.githubusercontent.com/RiverFlowsInUUU/Self-Configuration/main/icons/Emby.png
+    icon: https://raw.githubusercontent.com/RiverFlowsInUUU/self-conf/main/icons/Emby.png
 - select:
     name: Google
     # 首项 `Gemini` ⇒「Google 走 Gemini → 各地区组」。
@@ -275,7 +275,7 @@ policy_groups:
     - Japan
     - Singapore
     - United States
-    icon: https://raw.githubusercontent.com/RiverFlowsInUUU/Self-Configuration/main/icons/Google.png
+    icon: https://raw.githubusercontent.com/RiverFlowsInUUU/self-conf/main/icons/Google.png
 - select:
     name: Telegram
     # ⚠️ 逐地区组列出（不用 `policies: [Proxy]`）：后者会把 `Hong Kong` / `Other Regions` 带进来。
@@ -287,7 +287,7 @@ policy_groups:
     - Japan
     - Singapore
     - United States
-    icon: https://raw.githubusercontent.com/RiverFlowsInUUU/Self-Configuration/main/icons/Telegram.png
+    icon: https://raw.githubusercontent.com/RiverFlowsInUUU/self-conf/main/icons/Telegram.png
 - select:
     name: YouTube Music
     # 默认走 `United States`。
@@ -297,7 +297,7 @@ policy_groups:
     - Taiwan
     - Japan
     - Singapore
-    icon: https://raw.githubusercontent.com/RiverFlowsInUUU/Self-Configuration/main/icons/YouTubeMusic.png
+    icon: https://raw.githubusercontent.com/RiverFlowsInUUU/self-conf/main/icons/YouTubeMusic.png
 - select:
     name: Spotify
     # 默认走 `United States`（与 `YouTube Music` 同）；Spotify 的解锁地区以美区为准。
@@ -307,7 +307,7 @@ policy_groups:
     - Taiwan
     - Japan
     - Singapore
-    icon: https://raw.githubusercontent.com/RiverFlowsInUUU/Self-Configuration/main/icons/Spotify.png
+    icon: https://raw.githubusercontent.com/RiverFlowsInUUU/self-conf/main/icons/Spotify.png
 - select:
     name: Twitter
     # ⚠️ 逐地区组列出（不用 `policies: [Proxy]`）：后者会把 `Hong Kong` / `Other Regions` 带进来。
@@ -319,7 +319,7 @@ policy_groups:
     - Japan
     - Singapore
     - United States
-    icon: https://raw.githubusercontent.com/RiverFlowsInUUU/Self-Configuration/main/icons/Twitter.png
+    icon: https://raw.githubusercontent.com/RiverFlowsInUUU/self-conf/main/icons/Twitter.png
 # 单一订阅入口 Airport，对齐 Surge 的单个隐藏 Airport；下方 Smart 与各服务组统一引用它。
 - external:
     name: Airport
@@ -333,7 +333,7 @@ policy_groups:
     #    （仓规见 skill/reference/shared/troubleshoot-faq.md「规则集刷新统一一周」）。
     interval: 86400
     hidden: true
-    icon: https://raw.githubusercontent.com/RiverFlowsInUUU/Self-Configuration/main/icons/Airport.png
+    icon: https://raw.githubusercontent.com/RiverFlowsInUUU/self-conf/main/icons/Airport.png
 - select:
     name: Microsoft
     # 首项 `DIRECT`：微软服务直连优先（走代理反而慢）。
@@ -342,7 +342,7 @@ policy_groups:
     policies:
     - DIRECT
     - Proxy
-    icon: https://raw.githubusercontent.com/RiverFlowsInUUU/Self-Configuration/main/icons/Microsoft.png
+    icon: https://raw.githubusercontent.com/RiverFlowsInUUU/self-conf/main/icons/Microsoft.png
 
 # Apple 更新（OTA）—— 系统更新下载走哪个出口。
 # 首项 `DIRECT` 即默认取向：更新包体积大，直连通常比绕代理更快、也不吃订阅流量。
@@ -353,13 +353,13 @@ policy_groups:
     policies:
     - DIRECT
     - REJECT
-    icon: https://raw.githubusercontent.com/RiverFlowsInUUU/Self-Configuration/main/icons/Apple.png
+    icon: https://raw.githubusercontent.com/RiverFlowsInUUU/self-conf/main/icons/Apple.png
 - select:
     name: AD
     policies:
     - REJECT
     - DIRECT
-    icon: https://raw.githubusercontent.com/RiverFlowsInUUU/Self-Configuration/main/icons/AdBlock.png
+    icon: https://raw.githubusercontent.com/RiverFlowsInUUU/self-conf/main/icons/AdBlock.png
 # ================================================================ 地区组（6 个）
 # ⚠️ 每个地区组都带 `priorities`（系数 0.15 = 低倍率优先），与 `Smart` 及 Surge 侧逐字同值；
 #    凡 smart 组都必须带它，要调这个口径就一起调。语义见上方 `Smart` 的注释。
@@ -376,7 +376,7 @@ policy_groups:
     filter: (?i)🇭🇰|香港|Hong\s*Kong|\bHKG?\b|(?:深|沪|京|广)港
     priorities:
       "(?<![\\d.])0\\.\\d*[1-9]": 0.15
-    icon: https://raw.githubusercontent.com/RiverFlowsInUUU/Self-Configuration/main/icons/HongKong.png
+    icon: https://raw.githubusercontent.com/RiverFlowsInUUU/self-conf/main/icons/HongKong.png
 - smart:
     name: Taiwan
     policies:
@@ -385,7 +385,7 @@ policy_groups:
     filter: (?i)🇹🇼|台湾|Taiwan|\b(?:TWN?|TPE|Taipei)\b
     priorities:
       "(?<![\\d.])0\\.\\d*[1-9]": 0.15
-    icon: https://raw.githubusercontent.com/RiverFlowsInUUU/Self-Configuration/main/icons/Taiwan.png
+    icon: https://raw.githubusercontent.com/RiverFlowsInUUU/self-conf/main/icons/Taiwan.png
 - smart:
     name: Japan
     policies:
@@ -394,7 +394,7 @@ policy_groups:
     filter: (?i)🇯🇵|日本|东京|大阪|Japan|\b(?:JPN?|NRT|HND|KIX|FUK|NGO|OSA|CTS|SDJ|OKA)\b
     priorities:
       "(?<![\\d.])0\\.\\d*[1-9]": 0.15
-    icon: https://raw.githubusercontent.com/RiverFlowsInUUU/Self-Configuration/main/icons/Japan.png
+    icon: https://raw.githubusercontent.com/RiverFlowsInUUU/self-conf/main/icons/Japan.png
 - smart:
     name: Singapore
     policies:
@@ -403,7 +403,7 @@ policy_groups:
     filter: (?i)🇸🇬|新加坡|狮城|Singapore|\b(?:SGP?|SIN)\b
     priorities:
       "(?<![\\d.])0\\.\\d*[1-9]": 0.15
-    icon: https://raw.githubusercontent.com/RiverFlowsInUUU/Self-Configuration/main/icons/Singapore.png
+    icon: https://raw.githubusercontent.com/RiverFlowsInUUU/self-conf/main/icons/Singapore.png
 - smart:
     name: United States
     policies:
@@ -412,7 +412,7 @@ policy_groups:
     filter: (?i)🇺🇸|美国|United\s*States|America|\bUSA?\b|洛杉矶|硅谷|西雅图|芝加哥|达拉斯|凤凰城|阿什本|纽约|迈阿密|波士顿|休斯顿|亚特兰大|拉斯维加斯|圣地亚哥|盐湖城|奥斯汀|波特兰|丹佛|奥克兰|安大略|圣安娜|\b(?:LAX|SJC|SFO|SEA|ORD|JFK|DFW|IAD|PHX|ATL|BOS|MIA|EWR|LGA|IAH|HOU|DEN|OAK|ONT|SNA|LAS|PDX|DAL|SAN|SLC|MSP)\b
     priorities:
       "(?<![\\d.])0\\.\\d*[1-9]": 0.15
-    icon: https://raw.githubusercontent.com/RiverFlowsInUUU/Self-Configuration/main/icons/UnitedStates.png
+    icon: https://raw.githubusercontent.com/RiverFlowsInUUU/self-conf/main/icons/UnitedStates.png
 - smart:
     name: Other Regions
     # ================================================================ ⚠️ 维护陷阱
@@ -443,7 +443,7 @@ policy_groups:
       ) ) .+ $
     priorities:
       "(?<![\\d.])0\\.\\d*[1-9]": 0.15
-    icon: https://raw.githubusercontent.com/RiverFlowsInUUU/Self-Configuration/main/icons/WorldMap.png
+    icon: https://raw.githubusercontent.com/RiverFlowsInUUU/self-conf/main/icons/WorldMap.png
 rules:
 # ---- 3e. 禁用条目（与 Surge 对齐）------------------------------------------
 # blackmatrix7 Proxy.list：改成**纯注释** = 不进 rules 数组、不占一位。
@@ -511,7 +511,7 @@ rules:
 #   定位基础主机，**只有 SYSTEM 接得住**（`direct.txt` 仅兜住其中的 api.smoot.apple.cn）。
 - rule_set:
     name: System
-    match: https://raw.githubusercontent.com/RiverFlowsInUUU/Self-Configuration/main/rules/apple_system.list
+    match: https://raw.githubusercontent.com/RiverFlowsInUUU/self-conf/main/rules/apple_system.list
     policy: DIRECT
     update_interval: 604800
 - rule_set:
@@ -555,7 +555,7 @@ rules:
 # 与 ChatGPT 认证/遥测/风控基础设施域不再漏出 AI 组；上行 Repcz 管滚动新 AI 域。
 - rule_set:
     name: AI_Domains
-    match: https://raw.githubusercontent.com/RiverFlowsInUUU/Self-Configuration/main/rules/AI.list
+    match: https://raw.githubusercontent.com/RiverFlowsInUUU/self-conf/main/rules/AI.list
     policy: AI
 # GitHub —— 规则集仍引用（`GitHub.list`），但**不再单独成组**：本条直接指向 `Proxy`。
     update_interval: 604800
@@ -576,7 +576,7 @@ rules:
     update_interval: 604800
 - rule_set:
     name: Emby
-    match: https://raw.githubusercontent.com/RiverFlowsInUUU/Self-Configuration/main/rules/emby.list
+    match: https://raw.githubusercontent.com/RiverFlowsInUUU/self-conf/main/rules/emby.list
     policy: Emby
     update_interval: 604800
 - rule_set:

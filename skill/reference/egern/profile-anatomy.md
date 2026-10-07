@@ -72,7 +72,7 @@ Egern 的分流组**按类型做键**，而不是平铺的 `name` 字段。一�
 - **`routing_v2.3` 起已无空组**：`ChatGPT` / `Gemini` 曾是 `policies: []` 的空组，而规则直接指向它们
   ⇒ **导入即静默断流**；现已填成 `[Proxy]` + `flatten: true`（`flatten` 在这里起什么作用，
   见下方「组清单与要点」起的逐段讲解）。
-- **图标**：模板用到的全部策略组图标（条数现抓：`ls icons/*.png | wc -l`）（整合自 RiverFlowsInUUU/Rule、jnlaoshu/MySelf、Koolson/Qure 三个公开仓库）已统一下载进本仓库 `icons/`，全部以 `https://raw.githubusercontent.com/RiverFlowsInUUU/Self-Configuration/main/icons/<file>` 形式引用，**不再跨项目引用任何图标地址**。
+- **图标**：模板用到的全部策略组图标（条数现抓：`ls icons/*.png | wc -l`）（整合自 RiverFlowsInUUU/Rule、jnlaoshu/MySelf、Koolson/Qure 三个公开仓库）已统一下载进本仓库 `icons/`，全部以 `https://raw.githubusercontent.com/RiverFlowsInUUU/self-conf/main/icons/<file>` 形式引用，**不再跨项目引用任何图标地址**。
 
 #### 组清单与要点（现役）
 
