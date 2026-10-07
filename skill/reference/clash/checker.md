@@ -93,7 +93,7 @@ python skill/tests/check_selfcontained.py         # 整合仓自洽性
 所有 clash 门禁都接受**可选的仓库根参数**：`python skill/tests/clash/check_structure.py <根目录>`。
 不传就用 `_default_root()`。**这正是不带参数时在仓库根调用能工作的原因**（CWD → CWD/clash 命中）。
 
-⚠️ `python skill/tests/check_secrets.py` 与 `clash/check_secrets.py` 是**两个不同的脚本**：
+⚠️ `python skill/tests/check_secrets.py` 与 `skill/tests/clash/check_secrets.py` 是**两个不同的脚本**：
 
 | 脚本 | 扫描面 | 判据 |
 |:-----|:-------|:-----|
@@ -131,7 +131,7 @@ python skill/tests/check_selfcontained.py         # 整合仓自洽性
 | `clash/check_min_pair.py` | 0 / 1 / **2**（缺 PyYAML）|
 | `clash/check_script_sync.py` | 0 / 1 / **2**（缺 PyYAML）|
 | `clash/check_remote_urls.py` | 0 / 1 / **2**（`未收集到任何远程 URL` ⇒ 收集规则坏了）|
-| `clash/check_secrets.py` | 0 / 1 |
+| `skill/tests/clash/check_secrets.py` | 0 / 1 |
 | `scripts/clash/build_rules.py` | 0 / 1 |
 | `check_selfcontained.py` | 0 / 1 |
 
@@ -629,8 +629,8 @@ python skill/tests/clash/check_script_sync.py "$SB"   # 期望 0
 
 | 脚本 | 最小判负样例 | 定位标记 |
 |:-----|:-------------|:---------|
-| `clash/check_secrets.py` | 任意 `.yaml` 里写 `password: MyRealP@ssw0rd123`（非占位、含数字）| `非占位凭据:` |
-| `clash/check_secrets.py` | 任意文件里出现白名单外 IPv4，如 `10.0.0.1` | `非常见 IP: 10.0.0.1` |
+| `skill/tests/clash/check_secrets.py` | 任意 `.yaml` 里写 `password: MyRealP@ssw0rd123`（非占位、含数字）| `非占位凭据:` |
+| `skill/tests/clash/check_secrets.py` | 任意文件里出现白名单外 IPv4，如 `10.0.0.1` | `非常见 IP: 10.0.0.1` |
 | `check_selfcontained.py` | 任意**非注释行**出现 `https://raw.githubusercontent.com/RiverFlowsInUUU/Clash/...` | `外部依赖 N 处` |
 
 ### 9.3 判别力回归的现状（诚实口径）
@@ -892,7 +892,7 @@ mihomo 侧的实例：
 
 ## 15 · FAQ
 
-**Q：`clash/check_secrets.py` 和 `skill/tests/check_secrets.py` 该跑哪个？**
+**Q：`skill/tests/clash/check_secrets.py` 和 `skill/tests/check_secrets.py` 该跑哪个？**
 
 两个都跑 —— 16 道里进的是**跨内核版**（`skill/tests/check_secrets.py`，带禁串黑名单）。
 mihomo 版（`skill/tests/clash/check_secrets.py`）覆盖 `.js`、且跳过 `rules/` 的主机扫描
