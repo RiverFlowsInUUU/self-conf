@@ -2,7 +2,7 @@
 
 > 本仓的发版模型：一个更新日 = 一个 Release，tag = `vYYYY-MM-DD`。
 
-⚠️ 本文是**规矩**，不是历史。历史请看 [`CHANGELOG.md`](../../../CHANGELOG.md)。
+⚠️ 本文是**规矩**，不是历史。历史请看 [`CHANGELOG.md`](CHANGELOG.md)。
 
 ## 1 · 版本号放哪
 

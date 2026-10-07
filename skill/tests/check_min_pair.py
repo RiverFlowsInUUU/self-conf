@@ -41,7 +41,9 @@ for _stream in (sys.stdout, sys.stderr):
     except Exception:
         pass
 
-PROFILE_DIRS = ("surge/profiles", "egern/profiles")
+# ⚠️ 原本只有两族 —— mihomo 的 .min 对拍 / 版本头注 / 归档序列**从来没被审过**。
+#   2026-10-07 补上 clash/profiles（mihomo 无 config_old，归档判据对它不适用）。
+PROFILE_DIRS = ("surge/profiles", "egern/profiles", "clash/profiles")
 TRAIL = re.compile(r"[ \t]+[#;].*$")      # 行尾注释
 WHOLE = re.compile(r"^\s*[#;]")           # 整行注释
 
