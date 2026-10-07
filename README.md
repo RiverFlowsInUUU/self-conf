@@ -23,10 +23,10 @@
 
 | <div align="center">内核</div> | 🪶 懒人版 · 至简 · 省心 | 🧭 分流版 · 可控 · 随心 |
 |:--|:--|:--|
-| <img src="https://raw.githubusercontent.com/RiverFlowsInUUU/self-conf/main/icons/Surge-Icon.png" height="20" alt=""> **Surge** | [`lazy.min.conf`](surge/profiles/lazy.min.conf) | [`routing.min.conf`](surge/profiles/routing.min.conf) |
-| <img src="https://raw.githubusercontent.com/RiverFlowsInUUU/self-conf/main/icons/Egern-Icon.png" height="20" alt=""> **Egern** | [`lazy.min.yaml`](egern/profiles/lazy.min.yaml) | [`routing.min.yaml`](egern/profiles/routing.min.yaml) |
-| **mihomo**<br><sub>静态</sub> | [`lazy.min.yaml`](clash/profiles/lazy.min.yaml) | [`routing.min.yaml`](clash/profiles/routing.min.yaml) |
-| **mihomo**<br><sub>覆写脚本</sub> | [`my_clash_lazy.js`](clash/override/my_clash_lazy.js) | [`my_clash.js`](clash/override/my_clash.js) |
+| <img src="https://raw.githubusercontent.com/RiverFlowsInUUU/self-conf/main/icons/Surge-Icon.png" height="20" alt=""> **Surge** | [`lazy.min.conf`](https://raw.githubusercontent.com/RiverFlowsInUUU/self-conf/main/surge/profiles/lazy.min.conf) | [`routing.min.conf`](https://raw.githubusercontent.com/RiverFlowsInUUU/self-conf/main/surge/profiles/routing.min.conf) |
+| <img src="https://raw.githubusercontent.com/RiverFlowsInUUU/self-conf/main/icons/Egern-Icon.png" height="20" alt=""> **Egern** | [`lazy.min.yaml`](https://raw.githubusercontent.com/RiverFlowsInUUU/self-conf/main/egern/profiles/lazy.min.yaml) | [`routing.min.yaml`](https://raw.githubusercontent.com/RiverFlowsInUUU/self-conf/main/egern/profiles/routing.min.yaml) |
+| **mihomo**<br><sub>静态</sub> | [`lazy.min.yaml`](https://raw.githubusercontent.com/RiverFlowsInUUU/self-conf/main/clash/profiles/lazy.min.yaml) | [`routing.min.yaml`](https://raw.githubusercontent.com/RiverFlowsInUUU/self-conf/main/clash/profiles/routing.min.yaml) |
+| **mihomo**<br><sub>覆写脚本</sub> | [`my_clash_lazy.js`](https://raw.githubusercontent.com/RiverFlowsInUUU/self-conf/main/clash/override/my_clash_lazy.js) | [`my_clash.js`](https://raw.githubusercontent.com/RiverFlowsInUUU/self-conf/main/clash/override/my_clash.js) |
 
 mihomo 多一种形态：覆写脚本可挂到任意订阅上，输出与静态文件的**结构逐位一致**。
 唯一差异是 `Smart` 三档子组 —— 模板专属（脚本运行时看不到 provider 节点名，分不了档），
