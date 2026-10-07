@@ -29,8 +29,8 @@
 |:--|:--|:--|
 | <img src="https://raw.githubusercontent.com/RiverFlowsInUUU/self-conf/main/icons/Surge-Icon.png" height="20" alt=""> **Surge** | [`surge-lazy.min.conf`](https://raw.githubusercontent.com/RiverFlowsInUUU/self-conf/main/surge/profiles/lazy.min.conf) | [`surge-routing.min.conf`](https://raw.githubusercontent.com/RiverFlowsInUUU/self-conf/main/surge/profiles/routing.min.conf) |
 | <img src="https://raw.githubusercontent.com/RiverFlowsInUUU/self-conf/main/icons/Egern-Icon.png" height="20" alt=""> **Egern** | [`egern-lazy.min.yaml`](https://raw.githubusercontent.com/RiverFlowsInUUU/self-conf/main/egern/profiles/lazy.min.yaml) | [`egern-routing.min.yaml`](https://raw.githubusercontent.com/RiverFlowsInUUU/self-conf/main/egern/profiles/routing.min.yaml) |
-| <img src="https://raw.githubusercontent.com/RiverFlowsInUUU/self-conf/main/icons/mihomo.png" height="20" alt=""> **mihomo**<br><sub>静态</sub> | [`clash-lazy.min.yaml`](https://raw.githubusercontent.com/RiverFlowsInUUU/self-conf/main/clash/profiles/lazy.min.yaml) | [`clash-routing.min.yaml`](https://raw.githubusercontent.com/RiverFlowsInUUU/self-conf/main/clash/profiles/routing.min.yaml) |
-| <img src="https://raw.githubusercontent.com/RiverFlowsInUUU/self-conf/main/icons/mihomo.png" height="20" alt=""> **mihomo**<br><sub>覆写脚本</sub> | [`my_clash_lazy.js`](https://raw.githubusercontent.com/RiverFlowsInUUU/self-conf/main/clash/override/my_clash_lazy.js) | [`my_clash.js`](https://raw.githubusercontent.com/RiverFlowsInUUU/self-conf/main/clash/override/my_clash.js) |
+| <img src="https://raw.githubusercontent.com/RiverFlowsInUUU/self-conf/main/icons/mihomo-Icon.png" height="20" alt=""> **mihomo**<br><sub>静态</sub> | [`clash-lazy.min.yaml`](https://raw.githubusercontent.com/RiverFlowsInUUU/self-conf/main/clash/profiles/lazy.min.yaml) | [`clash-routing.min.yaml`](https://raw.githubusercontent.com/RiverFlowsInUUU/self-conf/main/clash/profiles/routing.min.yaml) |
+| <img src="https://raw.githubusercontent.com/RiverFlowsInUUU/self-conf/main/icons/mihomo-Icon.png" height="20" alt=""> **mihomo**<br><sub>覆写脚本</sub> | [`my_clash_lazy.js`](https://raw.githubusercontent.com/RiverFlowsInUUU/self-conf/main/clash/override/my_clash_lazy.js) | [`my_clash.js`](https://raw.githubusercontent.com/RiverFlowsInUUU/self-conf/main/clash/override/my_clash.js) |
 
 - **懒人版**：一个总出口，只做防泄露 + 广告拦截 + AI 分流。想省心就用它。
 - **分流版**：按应用 + 按地区细分，每个应用可单独指定走哪个地区。想可控就用它。
@@ -54,7 +54,7 @@
 
 ## 🌐 隐私至上 · 无 DNS 泄露
 
-| | <div align="center"><img src="https://raw.githubusercontent.com/RiverFlowsInUUU/self-conf/main/icons/Surge-Icon.png" height="22" alt=""> Surge</div> | <div align="center"><img src="https://raw.githubusercontent.com/RiverFlowsInUUU/self-conf/main/icons/Egern-Icon.png" height="22" alt=""> Egern</div> | <div align="center"><img src="https://raw.githubusercontent.com/RiverFlowsInUUU/self-conf/main/icons/mihomo.png" height="22" alt=""> mihomo</div> |
+| | <div align="center"><img src="https://raw.githubusercontent.com/RiverFlowsInUUU/self-conf/main/icons/Surge-Icon.png" height="22" alt=""> Surge</div> | <div align="center"><img src="https://raw.githubusercontent.com/RiverFlowsInUUU/self-conf/main/icons/Egern-Icon.png" height="22" alt=""> Egern</div> | <div align="center"><img src="https://raw.githubusercontent.com/RiverFlowsInUUU/self-conf/main/icons/mihomo-Icon.png" height="22" alt=""> mihomo</div> |
 |:--|:--|:--|:--|
 | 🚫 旁路设备 | `hijack-dns` 接管明文 `:53`（六个知名解析器） | `hijack_dns` 接管明文 `:53`（全量） | 由客户端 TUN 或透明代理重定向接管 |
 | 🔐 加密通道 | 主解析走 DoH，主机名端点经裸 IP 受控引导 | 主解析走 DoH/DoT，四条端点全是 IP 字面量 | 主解析走 DoH，端点一律写 IP 字面量 |
