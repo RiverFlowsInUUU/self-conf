@@ -51,6 +51,16 @@ FAM_CN = {'lazy': '懒人版', 'routing': '分流版'}
 #    首次发布时 R2 判据把 4 个 clash 资产全判「不在固定名集合」。
 KERN_LABEL = {'surge': 'Surge', 'egern': 'Egern', 'clash': 'mihomo'}
 KERN_COLOR = {'surge': '0A84FF', 'egern': '10B981', 'clash': '8250DF'}
+# 内核顺序（Surge → Egern → mihomo）。⚠️ 全脚本只认这一个元组，
+# 不要再散写 KERNS —— 2026-10-08 彻查时全仓有 11 处硬编码两内核，
+# 加 mihomo 后每处都得改，漏一处就是「资产少一个内核」这类静默缺失。
+KERNS = ('surge', 'egern', 'clash')
+KERN_EXT = {'surge': '.conf', 'egern': '.yaml', 'clash': '.yaml'}
+
+
+def kern_ext(kern):
+    """内核 → 配置扩展名（单一真源，替代 `'.conf' if kern == 'surge' else '.yaml'`）。"""
+    return KERN_EXT[kern]
 
 def badge_url(kern, fam):
     return (f"https://img.shields.io/badge/{KERN_LABEL[kern]}-{FAM_CN[fam]}_下载-"
@@ -72,6 +82,8 @@ DAY_THEMES = {
     '2026-10-05': ('🧭', '分组精简与配置注释现况化'),
     '2026-10-06': ('🍎', 'Apple 更新分组、系统域落点调整与 Select 显性选择组'),
     '2026-10-07': ('🧹', '占位节点全面移除：只填订阅即可导入'),
+    # 2026-10-08：整合仓首次发布 —— 三内核（Surge · Egern · mihomo）版本线统一 v1.0.0
+    '2026-10-08': ('🎉', '首次发布：三内核版本线统一 v1.0.0'),
 }
 
 # ⚠️ 归组口径（2026-10-05 起）："注释/文案改动不升号" —— 它与"一天一版"合起来的结果是，
@@ -96,6 +108,23 @@ DATE_OVERRIDES = {('routing', 'v3.5'): '2026-09-26'}
 # 不用文言腔（口径修正/收编/压到最小/上线），不搬内部过程语言。
 # 发新版本前必须先在此补一组 —— 动线⑦的一部分。
 PUBLIC_NOTES = {
+    # ── 2026-10-08 首次发布（三内核版本线统一 v1.0.0）
+    #    本仓为整合仓：Surge · Egern 的 config_old/ 保留原仓历史版本（沿革），
+    #    现役与 mihomo 一并从 v1.0.0 重新计数。
+    ('lazy', 'v1.0.0'): [
+        '首次发布（三内核版本线统一 v1.0.0）。内置订阅槽位与占位节点，导入后填入订阅即可使用。',
+        '懒人版：一个总出口，只做防泄露 + 广告拦截 + AI 分流，省心优先。',
+        'DNS 全链路加密解析；IPv6 显式关闭。',
+        '三内核同源：Surge（.conf）、Egern（.yaml）、mihomo（.yaml）结构对齐。',
+    ],
+    ('routing', 'v1.0.0'): [
+        '首次发布（三内核版本线统一 v1.0.0）。按应用 + 按地区细分，每个应用可单独指定走哪个地区。',
+        '分流版：23 组 / 26 条规则（Surge · Egern）；mihomo 静态 25 组 / 27 条，'
+        '覆写脚本输出 22 组 / 27 条。',
+        '广告拦截前移；代理域名不给真答案；解析器全加密。',
+        'mihomo 另有覆写脚本（my_clash.js / my_clash_lazy.js），'
+        '不用下载配置 —— 挂在自己的订阅上即可改造成同样结构。',
+    ],
     ('lazy', 'v1.0'): [
         '首次发布。内置订阅槽位与占位节点，导入后填入订阅即可使用。',
         '内置完整分流规则：广告拦截、AI 服务分流、系统与国内域名直连。',
@@ -291,11 +320,11 @@ def active_versions(root):
     return out
 
 def archive_file(root, kern, fam, ver):
-    ext = '.conf' if kern == 'surge' else '.yaml'
+    ext = kern_ext(kern)
     return os.path.join(root, kern, 'profiles', 'config_old', f'{fam}_{ver}{ext}')
 
 def archive_min(root, kern, fam, ver):
-    ext = '.conf' if kern == 'surge' else '.yaml'
+    ext = kern_ext(kern)
     return os.path.join(root, kern, 'profiles', 'config_old', f'{fam}_{ver}.min{ext}')
 
 def _blob_birth(root, kern, fam, path):
@@ -347,7 +376,7 @@ def number_birth(root, kern, fam, ver):
        因此取 `--reverse` 后的**第一条** = 首次出现（即加入那一次），不能取最后一条。
     ⚠️ 兜底：早期版本（v1 / v2 / v3.0–v3.4）根本没有 `#! version=` 头注 ⇒ 查不到，
        退回 blob 口径。现役版全部有头注，故不影响；归档版走 `version_date`，本就不经这里。"""
-    ext = '.conf' if kern == 'surge' else '.yaml'
+    ext = kern_ext(kern)
     prof = f'{kern}/profiles/{fam}{ext}'
     # ⚠️ 入参 `ver` 可能带 `v` 前缀（`parse_ver`/`active_versions` 返回的就是 `v2.0.3`），
     #    而头注里是 `#! version=lazy_v2.0.3`（只有一个 v）⇒ 必须先剥掉前缀再拼，
@@ -385,7 +414,7 @@ def version_date(root, kern, fam, ver):
        撞成「一天两个版本」，V7 误判负。号首现日对此免疫：号是 10-04 出现的。
     ⚠️ 兜底仍必要：早期版本（v1 / v2 / v3.0–v3.4）没有 `#! version=` 头注，
        只能退回 blob 口径。"""
-    ext = '.conf' if kern == 'surge' else '.yaml'
+    ext = kern_ext(kern)
     d = number_birth(root, kern, fam, ver)
     if d:
         return d
@@ -409,7 +438,7 @@ def build_days(root):
     versions = []
     for fam in FAMS:
         vers = set()
-        for kern in ('surge', 'egern'):
+        for kern in KERNS:
             d = os.path.join(root, kern, 'profiles', 'config_old')
             for f in os.listdir(d):
                 if parse_ver(f) and f.startswith(fam + '_v'):
@@ -418,8 +447,8 @@ def build_days(root):
         for ver in sorted(vers, key=vkey):
             is_cur = ver == act[fam]
             kerns = {}
-            for kern in ('surge', 'egern'):
-                ext = '.conf' if kern == 'surge' else '.yaml'
+            for kern in KERNS:
+                ext = kern_ext(kern)
                 full = os.path.join(root, kern, 'profiles', f'{fam}{ext}') if is_cur \
                     else archive_file(root, kern, fam, ver)
                 if not os.path.exists(full):
@@ -448,7 +477,7 @@ def build_days(root):
                 continue
             latest = fv[-1]
             fams[fam] = {'versions': [v['version'] for v in fv], 'entries': fv,
-                         'assets': {k: latest['kerns'][k] for k in ('surge', 'egern')
+                         'assets': {k: latest['kerns'][k] for k in KERNS
                                     if latest['kerns'].get(k)}}
         emoji, theme = DAY_THEMES.get(date, ('📦', '配置更新'))
         days.append({'date': date, 'tag': f'v{date}', 'emoji': emoji, 'theme': theme,
@@ -563,9 +592,9 @@ def build_notes(day):
         if fam not in day['fams']:
             continue
         assets = day['fams'][fam].get('assets', {})
-        missing = [k for k in ('surge', 'egern') if k not in assets]
+        missing = [k for k in KERNS if k not in assets]
         if len(missing) == 1:
-            have = [k for k in ('surge', 'egern') if k in assets]
+            have = [k for k in KERNS if k in assets]
             extras.append(f'{FAM_CN[fam]}当日仅 {KERN_LABEL[have[0]]} 内核有内容变化')
         elif len(missing) == 2:
             extras.append(f'{FAM_CN[fam]}当日无内容变化')
@@ -601,7 +630,7 @@ def build_notes(day):
     # 下载按钮
     buttons = []
     for fam in FAMS:
-        for kern in ('surge', 'egern'):
+        for kern in KERNS:
             info = day['fams'].get(fam, {}).get('assets', {}).get(kern)
             if not info:
                 continue
@@ -738,7 +767,7 @@ def show_plan(days):
             if fam not in d['fams']:
                 continue
             info = d['fams'][fam]
-            kerns = '/'.join(k for k in ('surge', 'egern') if k in info['assets']) or '无资产'
+            kerns = '/'.join(k for k in KERNS if k in info['assets']) or '无资产'
             fam_bits.append(f"{FAM_CN[fam]} {'→'.join(info['versions'])}[{kerns}]")
         mark = '现行' if d['is_current'] else '历史'
         print(f"{d['tag']:14s} {mark}  {'  '.join(fam_bits)}")

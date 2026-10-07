@@ -33,8 +33,8 @@ CI = os.path.join(ROOT, ".github", "workflows", "ci.yml")
 # 有意不在 verify_all 里的：CI 独立 step（慢 / 需真机），已在 ops.md §6.8.1 登记
 KNOWN_SEPARATE = {"check_remote_urls.py": "CI 独立 step（慢，需联网探测数十个 URL）",
                   "check_real_kernel.py": "需真内核 + 真网络，仅本地人工跑（ops.md §6.8.1）",
-                  "check_releases.py": ("本仓尚未发布过 Release ⇒ 暂不适用；"
-                                        "首次发布后启用（release-rules.md §4 已在册）"),
+                  # 2026-10-08：首个 Release（v2026-10-08）已发布 ⇒ 判据启用并进 27 道，
+                  # 不再豁免。此处保留注释以存其沿革。
                   "verify_all.py": "它自己就是总入口，不是被调的判据"}
 
 

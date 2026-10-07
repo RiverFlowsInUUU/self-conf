@@ -91,6 +91,9 @@ def build_gates():
         ('secrets 扫描', [PY, 'skill/tests/check_secrets.py'], {}),
         # 闸门清单对账：ci.yml 与 verify_all 跑的是不是同一套（消掉 checker.md §12.2 的挂账）
         ('闸门清单对账', [PY, 'skill/tests/check_gate_manifest.py'], {}),
+        # 2026-10-08：本仓已发布首个 Release ⇒ R1–R5 判据启用。
+        # 需网络 + GITHUB_TOKEN（缺省回退 gh auth token）；不可达时走 SKIP(3)=未验证。
+        ('Release 断言', [PY, 'skill/tests/check_releases.py'], {}),
         # 2026-10-07 零信任自查补入：clash 侧凭据扫描此前**不在任何闸门里**
         # （pitfalls.md:1037 记为挂账，靠人记得跑）。本轮修好它的三个误报源
         # （ROOT 落在文档区 / 已放行 IP 被当主机重报 / 注释里的 IP 也报警）
