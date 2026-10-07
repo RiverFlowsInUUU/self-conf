@@ -107,10 +107,15 @@ def build_gates():
          [PY, 'skill/scripts/surge/audit_ruleset_content.py', 'surge/profiles/routing.conf'], {}),
         ('规则集内容·mihomo',
          [PY, 'skill/scripts/clash/audit_ruleset_content.py', 'clash/profiles/routing.yaml'], {}),
+        # ⚠️ 必须带 --strict：这两个脚本把「与本仓约定不同」归为「约定」档，
+        #    默认**不改退出码**（只打印 🟡 提示）。不加 --strict 就是一道假闸门
+        #    —— 2026-10-08 判别力矩阵实测：改了 25 处 update_interval 仍 exit=0。
         ('规则集刷新周期·Surge',
-         [PY, 'skill/scripts/surge/audit_ruleset_refresh.py', 'surge/profiles/routing.conf'], {}),
+         [PY, 'skill/scripts/surge/audit_ruleset_refresh.py', '--strict',
+          'surge/profiles/routing.conf'], {}),
         ('规则集刷新周期·Egern',
-         [PY, 'skill/scripts/egern/audit_ruleset_refresh.py', 'egern/profiles/routing.yaml'], {}),
+         [PY, 'skill/scripts/egern/audit_ruleset_refresh.py', '--strict',
+          'egern/profiles/routing.yaml'], {}),
         ('DNS 转发泄露·Egern',
          [PY, 'skill/scripts/egern/audit_dns_forward.py', 'egern/profiles/routing.yaml'], {}),
         ('no-resolve 配对·Egern',
