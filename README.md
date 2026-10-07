@@ -60,26 +60,44 @@ icons/    rules/                 共享资产
 skill/                           手册 · 判据 · 文档
 ```
 
-**共享是真的共享**：`icons/` 三内核引用同一份（38 个）；`rules/` 以 `.list` 为唯一真源，mihomo 用的 `.yaml` 由 `build_rules.py` 生成 —— 单一真源，不会漂移。
+**共享的是内容，不是文件** —— `icons/` 三内核引用同一份（38 个）；
+`rules/` 以 `.list` 为唯一真源，mihomo 用的 `.yaml` 由 `build_rules.py` 生成。
 
-**分歧是内核机制决定的**，不是失误：地区组的择优方式、订阅源的载体、倍率机制、规则集格式（`.list` ↔ `.mrs`），三内核各不相同。哪些能互相照搬、哪些照搬就是错的，见 [`cross-kernel-diff.md`](skill/reference/shared/cross-kernel-diff.md)。
+**分歧由内核机制决定**，不是失误：
 
-mihomo 有一个独有的设计：`Smart` 是 fallback，按**倍率**分三档回落（`Low Mult.` → `Auto` → `High Mult.`）。
+| | Surge | Egern | mihomo |
+|:--|:--|:--|:--|
+| 订阅源载体 | `Airport` external 组 | `Airport` external 组 | `proxy-providers`（provider） |
+| 地区组择优 | `smart` + filter | `smart` + filter | `url-test` + filter |
+| 倍率机制 | `policy-priority` 权重 | `priorities` | 无权重键，用 `fallback` + `filter` 分档 |
+| 规则集格式 | `.list` / `.txt` | `.list` / `.txt` | `.mrs`（+ 少量 `.yaml`） |
+| `no-resolve` 落点 | 规则行尾 | 仅 `geoip`/`ip_cidr`/`asn` 类 | `RULE-SET` 行尾 |
+| 独有机制 | `pre-matching` / `extended-matching` | `flatten: true` | `tun` 段 / 覆写脚本 |
+
+哪些能互相照搬、哪些照搬就是错的，见
+[`cross-kernel-diff.md`](skill/reference/shared/cross-kernel-diff.md)。
+
+mihomo 有一个独有设计：`Smart` 是 fallback，按**倍率**分三档回落
+（`Low Mult.` → `Auto` → `High Mult.`）。
 
 ---
 
 ## 🌐 隐私至上 · 无 DNS 泄露
 
-三个内核共同的底线：
+| | <div align="center"><img src="https://raw.githubusercontent.com/RiverFlowsInUUU/self-conf/main/icons/Surge-Icon.png" height="22" alt=""> Surge</div> | <div align="center"><img src="https://raw.githubusercontent.com/RiverFlowsInUUU/self-conf/main/icons/Egern-Icon.png" height="22" alt=""> Egern</div> | <div align="center"><img src="https://raw.githubusercontent.com/RiverFlowsInUUU/self-conf/main/icons/Proxy.png" height="22" alt=""> mihomo</div> |
+|:--|:--|:--|:--|
+| 🚫 旁路设备 | `hijack-dns` 接管明文 `:53`（六个知名解析器） | `hijack_dns` 接管明文 `:53`（全量） | `tun.dns-hijack: any:53` + `strict-route`（锁死绕行） |
+| 🔐 加密通道 | 主解析走 DoH，主机名端点经裸 IP 受控引导 | 主解析走 DoH/DoT，四条端点全是 IP 字面量 | 主解析走 DoH，端点一律写 **IP 字面量**（`1.1.1.1` / `8.8.8.8`） |
+| 🛡️ 明文回退 | `dns-server` 全裸 IP，绝不写 `system` | `forward` 兜底只指加密组，绝不落明文 | `default-nameserver` 裸 IP（仅引导）+ `proxy-server-nameserver` 专用通道 |
+| 🧭 规则克制 | IP 类规则一律 `no-resolve`；零 IP 的规则集不写 | IP 类规则一律 `no_resolve`；该键对 `rule_set` 不生效 | IP 类规则一律 `no-resolve`；纯域名规则集不写 |
+| ✂️ 远端解析 | 代理域名交节点解析，本地不留答案 | 代理域名交节点解析（`proxy_nameservers` 专用通道） | `enhanced-mode: fake-ip` 只回假 IP，真实解析在落地侧 |
+| 🔎 IPv6 | `ipv6 = false` | `ipv6: false` | 顶层 `ipv6` + `dns.ipv6` **两处**都要 false |
+| 🛑 广告拦截 | `pre-matching REJECT` | `forward` → `reject` | DNS 层双条件（`rcode://success` + `fake-ip-filter` 成对） |
+| 📦 数据库依赖 | 依赖内置系统集 | 引用共享 `.list` | **零 dat 依赖**，用 `.mrs` 远程集 |
+| 📋 自检读数 | 5 个审计脚本 · 19 断言 | 10 个审计脚本 · 24 断言 | `check_clash_dns` 14 项 + `check_structure` 8 项 |
 
-- **解析器全加密** —— DoH / DoT，无一条明文递归
-- **明文入口收口** —— 接管 `:53`，应用直发的查询出不去
-- **代理域名不给真答案** —— fake-ip，真实解析在落地侧
-- **IPv6 显式关闭** —— 杜绝真实 IPv6 绕过 TUN
-- **广告拦截前移到 DNS 层** —— 两个必要条件缺一即失效
-- **零 dat 依赖** —— 用 `.mrs` 远程集，不加载 `GeoSite.dat` / `GeoIP.dat`
-
-这不是文档里的一句话，每一条都有判据守着（21 道门禁 + CI）。
+三内核共通的底线：**解析器全加密 · 明文入口收口 · 代理域名不给真答案 ·
+IPv6 显式关闭 · 广告拦截前移**。每一条都有判据守着（21 道门禁 + CI）。
 
 ---
 
