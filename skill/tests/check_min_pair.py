@@ -30,6 +30,13 @@
 """
 
 import os
+
+# ── 前代版本线（2026-10-08 起）
+# 三内核现役统一为 v1.0.0，而 Surge / Egern 的 config_old/ 保留**原仓
+# Self-Configuration 的历史版本**（最高 v4.0.4）—— 那条线已完结，是本仓的沿革。
+# 因此「归档版本号高于现役」在此情形**不判负**，但由 V10 显式报出（不许静默吞掉）。
+# 想彻底重编归档时，设 STRICT_ARCHIVE=1 恢复严格判定。
+_LEGACY_ARCHIVE_OK = (os.environ.get("STRICT_ARCHIVE", "") != "1")
 import re
 import sys
 
@@ -177,12 +184,21 @@ def version_checks(root):
         #      版本号比当前版更高 ⇒ 归档了一个没发布过的号；同名而内容已漂 ⇒ 线上改了没升版，
         #      或归档被人当工作文件动过（归档目录是只读历史，这条也守住它）。
         v6_bad = []
+        legacy_higher = []
         for n in names:
             m = ARCHIVE_RE.match(n)
             hv = vr if (m and m.group(1) == "routing") else vl
             if not m or not hv:
                 continue
             if ver_tuple(m.group(2)) > ver_tuple(hv[1]):
+                # ── 2026-10-08 起：三内核版本线从本仓重新计数（统一 v1.0.0）。
+                #    Surge / Egern 的 config_old/ 里存的是**原仓 Self-Configuration 的
+                #    历史版本**（最高 v4.0.4），那条版本线已完结 —— 它们是沿革，
+                #    不是「本仓归档了一个没发布过的号」。
+                #    ⇒ 归档版本号高于现役，在此情形**不判负**，但必须显式报出（见下方 V10）。
+                if _LEGACY_ARCHIVE_OK:
+                    legacy_higher.append(n)
+                    continue
                 v6_bad.append("%s 版本号高于当前版 v%s" % (n, hv[1]))
             elif m.group(2) == hv[1]:
                 p_old = os.path.join(old_dir, n)
@@ -196,6 +212,14 @@ def version_checks(root):
                     v6_bad.append("%s 与线上同版本但内容已漂（改了没升版，或归档被动过）" % n)
         out.append(("%s V6 归档不高于当前版·同版本仍是逐字快照" % side, not v6_bad,
                     " ".join(v6_bad)))
+        # V10：前代版本线的归档（不判负，但必须点名 —— 否则「归档比现役高」会被静默吞掉）
+        if legacy_higher:
+            out.append(("%s V10 前代版本线归档已登记（%d 份，最高 v%s）" % (
+                            side, len(legacy_higher),
+                            max((ARCHIVE_RE.match(x).group(2) for x in legacy_higher),
+                                key=ver_tuple)),
+                        True,
+                        "原仓沿革，非本仓版本线 —— 见 release-rules.md §4.1"))
         # ── V8 / V9：归档头注（第二轮外部审查第 9 条）
         #
         # V8 头注 ↔ 文件名一致：此前把 routing_v4.0.4.conf 的头注改成 v9.9.9，
