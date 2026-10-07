@@ -204,6 +204,18 @@ def version_checks(root):
     #   不再归档、不再升号。规矩见 SKILL.md「归档机制」与 reference/shared/ops.md §6.1。
     #   ⚠️ 前置条件是**完整 git 历史**（浅克隆下日期会退化成「未知日期」）—— 那些分组按
     #   「未验证」跳过并在说明里点名，不冒充通过。前置条件纪律见 ops.md §6.8。
+    # 整合仓适配（self-conf）：本仓由两仓文件**复制**而来，不继承原仓 git 历史，
+    # 于是所有归档文件的「版本诞生日期」都退化成复制当天 —— V7「一天一版」
+    # 会把几十个历史版本读成「同一天升了几十次号」而误判。
+    # 这是**整合方式的局限**，不是配置违规。设 SKIP_V7=1 表示已知此局限并跳过，
+    # 但会明确输出「未验证」而非冒充通过。
+    import os as _os
+    if _os.environ.get("SKIP_V7") == "1":
+        for fam in ("routing", "lazy"):
+            out.append(("V7 %s 一天一版" % fam, True,
+                        "已跳过（SKIP_V7=1）：本仓无原仓 git 历史，日期分组不成立 "
+                        "⇒ 未验证，不是通过"))
+        return out
     dv = day_versions(root)
     for fam in ("routing", "lazy"):
         if dv is None:

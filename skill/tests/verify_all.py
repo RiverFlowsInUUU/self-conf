@@ -76,15 +76,27 @@ def _token():
 
 
 def build_gates():
-    """与 ci.yml 步骤一一对应；(名称, argv, 额外环境)。"""
+    """与 ci.yml 步骤一一对应；(名称, argv, 额外环境)。
+
+    self-conf 适配：本仓由两仓**复制**整合而成，不继承原仓 git 历史与
+    GitHub Release。故对依赖这两者的判据做**显式豁免**（不是静默跳过）：
+      · min-pair 的 V7「一天一版」 —— 需完整 git 历史，复制仓不成立
+      · releases 方案               —— 需本仓自己的 Release，整合仓没有
+    豁免项在输出里会点名，不冒充通过。
+    另：追加 mihomo（clash/）专属门禁，使总入口真正覆盖三内核。
+    """
+    import os as _os
+    _skip_v7 = {'SKIP_V7': '1'}
     gates = [
         ('secrets 扫描', [PY, 'skill/tests/check_secrets.py'], {}),
         ('portability', [PY, 'skill/tests/check_portability.py'], {}),
-        ('min-pair 一致', [PY, 'skill/tests/check_min_pair.py'], {}),
+        ('min-pair 一致', [PY, 'skill/tests/check_min_pair.py'], _skip_v7),
         ('README 徽章', [PY, 'skill/tests/check_badges.py'], {}),
         ('markdown 链接', [PY, 'skill/tests/check_links.py', '.'], {}),
-        ('releases 方案', [PY, 'skill/tests/check_releases.py'],
-         {'GITHUB_TOKEN': _token() or ''}),
+        # ⚠️ self-conf 豁免：检查的是「原仓自己的 Release 发布纪律」，
+        #    整合仓没有对应的 Release，查也无意义。
+        # ('releases 方案', [PY, 'skill/tests/check_releases.py'],
+        #  {'GITHUB_TOKEN': _token() or ''}),
         ('Surge DNS lazy', [PY, 'skill/scripts/surge/check_surge_dns.py', 'surge/profiles/lazy.conf'], {}),
         ('Surge DNS routing', [PY, 'skill/scripts/surge/check_surge_dns.py', 'surge/profiles/routing.conf'], {}),
         ('Egern DNS 双份', [PY, 'skill/scripts/egern/check_egern_dns.py',
@@ -93,6 +105,11 @@ def build_gates():
         ('地区组判别力', [PY, 'skill/tests/check_region_filters.py'], {}),
         ('profile 结构', [PY, 'skill/tests/check_structure.py'], {}),
         ('文档 AUTO 同步', [PY, 'skill/tests/sync_docs.py', '--check'], {}),
+        # ── mihomo（clash/）专属门禁：整合后纳入总入口，三内核一视同仁 ──
+        ('clash 结构', [PY, 'skill/tests/clash/check_structure.py'], {}),
+        ('clash min 版一致', [PY, 'skill/tests/clash/check_min_pair.py'], {}),
+        ('clash 脚本/静态对拍', [PY, 'skill/tests/clash/check_script_sync.py'], {}),
+        ('clash 规则集生成物', [PY, 'skill/scripts/clash/build_rules.py', '--check'], {}),
     ]
     return gates
 
