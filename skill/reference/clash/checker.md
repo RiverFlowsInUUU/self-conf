@@ -770,12 +770,15 @@ _skip_v7 = {'SKIP_V7': '1'}
 | 45 | clash 规则集内容 | `skill/scripts/clash/audit_ruleset_content.py clash/profiles/routing.yaml clash/profiles/lazy.yaml` |
 | 46 | clash 静态 profile 新鲜度 | `skill/scripts/clash/build_profiles.py --check` |
 
-另有**不进闸门**的两项（由「闸门清单对账」登记并逐条点名理由）：
+另有**不进闸门**的几项（以 `check_gate_manifest.py` 的 KNOWN_SEPARATE 为**真源**，
+> 下表若与之不符即为漂移；由「闸门清单对账」机器对账）：
 
 | 项 | 位置 | 为什么不进 |
 |:---|:-----|:-----------|
 | `clash/check_remote_urls.py` | CI 独立 step | 慢（需联网探测数十个 URL），不适合与快门并行 |
 | `egern/probe_dns_endpoints.py` | CI 独立 step | 需联网实测加密 DNS 端点，网络抖动会假红 |
+| `clash/check_real_kernel.py` | 手动（不在任何闸门） | 需真实 mihomo 内核二进制 + 真网络，CI 沙箱两者都没有 |
+| `skill/scripts/repo_state.py` | 手动（AI 动线①） | 「一屏现状」工具，不是判据；每个任务开工都该先跑它 |
 
 ⚠️ `min-pair 一致` 一道含 V7「一天至多一版」两条断言；本仓以 `SKIP_V7=1` 豁免
 ⇒ 该两条记为 **未验证**（⚠️）而非通过，本道以 exit 3 结束，上层显示 ⚠️。

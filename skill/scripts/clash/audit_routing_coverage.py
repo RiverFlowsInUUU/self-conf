@@ -312,6 +312,24 @@ def dom_match(t, pat, host):
 # 四、离线档（默认）—— 保持与加入联网档之前逐字一致
 # ============================================================================
 # provider 名 ⇒ 语义（离线推演用）
+def _has_direct_token(n):
+    """按 `[-_/]` 切词后**整词匹配**国内/私有直连语义。
+
+    为什么不用 `k in n`：`scn` / `mycnset` 这类名字含 "cn" 却不是直连集，
+    子串匹配会把它们全误判成 DIRECT（第七轮问题 7）。
+    ⚠️ ipcidr 与非 ipcidr 两支**必须用这一个函数**，否则修一支漏一支（第八轮问题 6）。
+    """
+    n = str(n).lower()
+    _DIRECT = ("cn", "private", "apple-cn", "apple-system",
+               "apple-update", "jinx-cn")
+    # ① 先整名匹配（apple-cn / apple-system / jinx-cn 这类复合名）
+    if n in _DIRECT:
+        return True
+    # ② 再按分隔符切词匹配（geoip-cn / cn-ip 这类）
+    tokens = re.split(r"[-_/]", n)
+    return any(t in _DIRECT for t in tokens)
+
+
 def provider_semantics(name, behavior):
     """按 provider 名与 behavior 推断它把域名送到哪儿。
     返回 'DIRECT' / 'PROXY-ish' / None（无法判定）。"""
@@ -321,15 +339,15 @@ def provider_semantics(name, behavior):
         #    于是 `geoip-cn,Proxy`（国内 IP 全走代理）**静默通过** ——
         #    而这恰恰是本闸门存在的理由。
         #    现：国内/私有语义的 ipcidr 集返回 DIRECT，让静态策略校验覆盖到它。
-        # ⚠️ 第七轮审查问题 7：原 `any(k in n for k in ("cn","private"))` 过粗 ——
-        #    任何名字含 `cn` 的集（如未来的 `scn-*` / `*-cn-ip`）都会被强制要求 DIRECT。
-        #    收窄：只认**以 cn/private 结尾**或**等于**的集（本仓现役即这形态）。
-        tokens = re.split(r"[-_/]", n)
-        if "cn" in tokens or "private" in tokens or n in ("cn", "private"):
+        # ⚠️ 第七轮审查问题 7 / 第八轮问题 6：原 `any(k in n for k in ("cn","private"))` 过粗 ——
+        #    任何名字含 `cn` 的集（如 `scn-ip` / `mycnset`）都会被强制要求 DIRECT。
+        #    收窄：按 `[-_/]` 切词后**整词匹配**（`geoip-cn`、`cn-ip` 仍命中，`scn` 不命中）。
+        #    ⚠️ 注意：**两处**（ipcidr 与非 ipcidr）必须用同一套判据 —— 第八轮发现
+        #       只改了 ipcidr 那支，往上挪一行就还是老 bug。现统一走 _has_direct_token()。
+        if _has_direct_token(n):
             return "DIRECT"
         return None
-    if any(k in n for k in ("cn", "private", "apple-cn", "apple-system",
-                            "apple-update", "jinx-cn")):
+    if _has_direct_token(n):
         return "DIRECT"
     if "ads" in n or "ad" == n:
         return "AD"

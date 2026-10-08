@@ -88,17 +88,31 @@ _RULES_DOC = os.path.join(os.path.dirname(os.path.abspath(__file__)),
 
 def _assert_allowlist_registered():
     """白名单项必须在 release-rules §4.1 有登记，防止悄悄扩权。"""
+    # ⚠️ 第八轮审查问题 2：原实现 fail-open（读不到文档就 return 静默放行），
+    #    且按**松散子串**匹配 —— 闸门名只要在 §4.1 附近被"提到过"就被接受。
+    #    现改为 fail-closed + **精确标记**匹配：
+    #      登记格式必须是「闸门名 `X`」或「**`X`**」这类显式登记行。
     try:
         doc = open(os.path.normpath(_RULES_DOC), encoding='utf-8').read()
-    except Exception:
-        return                      # 读不到就放过（不因文档缺失拖垮闸门）
+    except Exception as e:
+        raise SystemExit('❌ 读不到 release-rules.md（%s）—— '
+                         'CI 豁免白名单无法校验，不放行' % e)
     i = doc.find('### 4.1 已知豁免')
-    seg = doc[i:i + 4000] if i >= 0 else doc
-    missing = [x for x in CI_ALLOWED_SKIP if x not in seg]
+    if i < 0:
+        raise SystemExit('❌ release-rules.md 里找不到「### 4.1 已知豁免」 —— '
+                         'CI 豁免白名单无法校验，不放行')
+    seg = doc[i:i + 4000]
+    missing = []
+    for x in CI_ALLOWED_SKIP:
+        # 精确登记标记：反引号包裹的闸门名（避免"被提到过"就算登记）
+        if ('`%s`' % x) in seg:
+            continue
+        missing.append(x)
     if missing:
         raise SystemExit(
-            '❌ CI_ALLOWED_SKIP 里的 %s 未在 release-rules.md §4.1 登记 —— '
-            '不许悄悄扩权（要么先登记，要么别加）' % '、'.join(missing))
+            '❌ CI_ALLOWED_SKIP 里的 %s 未在 release-rules.md §4.1 以 '
+            '「`闸门名`」形式登记 —— 不许悄悄扩权（要么先登记，要么别加）'
+            % '、'.join(missing))
 
 
 def build_gates():
@@ -118,10 +132,10 @@ def build_gates():
     # 其中 V7 两条会返回「未验证」。verify_all 不能把它显示成 ✅。
     # 下面用 exit code 3 的约定：脚本以 3 结束 = 未验证（见本文件头注）。
     _skip_v7 = {'SKIP_V7': '1'}
-    # CI 侧允许放行的「已登记豁免」（理由写在 release-rules.md §4.1）；
-    # 除这些之外的 SKIP 在 CI 上一律视为失败（多为 token/网络等环境异常）。
-    global CI_ALLOWED_SKIP
-    CI_ALLOWED_SKIP = ('min-pair 一致',)   # 内含 V7 两条，豁免正当但**无条件**
+    # ⚠️ CI_ALLOWED_SKIP **只在这里（模块级）定义一次**。
+    #    此前 build_gates() 里还有一份带 `global` 的重新赋值 ⇒ 双真源，
+    #    而护栏只校验模块级那份 ⇒ 改 :124 那份就能悄悄扩权、护栏一声不吭
+    #    （第八轮审查问题 1/4）。现已删除，入口唯一。
 
     gates = [
         ('secrets 扫描', [PY, 'skill/tests/check_secrets.py'], {}),
@@ -286,6 +300,7 @@ def print_index():
 
 
 def main():
+    _assert_allowlist_registered()   # 护栏必须在**真正入口**跑（第八轮审查问题 1）
     if '--index' in sys.argv:
         print_index()
     verbose = '-v' in sys.argv
