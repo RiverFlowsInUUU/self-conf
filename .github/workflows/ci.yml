@@ -49,7 +49,7 @@ jobs:
         continue-on-error: ${{ github.event_name == 'pull_request' }}
 
       - name: Encrypted DNS endpoints reachability (Egern)
-        # 需联网实测每个加密 DNS 端点 ⇒ 不进 44 道（抖动会假红），放在这里兜底。
+        # 需联网实测每个加密 DNS 端点 ⇒ 不进 46 道（抖动会假红），放在这里兜底。
         # 判负语义：脚本末尾会报「失效端点：N / 总数」。
         run: python skill/scripts/egern/probe_dns_endpoints.py egern/profiles/routing.yaml
         continue-on-error: ${{ github.event_name == 'pull_request' }}

@@ -425,7 +425,7 @@ python skill/tests/clash/check_remote_urls.py          # 慢，按需
 `fallback-filter.geoip: true` 是双倍延迟、不是泄露。**改它们之前先问一句"我真的需要吗"**（懒人版干脆不开 `fallback` 就是同一个判断）。
 
 > ⚠️ **审计通过 ≠ 配置可用**（三侧共通的母题，见 [故障排查 · FAQ](troubleshoot-faq.md) §7.5）。
-> mihomo 侧**已有**专用的分流覆盖审计脚本（`skill/scripts/clash/audit_routing_coverage.py`，闸门 #39；2026-10-07 补出）。Surge / Egern 各自也有。
+> mihomo 侧**已有**专用的分流覆盖审计脚本（`skill/scripts/clash/audit_routing_coverage.py`，闸门 #9；2026-10-07 补出）。Surge / Egern 各自也有。
 > 因此每次增删 `no-resolve`、替换 `cn` provider、或移动 `MATCH` 前的规则时，
 > 仍要人工核对三条：`cn` 仍是 `behavior: domain` 的国内域名集；
 > `RULE-SET,cn,DIRECT` 仍在 `MATCH,Proxy` 之前；用国内**非 `.cn`** 域名验证，不能只测会被后缀兜底救活的样本。
@@ -640,6 +640,7 @@ python skill/tests/check_portability.py
 登记了事、靠人记得跑。**实测推翻了这判断** —— 它们都给出明确的过/不过（exit 0/1）。
 现 11 项已进 46 道闸门（地区组判别力 ×3、分流覆盖 ×2、规则集内容 ×2、
 刷新周期 ×2、DNS 转发泄露、no-resolve 配对），不再需要人记得跑。
+📌 计数订正（2026-10-08 第五轮）：分流覆盖是 **×3**（Surge / Egern / mihomo），合计 **12 项**审计工具已进闸门（此前误写 ×2 / 11 项）。
 
 ⚠️ **又一次校准（同日）**：`profile_ruleset.py` 实测输出
 「✅ 没有裸 IP 条目」+ 明确退出码 ⇒ 也可进闸门，已作为 #16–18 道接入（离线、快）。

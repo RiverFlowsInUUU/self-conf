@@ -121,7 +121,7 @@ Egern 日志速读：
 | Smart 不按倍率选节点 | 看 `Smart.proxies` 是不是 `["DIRECT"]` | 接上三档子组 | `build_profiles.py` 自检 |
 | 头注数字对不上 | 跑一次就知道 | 改文档数字为实际值 | `check_header_numbers.py` |
 
-✅ **mihomo 侧此缺口已补**：已有分流覆盖审计脚本（闸门 #39）。（此处曾写「没有」，与事实相反；Surge / Egern 亦有）
+✅ **mihomo 侧此缺口已补**：已有分流覆盖审计脚本（闸门 #9）。（此处曾写「没有」，与事实相反；Surge / Egern 亦有）
 `audit_routing_coverage.py`）。即「规则是否真的接住了该接的域名」在 mihomo 侧
 **只能人工验证** —— 见 [`boundaries.md`](boundaries.md) 的如实记录。
 这与 [`no-resolve-pairing.md`](no-resolve-pairing.md) 的母题一致：

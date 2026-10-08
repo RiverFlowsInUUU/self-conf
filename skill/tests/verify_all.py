@@ -81,6 +81,8 @@ def build_gates():
     self-conf 适配：本仓由两仓**复制**整合而成，不继承原仓 git 历史与
     GitHub Release。故对依赖这两者的判据做**显式豁免**（不是静默跳过）：
       · min-pair 的 V7「一天一版」 —— 需完整 git 历史，复制仓不成立
+        （⚠️ 2026-10-08：Release 断言**已启用**（第 22 道），不再是豁免项；
+          本条只列仍存活的豁免。V7 现在是「未验证」而非「通过」，见 release-rules §4.1）
       · releases 方案               —— 需本仓自己的 Release，整合仓没有
     豁免项在输出里会点名，不冒充通过。
     另：追加 mihomo（clash/）专属门禁，使总入口真正覆盖三内核。
@@ -245,7 +247,7 @@ def print_index():
         need = '  [需 GITHUB_TOKEN]' if 'GITHUB_TOKEN' in env else ''
         print(f'{i:>2}. {name}{need}')
         print(f'      {" ".join(argv[1:])}')
-    print(f'\nCI 侧为 10 个 step（Surge 双 profile 合并在同一 run 内）—— 末位那个'
+    print(f'\nCI 侧为 5 个 step（Install deps / Gates / Encoding gate / Remote ruleset / Encrypted DNS）（Surge 双 profile 合并在同一 run 内）—— 末位那个'
           f'「Encoding gate (cp936)」以本脚本为入口复跑一遍，故**不进 build_gates()**'
           f'（进去即递归）；与上表按 step 聚合后形状不同，属已知挂账，见本文件头注。')
     sys.exit(0)

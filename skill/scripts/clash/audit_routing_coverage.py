@@ -17,6 +17,16 @@
 
 离线档（默认，CI 友好，不联网）：
     按**规则名的语义**推演（provider 名含 cn/private/apple-cn ⇒ DIRECT）。
+
+    ⚠️ 2026-10-08 第五轮审查问题 7：离线档**只按名字推演，不读规则里实际写的策略**
+    ⇒ 把 `RULE-SET,cn,DIRECT` 改成 `RULE-SET,cn,Proxy`，它仍报「覆盖合理」（exit 0）。
+    这是**给假信心的闸门**，曾被用来宣称「这一条也由机器守着，无需人工核对」。
+
+    现补 **静态策略校验**（不需要联网，纯读配置）：
+      · 名字属 DIRECT 语义的集，规则里**实际策略**必须是 DIRECT，否则判负
+      · 名字属 PROXY 语义的集，规则里**实际策略**若为 DIRECT ⇒ 判负（覆盖过宽）
+    ⇒ 改策略这类漂移现在抓得住。但**真实域名是否命中**仍需 --online 或实测，
+      离线档永远不能当充分条件。
     局限：不知道 `google.com` 是否真的在 `google.mrs` 里 —— 判不准。
     行为与加入联网档之前**逐字一致**（`analyze()` 未改动）。
 
@@ -357,6 +367,37 @@ def analyze(path, offline=True):
                 direct_positions.append((i, parts[1]))
             elif sem == "PROXY-ish":
                 app_positions.append((i, parts[1]))
+
+    # ── 2.5) 静态策略校验（2026-10-08 第五轮审查问题 7）
+    #    上面都只看规则集**名字**推演，不看规则里实际写的策略。
+    #    实测：把所有 `RULE-SET,cn,DIRECT` 改成 `,Proxy` ⇒ 仍报「覆盖合理」。
+    #    这里直接读 parts[2]（实际策略），与名字语义对拍 —— 纯静态、无需联网。
+    policy_bad = []
+    for i, r in enumerate(rules):
+        parts = [x.strip() for x in r.split(",")]
+        if len(parts) < 3 or parts[0] != "RULE-SET":
+            continue
+        name, policy = parts[1], parts[2]
+        prov = providers.get(name, {})
+        sem = provider_semantics(name, prov.get("behavior"))
+        # ⚠️ 只对**语义明确**的集做策略校验：provider_semantics 的判据很粗
+        #    （名字含 "apple"/"cn" 就归 DIRECT），而 apple-update 实际走
+        #    「Apple Update」组、category-ai-chat-!cn 实际走「AI」组 —— 都是对的。
+        #    故加白名单排除「名字像但语义不是纯直连」的集。
+        _NOT_PURE_DIRECT = {"apple-update", "apple-system", "category-ai-chat-!cn",
+                            "apple-cn"}
+        if name in _NOT_PURE_DIRECT:
+            continue
+        if sem == "DIRECT" and policy != "DIRECT":
+            policy_bad.append("第 %d 条 %s：名字属国内/私有直连语义，"
+                              "但实际策略是 %s（应为 DIRECT）"
+                              % (i + 1, name, policy))
+        elif sem == "PROXY-ish" and policy == "DIRECT":
+            policy_bad.append("第 %d 条 %s：名字属应用/代理语义，"
+                              "但实际策略是 DIRECT ⇒ 覆盖过宽，会把不该直连的也直连"
+                              % (i + 1, name))
+    if policy_bad:
+        issues.extend(policy_bad)
 
     if direct_positions and app_positions:
         first_app = min(app_positions)[0]

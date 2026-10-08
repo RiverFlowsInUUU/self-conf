@@ -192,7 +192,7 @@ python skill/tests/clash/check_structure.py
    且它必须是 `behavior: domain` 的真正域名集。
    **这一条是第 10 项的代价，必须成对交付**：给 IP 规则补 `no-resolve` 会同时关掉
    "靠解析判 IP 归属"那条直连路径。
-   ✅ **mihomo 侧已有专用分流覆盖审计脚本** `skill/scripts/clash/audit_routing_coverage.py`（2026-10-07 补出，已进闸门 #39）—— 前 5 条自动化后，这一条**也由机器守着**，无需再人工核对。（此处曾长期写「没有」，与实际相反。）
+   ✅ **mihomo 侧已有专用分流覆盖审计脚本** `skill/scripts/clash/audit_routing_coverage.py`（2026-10-07 补出，已进闸门 #9）—— 前 5 条自动化后，这一条**也由机器守着**，无需再人工核对。（此处曾长期写「没有」，与实际相反。）
    且要用**国内非 `.cn` 域名**验证（只测 `.cn` 会被后缀兜底救活，假通过）。
 
 ### 两个脚本的定位与分工
@@ -207,8 +207,8 @@ python skill/tests/clash/check_structure.py
 | `build_rules.py --check`（`skill/scripts/clash/`） | **`rules/*.yaml` ↔ `.list` 真源** | 生成物过期即判负；❌ 不手工编辑 `rules/*.yaml` |
 | `check_remote_urls.py`（`skill/tests/clash/`） | **远程集可达性**（联网，慢） | 死链不是报错，是**静默降级** —— provider 拉不到就变空集，广告全进兜底出口而配置看着跑得挺好 |
 
-> ⭐ **审计通过 ≠ 配置可用**（三侧共通的母题）。mihomo 侧**已有**分流覆盖审计脚本（#39 闸门），但审计通过仍不等于真机可用 —— 这句母题对三侧都成立。
-> （Surge / Egern 有 `audit_routing_coverage.py`），所以上面的第 6 条验收标准只能人工做。
+> ⭐ **审计通过 ≠ 配置可用**（三侧共通的母题）。mihomo 侧**已有**分流覆盖审计脚本（闸门 #9），但审计通过仍不等于真机可用 —— 这句母题对三侧都成立。
+> （三内核均有 `audit_routing_coverage.py`，闸门 #7/#8/#9）—— 第 6 条验收标准**先跑它们**，但注意离线档按规则集名推演、不读实际策略（第五轮审查问题 7），**仍需实测兜底**，别把闸门绿当充分条件。
 > 这正是 `no-resolve-pairing.md` 要跨内核保留下来的教训：**不得因为两道静态门禁全绿就跳过它。**
 
 ### 已知取舍（LOW 不是缺陷）
