@@ -548,6 +548,9 @@ def build_gates():
     # 写死数字的新鲜度：文档里的「N 个图标」「N 道判据」必须与真源一致
     # （实测漂过三次；靠人记不管用，必须机器守）
     add('文档数字新鲜度', [PY, 'self-conf-skills/gates/check_doc_numbers.py'])
+    # DNS 段跨配置一致性（防泄露标准不因分流粒度而变）
+    # —— 文档长期声称有、实际不存在；2026-10-08 用「全新 AI 实测」发现后补上
+    add('DNS 段跨配置一致', [PY, 'self-conf-skills/gates/check_dns_parity.py'])
     add('secrets 扫描', [PY, 'self-conf-skills/gates/check_secrets.py'])
     add('未定义名扫描', [PY, 'self-conf-skills/gates/check_undefined_names.py'])
     add('portability', [PY, 'self-conf-skills/gates/check_portability.py'])

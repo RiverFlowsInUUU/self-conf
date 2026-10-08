@@ -44,7 +44,8 @@ python self-conf-skills/run/repo_state.py                    # 一屏现状：�
 
 **🚫 从不**
 - 手工编辑生成物：`rules/*.yaml`（改 `rules/*.list`）、
-  `clash/profiles/*.yaml`（改 `clash/override/my_clash*.js`）、`*.min.*`（跑 `make_min.py --apply`）
+  `clash/profiles/*.yaml`（改 `clash/override/my_clash*.js`）、`*.min.*`（跑 `make_min.py --apply`）、
+  **`rules/AI.list`**（改 `self-conf-skills/run/ai_sources/` 再跑 `ai_domains_build.py`）
 - 为了「让门禁变绿」而改判据
 - 把文档里写的数字当权威（组数/条数一律现抓）
 - **把三内核「对齐」** —— 机制不同，看起来的不一致常是刻意的
@@ -58,7 +59,21 @@ python self-conf-skills/run/repo_state.py                    # 一屏现状：�
 | Surge 配置 | `surge/profiles/*.conf` | **不是**生成物，直接改 |
 | Egern 配置 | `egern/profiles/*.yaml` | **不是**生成物，直接改 |
 | mihomo 配置 | `clash/override/my_clash*.js` | ⚠️ **是**生成物 ⇒ 改 JS 再 build |
-| 规则集内容 | `rules/*.list` | ⚠️ `.yaml` 是生成的 |
+| 远程规则集内容 | `rules/*.list` | ⚠️ `.yaml` 是生成的 |
+
+**四个生成链**（改左边，跑右边重生成）：
+
+```
+surge|egern/profiles/*.conf|yaml   ──make_min.py──▶        *.min.*
+clash/override/my_clash*.js        ──build_profiles.py──▶  clash/profiles/*.yaml + *.min.yaml
+rules/*.list                       ──build_rules.py──▶     rules/*.yaml
+self-conf-skills/run/ai_sources/*  ──ai_domains_build.py──▶ rules/AI.list
+```
+
+⚠️ **`rules/AI.list` 也是生成物**（由 `ai_sources/` 里 10 个来源合并而成）——
+改它要改 `self-conf-skills/run/ai_sources/` 下的源文件，再跑
+`python self-conf-skills/run/ai_domains_build.py`。
+（它的头部注释写明了生成脚本；`rules/*.yaml` 同理。）
 
 **三内核机制差异**（看起来不一致 ≠ 漂移）：地区组 Surge/Egern 用 `smart`、mihomo 用
 `url-test`；订阅源前者是 external 组、后者是 `proxy-provider`；倍率分档 mihomo 的

@@ -480,7 +480,15 @@ APPLE_PROBES = [
 判据仍会通过（因为 `FINAL → Proxy` 对境外探针是正确的）。
 若将来有探针因此误判，应改成显式枚举内置集合的已知内容。
 
-#### 7 · 架构不变量（`check_secrets.py`）
+#### 7 · 架构不变量
+
+> ⚠️ **2026-10-08 更正**：本节原把「① 占位符纪律」与「② DNS 段一致性（3 条断言）」
+> 都写成 `check_secrets.py` 的职责 —— 但**② 在代码里从来不存在**。
+> 这是用「全新 AI 实测」发现的：**文档在为不存在的事实背书**。
+> 现已补上实现（`gates/check_dns_parity.py`，进闸门），文档与代码对齐。
+
+**① 占位符纪律** → `gates/check_secrets.py`
+**② DNS 段一致性** → `gates/check_dns_parity.py`
 
 #### ① 占位符纪律
 
@@ -514,13 +522,19 @@ DNS_KEYS = [
 ]
 ```
 
-| 断言 | 比对对象 | 理由 |
-|:-----|:---------|:-----|
-| ②-a | `lazy.conf` ↔ `lazy.min.conf` | `.min.conf` 的定位是「去掉注释」，不是「裁剪配置」 |
-| ②-b | `routing.conf` ↔ `routing.min.conf` | 同上 |
-| ②-c | `lazy.conf` ↔ `routing.conf` | **防泄露标准不因分流粒度而变** |
+| 断言 | 比对对象 | 理由 | 谁在守 |
+|:-----|:---------|:-----|:--|
+| ②-a | `lazy.conf` ↔ `lazy.min.conf` | `.min.conf` 的定位是「去掉注释」，不是「裁剪配置」 | `gates/check_min_pair.py` |
+| ②-b | `routing.conf` ↔ `routing.min.conf` | 同上 | 同上 |
+| ②-c | `lazy.conf` ↔ `routing.conf` | **防泄露标准不因分流粒度而变** | `gates/check_dns_parity.py` |
 
 任一键只在一边存在、或值不同 → 失败。
+
+⚠️ **②-c 对 mihomo 只守「底线键」，不要求端点字面相同**（实测校准）：
+`fallback` / `fallback-filter` 懒人版**刻意不配**（§13.3）；
+端点也不同（分流版 `doh.18bit.cn`、懒人版 `223.5.5.5`）——
+差异在**脚本源头**就存在，是设计而非漂移。
+该判据守的是「两边都加密、IPv6 都关、双层广告拦截都在」。
 
 ⚠️ ②-c 是这份测试里**唯一一条跨配置**的断言。它挡的是这种想法：
 "反正这是分流版，DNS 段差不多就行"。两份配置的防泄露结构必须**完全相同** ——
