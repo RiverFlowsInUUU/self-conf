@@ -44,9 +44,8 @@ self-conf/                                    # 三内核整合仓
 │   │   └── README.md                         # 与静态模板的差别、用法、实测
 │   ├── ruleset-sources.md                # 规则集清单与选型（门面层）
 │   ├── （文档并入 self-conf-skills/references/profiles/clash.md）
-│   ├── CHANGELOG.md
 ├── rules/                                    # 共享规则集真源（.list）+ 生成物（.yaml）
-├── icons/                                    # 40 个图标 PNG + 1 个 SVG，三内核共用
+├── icons/                                    # 图标 PNG + SVG（数量现抓），三内核共用
 └── self-conf-skills/                                    # AI 知识库与工具集
     ├── AGENTS.md                            # Agent 入口（本仓根）（分歧 / 踩过的坑）
     ├── reference/profiles/{surge,egern,clash}.md · dns.md · rulesets.md · pitfalls.md · ops.md · gates.md
@@ -1663,7 +1662,7 @@ self-conf/
 #### 1.2 “版本”放在哪里
 
 - 现役入口使用稳定文件名 `lazy.*` / `routing.*`，订阅地址不随版本变化；
-- mihomo 当前以脚本生成现役静态 profile，演进记录主要看 Git 历史与 `CHANGELOG.md`（本目录）；
+- mihomo 当前以脚本生成现役静态 profile，演进记录看 git 历史（本仓不在仓内保留 CHANGELOG）；
 - 不要为了保留旧行为在现役目录里再造 `routing-new`、`routing-final`、`routing-fixed`。
 
 **判据**：能由旧配置升级得到的是“版本”；服务不同用户任务的才是“产品线”。

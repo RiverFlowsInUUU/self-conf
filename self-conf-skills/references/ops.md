@@ -981,7 +981,7 @@ python self-conf-skills/gates/clash/check_structure.py
 
 > 本仓的发版模型：一个更新日 = 一个 Release，tag = `vYYYY-MM-DD`。
 
-⚠️ 本文是**规矩**，不是历史。历史请看 [`CHANGELOG.md`](./ops.md)。
+⚠️ 本文是**规矩**，不是历史。历史请看 git 记录（本仓不在仓内保留 CHANGELOG）。
 
 ### 1 · 版本号放哪
 
@@ -1486,7 +1486,7 @@ IP6 2001:db8::2 > 2400:3200::1.53: AAAA? www.google.com               ← ❌ �
 **端点本身是主机名**。要连它就得先知道它的 IP，这一问只能用 `default-nameserver`
 （那一层是**明文 UDP**，因为它不能再依赖任何加密解析器，否则成环）。
 
-⭐ **本仓已实测过这条**（CHANGELOG，2026-09-22，本地 mihomo 内核 + 本机 DNS sink）：
+⭐ **本仓已实测过这条**（2026-09-22，本地 mihomo 内核 + 本机 DNS sink）：
 
 > 把唯一走明文 UDP 的 `default-nameserver` 顶到本机 sink 上跑真实解析，
 > **明文 `UDP:53` 只出现在 `dns.google` / `dns.cloudflare.com` 两个 DoH 端点域名上**
@@ -1796,7 +1796,7 @@ mihomo 侧因为**有 TUN**，IPv6 的两件事会叠加成一个真正的泄露
 = 应用拿到了真实的 IPv6 地址，但 IPv6 流量**不被 TUN 接管**
 ⇒ **双栈站点直接走本机真实 IPv6 出网，绕过代理** = 必然通路。
 
-> 📌 CHANGELOG 原文记录的正是这条：
+> 📌 历史记录里记的正是这条：
 > 「此前 `dns.ipv6` 为 `true` 时会返回 AAAA 记录，而本机真实 IPv6 未被 TUN 完整接管，
 > 双栈站点优先走 IPv6 ⇒ 出口 IP 与节点不符（表现为**站点测到美国 IPv6**）。」
 
@@ -1840,7 +1840,7 @@ dns:
 | 只关哪个 | 剩下什么风险 |
 |:---------|:-------------|
 | 只关 `dns.ipv6` | 应用拿不到 AAAA，但**应用自己用 IPv6 字面量 / 其它途径拿到 IPv6 时**，那条路仍不被 TUN 接管 |
-| 只关顶层 `ipv6` | TUN 不管 IPv6，但 `dns.ipv6: true` 仍会返回 AAAA ⇒ **应用拿着 AAAA 直连出去**（正是 CHANGELOG 记的那个 bug）|
+| 只关顶层 `ipv6` | TUN 不管 IPv6，但 `dns.ipv6: true` 仍会返回 AAAA ⇒ **应用拿着 AAAA 直连出去**（正是曾经记过的那个 bug）|
 | **两个都关** | 不返回 AAAA ⇒ 应用只能走 IPv4 ⇒ IPv4 必经 TUN ⇒ **通路闭合** |
 
 ⭐ **两个都关才是"必然不通"**：关 `dns.ipv6` 让应用**拿不到** IPv6 地址，
@@ -1994,7 +1994,7 @@ mihomo 的 fake-ip 模式先返回假 IP、等连接建立时再按域名分流�
 两个开关要**一起关**。只关 `dns.ipv6` 时，应用拿不到 AAAA，
 但顶层 `ipv6: false` 若没写，IPv6 流量侧的行为不明确；
 反过来只关顶层而 `dns.ipv6: true` ⇒ 应用拿着 AAAA 直连出去 ——
-**这正是 CHANGELOG 记过的那个 bug**。见 §6.4。
+**这正是曾经记过的那个 bug**。见 §6.4。
 
 **Q：`ipv6: false` 是默认值，为什么门禁要求必须写？**
 
