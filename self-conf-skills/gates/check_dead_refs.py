@@ -84,7 +84,7 @@ def check_line(ln):
         if any(os.path.exists(c) for c in cands):
             continue
         # 排除「明显是示例」的
-        if tok.count("/") == 0 and tok not in ("AGENTS.md", "GEMINI.md"):
+        if tok.count("/") == 0 and tok not in ("AGENTS.md",):
             # 裸文件名：只在它属于已删机制时才报
             if not any(d in tok for d in DEAD):
                 continue

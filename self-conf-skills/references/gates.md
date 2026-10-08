@@ -100,6 +100,7 @@ python self-conf-skills/gates/verify_all.py
 | 自洽性 | 把 URL 改回旧仓 |
 | Egern / mihomo DNS 双份 | 改 DNS 段键名 |
 | clash 结构 / 分流覆盖 | 改组名 / 改 MATCH |
+| AI 入口唯一性 | 重建 `GEMINI.md` / `CLAUDE.md` / `.cursorrules`（工具专属入口会被优先读取、屏蔽真源）|
 
 #### 已发现并修好的假闸门
 

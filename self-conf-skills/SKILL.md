@@ -14,7 +14,7 @@ license: MIT
 | 规范 | 用于 | 本仓的落实 | 谁在守 |
 |:--|:--|:--|:--|
 | **[Agent Skills](https://agentskills.io/specification)**（Anthropic 发布，开放标准，30+ 工具） | 本目录的形态 | 目录名 = `name`、有 frontmatter、SKILL.md < 500 行、`references/` 按需加载 | `gates/check_skill_spec.py` |
-| **[AGENTS.md](https://agents.md)**（Linux Foundation 托管，60k+ 项目） | 仓库根的常驻指令 | 根 `AGENTS.md` 是唯一真源；不建 `CLAUDE.md`/`.cursorrules`（会屏蔽真源） | `gates/check_ai_entry.py` |
+| **[AGENTS.md](https://agents.md)**（Linux Foundation 托管，60k+ 项目） | 仓库根的常驻指令 | 根 `AGENTS.md` 是**唯一**入口；不建 `CLAUDE.md`/`.cursorrules`/`GEMINI.md` 等工具专属入口（会被优先读取、屏蔽真源） | `gates/check_ai_entry.py` |
 | 本仓自制：**写死数字必漂** | 文档里的数量 | 一律现抓，不写死 | `gates/check_doc_numbers.py` |
 
 > 两个入口**分工不同、不重复**：根 `AGENTS.md` 常驻（底线/命令/边界，~90 行）；
