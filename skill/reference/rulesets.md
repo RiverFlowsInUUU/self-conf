@@ -548,7 +548,7 @@ mihomo 的实际值应以本页和 [`profiles/<kern>.md`](./profiles/clash.md) �
 | 链接门禁 | `python skill/tests/check_links.py` | 同左 | 同左 |
 
 三侧测试不能合成一个“万能解析器”：相同目标背后的语法、默认值和失败方式不同。
-维护入口与命令总表见 [`SKILL.md`](../SKILL.md)。
+维护入口与命令总表见 [`AGENTS.md`](../../AGENTS.md)。
 
 ### 8 · 合并后真正共享的东西
 
@@ -618,7 +618,7 @@ python skill/scripts/clash/build_rules.py --check
 
 相关：[`rulesets.md`](./rulesets.md) · [`dns.md`](./dns.md) ·
 [`profiles/<kern>.md`](./profiles/clash.md) · [`clash.md`](./profiles/clash.md) ·
-[`SKILL.md`](../SKILL.md)
+[`AGENTS.md`](../../AGENTS.md)
 
 ---
 
@@ -804,7 +804,7 @@ key = re.sub(r"[^A-Za-z0-9._-]", "_", url)[-120:]
 
 ## Egern · 规则集重量（egern 侧）
 
-> 本文是 [`SKILL.md`](../SKILL.md) 的引用文件。 **何时读**：用户问「3.42 MB 的规则集是不是负担太重 / 别的软件扛得住吗」。
+> 本文是 [`AGENTS.md`](../../AGENTS.md) 的引用文件。 **何时读**：用户问「3.42 MB 的规则集是不是负担太重 / 别的软件扛得住吗」。
 
 配套脚本 `skill/scripts/egern/weigh_ruleset.py`。**先纠正两个前提再谈数字**（见正文）。
 
@@ -1603,4 +1603,4 @@ Surge 侧取一周是因为那里有具体理由，**本仓没有**，所以保�
 [`gates.md`](./gates.md) §9 · [`profiles/<kern>.md`](./profiles/clash.md) ·
 [`rulesets.md`](./rulesets.md) ·
 [`rulesets.md`](./rulesets.md) ·
-[`../../SKILL.md`](../SKILL.md) · [`../../../README.md`](../../README.md)
+[`AGENTS.md`](../../AGENTS.md) · [`../../../README.md`](../../README.md)

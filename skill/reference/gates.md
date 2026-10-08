@@ -610,7 +610,7 @@ def _default_root:
 > 在 GitHub Actions 的调用方式下算错目录 ⇒ Linux 上全绿、CI 上报「缺文件」。
 > **本地全绿 ≠ 线上能跑** —— 路径探测这类环境相关的东西，必须让 CI 跑一遍才算数。
 
-⚠️ 千万别"顺手"把 CWD 优先改回 `__file__` 优先。那是已经踩过的坑（见 `SKILL.md` §7）。
+⚠️ 千万别"顺手"把 CWD 优先改回 `__file__` 优先。那是已经踩过的坑（见 `AGENTS.md` §7）。
 
 #### 2 · 命令
 
@@ -1061,7 +1061,7 @@ else:                 open(dp, "w", …).write(want)   # 重新生成
 python skill/scripts/clash/build_rules.py           # 重新生成（不是改 .yaml）
 ```
 
-❌ **红线：不手工编辑 `rules/*.yaml`**（`SKILL.md` §8）。改内容只改 `.list`，重跑脚本。
+❌ **红线：不手工编辑 `rules/*.yaml`**（`AGENTS.md` §8）。改内容只改 `.list`，重跑脚本。
 
 #### 9 · 判别力：怎么证明门禁真的会判负
 
@@ -1470,7 +1470,7 @@ self-conf/
 ├── .gitattributes · .gitignore
 ├── icons/                       # 图标 PNG + icons.json / icons-full.json —— 两内核共用
 ├── skill/                       # ★ AI 驱动的唯一知识库（无人类文档）
-│   ├── SKILL.md                 # 单一入口：底线与纪律 → §0 判内核 → 分支 A(Surge) / 分支 B(Egern)
+│   ├── AGENTS.md                 # 单一入口：底线与纪律 → §0 判内核 → 分支 A(Surge) / 分支 B(Egern)
 │   ├── reference/               # 8 篇：profiles/*.md · dns · rulesets · pitfalls · ops · gates ·
 │   │                            #   no-resolve-pairing · dns-basics · ops · troubleshoot-faq
 │   ├── reference/profiles/ # 单侧主题：profile-anatomy（逐键权威）· hardening-template · pitfalls ·
@@ -1492,7 +1492,7 @@ self-conf/
 | 层 | 装在什么 | **不装什么** |
 |:---|:---------|:-------------|
 | `README.md` | 能用起来所需的一切（产品结论） | 原理推导、逐行理由 |
-| `skill/SKILL.md` | AI 的工作手册：底线、归档动线、审计清单、验收判据 | 逐键细节（下沉 reference） |
+| `AGENTS.md` | AI 的工作手册：底线、归档动线、审计清单、验收判据 | 逐键细节（下沉 reference） |
 | `skill/reference/` | 机制推导、逐键语义、实测读数、已知取舍、FAQ、事故复盘 | 面向使用者的说明 |
 
 ⚠️ **不要把工作过程倒进产品文档。** 内部重构、仓库运维、行尾规范化 —— 使用者无感，
@@ -1583,7 +1583,7 @@ grep -rn -iE '<你的私有域名|你的密码片段|你的用户名>' . \
 #### 5 · 验证
 
 CI（根 `.github/workflows/ci.yml`）在 push / PR 自动跑：占位符扫描 → 可移植性 → `.min` 对拍 →
-链接锚点 → 两侧 DNS 审计 → `.min` 漂移检查。本地同组命令见 [`SKILL.md`](../SKILL.md) §3 动线第 ⑤ 步。
+链接锚点 → 两侧 DNS 审计 → `.min` 漂移检查。本地同组命令见 [`AGENTS.md`](../../AGENTS.md) §3 动线第 ⑤ 步。
 
 #### 5.1 改 markdown 版式前：先问 GitHub 本人
 
@@ -1632,7 +1632,7 @@ MSYS_NO_PATHCONV=1 gh api --method POST /markdown \
 
 ## Egern · 公开仓交付（egern 侧）
 
-> 本文是 [`SKILL.md`](../SKILL.md) 的引用文件。 **何时读**：要更新模板 / 了解公开仓库结构时。
+> 本文是 [`AGENTS.md`](../../AGENTS.md) 的引用文件。 **何时读**：要更新模板 / 了解公开仓库结构时。
 
 ---
 
@@ -1646,7 +1646,7 @@ LICENSE · .gitattributes · .gitignore
 icons/                                      # 图标 PNG + icons.json / icons-full.json —— 两内核共用
 rules/                                      # 本仓自托管的规则集（当前 1 份：Egern 用的 apple_system.list）
 skill/                                      # ★ AI 驱动的唯一知识库
-  SKILL.md                                  # 单一入口：底线与纪律 → §0 判内核 → 分支 A/B
+  AGENTS.md                                  # 单一入口：底线与纪律 → §0 判内核 → 分支 A/B
   reference/                                # 8 篇：profiles/{surge,egern,clash}.md · dns.md · rulesets.md
                                             #        pitfalls.md · ops.md · gates.md
   scripts/<kern>/ · tests/                  # 审计脚本 + 门禁（唯一入口 tests/verify_all.py）
@@ -1661,7 +1661,7 @@ egern/profiles/routing.yaml / .min.yaml     # 分流版 · 推荐（脱敏模板
 
 **要更新模板时**：**直接在仓库里改 `profiles/*.yaml` 即可。** 这份模板早已完成脱敏
 （2 条占位节点 + 1 个占位订阅，全都连不出去，无真实证书），改它不需要"从自用配置重新生成"。
-改完按 [`SKILL.md`](../SKILL.md) 的标准动线走（改完整版 → `make_min.py` → 闸门 → 推送）。
+改完按 [`AGENTS.md`](../../AGENTS.md) 的标准动线走（改完整版 → `make_min.py` → 闸门 → 推送）。
 
 > 📦 **历史做法（已不再使用）**：早期由维护者本地的 `outputs/` 脚本链生成 ——
 > `_build_public_template.py`（带断言的行级替换 + 38 个敏感串零残留自检）、
@@ -1673,7 +1673,7 @@ egern/profiles/routing.yaml / .min.yaml     # 分流版 · 推荐（脱敏模板
 > `github-publish-sanitized-repo`，需按它重建脚本。
 
 📌 **验证 = CI（`.github/workflows/ci.yml`，push / PR 自动）+ 本地同组命令复现**
-（命令清单见 [`SKILL.md`](../SKILL.md) §3）；探针 / 量测类脚本（`probe_*` / `weigh_*` / `profile_ruleset`）不在验证链上，是手工工具。
+（命令清单见 [`AGENTS.md`](../../AGENTS.md) §3）；探针 / 量测类脚本（`probe_*` / `weigh_*` / `profile_ruleset`）不在验证链上，是手工工具。
 
 **脱敏清单（这五类必须洗）**：节点 server/凭据/sni/reality 公钥 → 占位；
 机场订阅 URL（含 token）→ 占位；`mitm.ca_p12` + `ca_passphrase`（个人 CA 私钥）→ **注释掉**；
@@ -2188,5 +2188,5 @@ python skill/tests/clash/check_remote_urls.py --timeout 20
 ---
 
 相关：[`gates.md`](./gates.md) · [`profiles/<kern>.md`](./profiles/clash.md) ·
-[`rulesets.md`](./rulesets.md) · [`../../SKILL.md`](../SKILL.md) ·
+[`rulesets.md`](./rulesets.md) · [`AGENTS.md`](../../AGENTS.md) ·
 [`../../../SECURITY.md`](../../SECURITY.md)

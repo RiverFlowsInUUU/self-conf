@@ -1,0 +1,20 @@
+<!-- 本文件是指针：完整规程在 AGENTS.md。请先读那个文件。 -->
+
+# GEMINI.md
+
+**完整规程见 [`AGENTS.md`](AGENTS.md) —— 请先读它。**
+
+本仓是 Surge / Egern / mihomo（Clash Meta）三内核代理配置模板。
+
+> 本文件只是入口指针，内容以 `AGENTS.md` 为准（**不做第二份副本**，避免漂移）。
+
+## ⚠️ 红线（先看这个，再看全文）
+
+1. **改配置 = 改两份**：每份 profile 有 `.conf`/`.yaml` 与 `.min` 两个版本，只差注释、
+   内容必须逐字相同。改完跑 `python skill/tests/make_min.py --apply` 同步。
+2. **mihomo 的 profile 是生成物**：改 `clash/override/my_clash*.js`，
+   **不要**直接改 `clash/profiles/*.yaml`（会被重新生成覆盖）。
+3. **`rules/*.yaml` 是生成物**：改真源 `rules/*.list`，跑
+   `python skill/scripts/clash/build_rules.py` 重生成。
+4. **改完必须跑门禁**：`python skill/tests/verify_all.py`（唯一入口，与 CI 同源）。
+   绿了才算做完。

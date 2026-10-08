@@ -391,7 +391,7 @@ python skill/scripts/clash/build_rules.py --check    # CI 用：过期即判负�
 ```
 
 改内容**只改 `.list`**，重跑脚本 —— 物理上不可能漂移。
-❌ **不手工编辑 `rules/*.yaml`**（生成物；`SKILL.md` 的红线之一）。
+❌ **不手工编辑 `rules/*.yaml`**（生成物；`AGENTS.md` 的红线之一）。
 mihomo 其余 **20 份 `.mrs` 远程集 + 5 份 YAML** 不在此链上，由 `rule-providers` 自己管理。
 
 #### 5.5 日常验什么、用哪个脚本
@@ -1279,7 +1279,7 @@ python skill/scripts/surge/audit_routing_coverage.py <profile>
 
 ## Egern · 定位泄露实测（egern 侧）
 
-> 本文是 [`SKILL.md`](../SKILL.md) 的引用文件。 **何时读**：用户报「leak test 显示 china telecom / 联通」时。
+> 本文是 [`AGENTS.md`](../../AGENTS.md) 的引用文件。 **何时读**：用户报「leak test 显示 china telecom / 联通」时。
 
 **第一个动作不是改配置** —— 配置层只能证明「我声明的上游不会产生这个应答」，
 剩下的必须落到网络层实测。

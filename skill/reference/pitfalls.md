@@ -292,7 +292,7 @@ python skill/tests/make_min.py            # 计划模式：四份 .min 应全部
 | 🪟 **bash 双引号内的 `\n` 被 MSYS 静默扭曲** | Windows Git Bash 独有（Linux / macOS 无此参数转换层）：多行 `python -c` / heredoc 经 MSYS 参数传递后 `\n` 变字面 `/n`，锚点匹配 count=0 **静默失败**（2026-09-28 实测）。解法与平台无关：多行代码一律写 `.py` 脚本文件执行，单行无转义才用内联；锚点替换必带 `assert count==1`，写盘后 grep 抽查 |
 | 🩹 **今天之前 clone 的旧克隆要手动重检出一次** | `.gitattributes` 只约束 git **写盘的那一刻**，不会回头改写已经在磁盘上的文件。老克隆 `git pull` 之后：磁盘仍是 CRLF，而 `git status` **照样干净**（比对时 git 会先把工作树归一回 LF）⇒ 这是一处隐形差异，只有检查会抓到。两种解法任选：`git rm -r --cached . && git reset --hard`（实测 CRLF 94 → 0、`all.sh` 第 4 项 17 → 18 全绿），或干脆**删掉整个目录重新 clone** —— 反正仓内不留任何单机事实 |
 | 🔤 **文件名不构成风险** | 全树实测：路径全部 NFC 归一、无 Windows/macOS 非法字符、无保留设备名（`CON`/`NUL`/`COM1`…）、大小写折叠零冲突（Windows 的 `core.ignorecase=true` 会让只差大小写的两个文件互相覆盖）、最长相对路径 49 字符（Windows 260 上限内留足余量）。**中文文件名能正常上传 GitHub**，但只在人读的文档路径下允许；脚本 / profile / 图标 / 测试这些被程序消费的路径必须纯 ASCII —— 由 [`../skill/tests/check_portability.py`](../tests/check_portability.py) 常驻守着（**18 条规则，不随文件数增长**） |
-| 🤖 **agent 的入口** | [`skill/SKILL.md`](../SKILL.md) 是 agent 技能包门面：按内核分支的语法知识、检查入口与引用面。判"不对"前先 grep `audit-waive`（明知故犯处都有豁免条目与理由）。改配置遵循 [`ops.md`](./ops.md) 的标准动线 |
+| 🤖 **agent 的入口** | [`AGENTS.md`](../../AGENTS.md) 是 agent 技能包门面：按内核分支的语法知识、检查入口与引用面。判"不对"前先 grep `audit-waive`（明知故犯处都有豁免条目与理由）。改配置遵循 [`ops.md`](./ops.md) 的标准动线 |
 | 🧑‍💻 **换机器只做四件事** | ① `git clone https://github.com/RiverFlowsInUUU/self-conf.git`（公开仓读不需要登录）；② 配身份：`git config --global user.name` 与 `user.email`；③ 配推送凭据：`gh auth login` 或 Git 凭据管理器。**token 不写进仓内任何文件，也不写进 `git remote` 的 URL**——凭据是单机事实，仓不代管；④ `pip install pyyaml`（Egern 侧脚本依赖，Windows 的 Git Bash 不自带；缺它闸门前置就 rc=2） |
 | 🔁 **改完的固定动作** | 五项检查全过 → 点名 stage、提交、push → CI 在线上把同一组检查再跑一遍，红了就修 |
 | 🧊 **`git status` 里中文显示成八进制** | 看到 `docs/\345\233\276...` 是 git 的 `core.quotepath` 默认转义，**不是文件名坏了**。想看清：`git config --global core.quotepath false`。macOS 另建议 `git config --global core.precomposeunicode true`（文件系统以 NFD 落盘，否则同一个中文名会被认成两个文件） |
@@ -825,7 +825,7 @@ Surge 的 filter 不支持引用变量（filter 是字面正则），所以这�
 
 ## Egern · 坑（egern 侧）
 
-> 本文是 [`SKILL.md`](../SKILL.md) 的引用文件。 **何时读**：排查实际泄露、或改动审计判据 / 规则集之前。
+> 本文是 [`AGENTS.md`](../../AGENTS.md) 的引用文件。 **何时读**：排查实际泄露、或改动审计判据 / 规则集之前。
 
 每条都是真实事故复盘。**「审计通过 ≠ 配置可用」是贯穿全部 18 条的母题** ——
 连续 5 次出现「脚本全绿、实测仍有问题」，每次的结论都一样：
@@ -2098,4 +2098,4 @@ python skill/tests/clash/check_script_sync.py "$SB"   # 期望 0
 [`gates.md`](./gates.md)（公开仓纪律 · 2511 处事故）·
 [`profiles/<kern>.md`](./profiles/clash.md)（移植新内核的清单）·
 [`rulesets.md`](./rulesets.md)（同名概念的三内核落点）·
-[`../../SKILL.md`](../SKILL.md)（§7 踩过的坑 · §8 红线）
+[`AGENTS.md`](../../AGENTS.md)（§7 踩过的坑 · §8 红线）

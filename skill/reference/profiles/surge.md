@@ -42,7 +42,7 @@ self-conf/                                   # Surge · Egern · mihomo 三内�
 ├── icons/                                   # 策略组图标 PNG + SVG —— 仓库根，三内核共用、不跨项目引用
 ├── LICENSE · SECURITY.md · README.md        # 许可证 · 安全披露 · 门面（订阅入口 + 指路）
 └── skill/                                   # AI 知识库（本仓唯一文档区）
-    ├── SKILL.md                             # AI 唯一入口：六条底线 / 归档机制 / 动线 / 分支索引
+    ├── AGENTS.md                             # AI 唯一入口：六条底线 / 归档机制 / 动线 / 分支索引
     ├── reference/                           # 逐条判据（shared/ 七篇 + surge/ · egern/ 各七篇）
     ├── scripts/                             # surge/ 5 个审计脚本 + 1 个共享模块 · egern/ 10 个 + 1 个
     └── tests/                               # 闸门脚本（secrets / portability / min_pair / links / make_min / …，共全套）
@@ -1403,7 +1403,7 @@ REJECT 绝不能排在 `direct.txt` / `GEOIP,CN` **之后** —— 那等于白�
 
 #### 4.2 铁律二：`no-resolve` 与国内直连集**成对**
 
-见主干 `SKILL.md`。要点：给 IP 规则补 `no-resolve` 会**同时**关掉
+见主干 `AGENTS.md`。要点：给 IP 规则补 `no-resolve` 会**同时**关掉
 「解析后判 IP 归属」这条直连路径。**判据是「数域名条目」，不是看规则集名字。**
 
 实测反例：`ChinaMax.list` 12472 条里只有 64 条域名 —— 名字像国内域名集，
@@ -1520,8 +1520,8 @@ localhost = server:system
 
 ## Surge · 分支与变体（surge 侧）
 
-> 本文从 [`SKILL.md`](../../SKILL.md) 拆出 —— **Surge 单侧任务只读本文件，不读分支 B**。
-> 共享骨架（泄露面五类 / 四条铁律 / 六条底线 / 标准动线 / 按需读取索引）在 SKILL.md §1–§4。
+> 本文从 [`AGENTS.md`](../../../AGENTS.md) 拆出 —— **Surge 单侧任务只读本文件，不读分支 B**。
+> 共享骨架（泄露面五类 / 四条铁律 / 六条底线 / 标准动线 / 按需读取索引）在 AGENTS.md §1–§4。
 
 #### 适用
 
@@ -1534,7 +1534,7 @@ Egern（见分支 B）、Shadowrocket（`dns-server` 语义不同）。
 #### 引用文件（按需读取）
 
 本文件是**主干**：三条出口模型、12 项审计清单、加固模板、坑索引、验收判据。
-`reference/surge/` 七篇的「何时读」索引见 SKILL.md §4。**移植到 Egern 侧前必读
+`reference/surge/` 七篇的「何时读」索引见 AGENTS.md §4。**移植到 Egern 侧前必读
 [`rulesets.md`](../rulesets.md)**。
 
 #### Surge 的 DNS 模型（不理解这个就会改错地方）

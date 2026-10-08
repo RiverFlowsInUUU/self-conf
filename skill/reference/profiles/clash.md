@@ -48,7 +48,7 @@ self-conf/                                    # 三内核整合仓
 ├── rules/                                    # 共享规则集真源（.list）+ 生成物（.yaml）
 ├── icons/                                    # 40 个图标 PNG + 1 个 SVG，三内核共用
 └── skill/                                    # AI 知识库
-    ├── SKILL.md                              # 维护手册（分歧 / 踩过的坑）
+    ├── AGENTS.md                            # Agent 入口（本仓根）（分歧 / 踩过的坑）
     ├── reference/profiles/{surge,egern,clash}.md · dns.md · rulesets.md · pitfalls.md · ops.md · gates.md
     ├── scripts/clash/build_rules.py          # .list → .yaml 生成器
     └── tests/clash/                          # mihomo 专属门禁 9 个
@@ -1173,7 +1173,7 @@ Surge / Egern 侧的 secrets 扫描不认识它，整合时加了白名单（§5
 1. **重复顶层键**。PyYAML 静默取最后一份 ⇒ 本仓门禁（PyYAML 系）**全绿**，看不出问题；
    `check_min_pair.py` 也是拿最后一块与 `.min` 对拍，同样通过。
    mihomo 用 `gopkg.in/yaml.v3` 解析（v3 默认开启唯一键检查），**有报错风险，未经实测** ——
-   这正是 [`SKILL.md`](../../SKILL.md) §7 那条「**本地全绿 ≠ 线上能跑**」的同类。
+   这正是 [`AGENTS.md`](../../../AGENTS.md) §7 那条「**本地全绿 ≠ 线上能跑**」的同类。
 2. **在文件里搜索会命中多处**，`grep -c` 得到的数字是 7 倍。
    本文所有数字（25 / 27 / 25）取的是**解析后的结果**与**最后一块**，不是 grep 计数。
 3. **改文件时极易改错块** —— 改到第 1 块等于没改。
@@ -1223,7 +1223,7 @@ python skill/tests/clash/check_secrets.py        # 占位符纪律
 [`dns.md`](../dns.md) ·
 [`rulesets.md`](../rulesets.md) ·
 [`clash.md`](../profiles/clash.md) ·
-[`../../SKILL.md`](../../SKILL.md)
+[`AGENTS.md`](../../../AGENTS.md)
 
 ---
 
@@ -1612,7 +1612,7 @@ A：`python skill/scripts/clash/build_profiles.py` 重新生成两份 profile + 
 >
 > 本文只讨论**分支形态与维护边界**。具体键语义见各内核的 `profiles/<kern>.md`，
 > 门禁命令与判据见 [`gates.md`](../gates.md)。仓库总览与纪律以
-> [`SKILL.md`](../../SKILL.md) 为准。
+> [`AGENTS.md`](../../../AGENTS.md) 为准。
 >
 > 当前仓库不是把三份配置揉成一份“万能配置”，而是把它们放在同一个验证框架里：
 > **产品目标尽量一致，内核语义允许不同，共享资产只保留一份。**
@@ -1903,7 +1903,7 @@ PyYAML 只取最后一份，门禁看似全绿，真实文件却已畸形。**�
 7. **远程资源**：让 URL 收集器能看见字面 URL，也能执行脚本拿到运行期拼接 URL；
 8. **共享规则**：能复用 `rules/*.list` 就不复制；需要新格式时增加确定性生成器与 `--check`；
 9. **图标**：优先复用 `icons/`，新增文件后检查所有引用均指向本仓；
-10. **文档**：更新根 README 下载矩阵、`SKILL.md`、对应 anatomy / checker / 本文的规模与取舍；
+10. **文档**：更新根 README 下载矩阵、`AGENTS.md`、对应 anatomy / checker / 本文的规模与取舍；
 11. **CI**：把门禁挂入 `verify_all.py`，再确认 `.github/workflows/ci.yml` 的线上步骤确实执行；
 12. **实机验收**：导入客户端、检查空组、关键规则落点、DNS 与断网重启行为。
 
@@ -2009,7 +2009,7 @@ Surge / Egern 直接消费 `.list`；mihomo 消费生成的 `.yaml`。因此只�
 ---
 
 相关：[`profiles/<kern>.md`](../profiles/clash.md) · [`gates.md`](../gates.md) ·
-[`rulesets.md`](../rulesets.md) · [`../../SKILL.md`](../../SKILL.md) ·
+[`rulesets.md`](../rulesets.md) · [`AGENTS.md`](../../../AGENTS.md) ·
 [`../../../README.md`](../../../README.md)
 
 ---

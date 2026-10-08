@@ -426,7 +426,7 @@ def main():
     checks.append(("H4", ".gitignore 兜底覆盖单机残留与 OS 垃圾", missing))
 
     # ── M1 markdown frontmatter 完好性 ──────────────────────────────
-    #    2026-09-27 实测：批量删 hr 的脚本把 SKILL.md 的 frontmatter 闭合线
+    #    2026-09-27 实测：批量删 hr 的脚本把入口文件的 frontmatter 闭合线
     #    （其后正好是 H1 标题）当成"标题前的 hr"删掉 ⇒ YAML 未闭合，全文件
     #    解析崩。凡以 `---` 开头的 .md，头部必须有第二条 `---` 闭合。
     fm_bad = []

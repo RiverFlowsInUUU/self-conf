@@ -1,12 +1,14 @@
----
-name: self-conf
-description: Surge / Egern / mihomo（Clash Meta）三内核代理配置模板的维护与改动。改 profile、调分流规则、加规则集、防 DNS 泄露、排查拦截失效或分流异常、发版、跑门禁时使用。只要用户提到 self-conf、Surge 配置、Egern 配置、mihomo / Clash 配置、分流版 / 懒人版、规则集、DNS 泄露、审计脚本、闸门，或让你改这个仓库里的配置，就用这个技能——即使用户没明说仓库名。它给出「先读哪份、改完跑哪道门禁、什么算做完」。
----
+# self-conf · Agent 指南
 
-# self-conf 维护
+**给任何 AI 编码助手看的操作手册。** 人类请看 [`README.md`](./README.md)；
+`SECURITY.md` 是公开仓的安全纪律。
 
-三内核（Surge / Egern / mihomo）配置模板仓。**配置本身是给人读的**（注释写满「为什么」）；
-本技能是给 AI 的操作规程。
+本仓是 Surge / Egern / mihomo（Clash Meta）**三内核代理配置模板**。
+配置本身是给人读的（注释写满「为什么」）；本文件是给 AI 的操作规程。
+
+> 📌 **换任何 AI 都能用**：本文件是**唯一真源**。各工具的约定文件
+> （`CLAUDE.md` · `GEMINI.md` · `.cursorrules` · `.github/copilot-instructions.md`）
+> 是**薄指针 + 关键红线**，内容以本文件为准 —— 不做第二份副本，避免漂移。
 
 ---
 
@@ -39,14 +41,14 @@ grep -n "include-all" skill/reference/profiles/clash.md
 
 | 你要做的事 | 读哪份 | 改哪个文件 | 常见 grep 关键词 |
 |:--|:--|:--|:--|
-| 改 Surge 配置的某个键 | `reference/profiles/surge.md` | `surge/profiles/*.conf` | 键名（`hijack-dns` / `ipv6` / `proxy-test-url`） |
-| 改 Egern 配置 | `reference/profiles/egern.md` | `egern/profiles/*.yaml` | 键名（`forward` / `policy_groups` / `proxy_nameservers`） |
-| 改 mihomo 配置 | `reference/profiles/clash.md` | ⚠️ **`clash/override/my_clash*.js`**（不是 yaml，见底线 2） | 键名（`include-all` / `fake-ip-filter` / `nameserver-policy`） |
-| 动 DNS / 防泄露逻辑 | `reference/dns.md` | 三处对应文件 | `泄露` / `引导` / `no-resolve` / `明文` |
-| 加 / 换 / 删规则集 | `reference/rulesets.md` | `rules/*.list` + 三侧 profile | 规则集名（`AI.list` / `Jinja` / `mrs`） |
-| 排查拦截失效、分流异常 | `reference/pitfalls.md` | — | 现象词（`没有拦截` / `走直连` / `解析`） |
-| 日常操作 / 发版 / 加固清单 | `reference/ops.md` | — | `升号` / `Release` / `加固清单` |
-| 改门禁脚本 / 改判据 | `reference/gates.md` | `skill/tests/` · `skill/scripts/` | `判据` / `退出码` / `新增闸门` |
+| 改 Surge 配置的某个键 | `skill/reference/profiles/surge.md` | `surge/profiles/*.conf` | 键名（`hijack-dns` / `ipv6` / `proxy-test-url`） |
+| 改 Egern 配置 | `skill/reference/profiles/egern.md` | `egern/profiles/*.yaml` | 键名（`forward` / `policy_groups` / `proxy_nameservers`） |
+| 改 mihomo 配置 | `skill/reference/profiles/clash.md` | ⚠️ **`clash/override/my_clash*.js`**（不是 yaml，见底线 2） | 键名（`include-all` / `fake-ip-filter` / `nameserver-policy`） |
+| 动 DNS / 防泄露逻辑 | `skill/reference/dns.md` | 三处对应文件 | `泄露` / `引导` / `no-resolve` / `明文` |
+| 加 / 换 / 删规则集 | `skill/reference/rulesets.md` | `rules/*.list` + 三侧 profile | 规则集名（`AI.list` / `Jinja` / `mrs`） |
+| 排查拦截失效、分流异常 | `skill/reference/pitfalls.md` | — | 现象词（`没有拦截` / `走直连` / `解析`） |
+| 日常操作 / 发版 / 加固清单 | `skill/reference/ops.md` | — | `升号` / `Release` / `加固清单` |
+| 改门禁脚本 / 改判据 | `skill/reference/gates.md` | `skill/tests/` · `skill/scripts/` | `判据` / `退出码` / `新增闸门` |
 
 **每条配置键的权威解释，是它自己在 profile 里的注释**（写满了理由）。
 文档是「跨键的机制与取舍」，不是注释的复述。改键之前先读那个键的注释。
@@ -56,15 +58,18 @@ grep -n "include-all" skill/reference/profiles/clash.md
 ## 2 · 目录结构
 
 ```
+AGENTS.md          AI 入口（唯一真源，仓库根）
+CLAUDE.md · GEMINI.md · .cursorrules · .github/copilot-instructions.md
+                   薄指针 → AGENTS.md（兼容各 AI 工具的约定文件名）
 surge/profiles/    lazy.conf · lazy.min.conf · routing.conf · routing.min.conf
 egern/profiles/    同名 .yaml
-clash/profiles/    同名 .yaml（静态交付形态）
+clash/profiles/    同名 .yaml（静态交付形态，**由 override/*.js 生成**）
 clash/override/    my_clash.js · my_clash_lazy.js（覆写脚本形态，挂订阅上用）
 rules/             AI.list · apple_system.list · emby.list（唯一真源）
 icons/             策略组图标，三内核共用
 skill/
-  SKILL.md         本文件（AI 入口）
-  reference/       8 篇：profiles/{surge,egern,clash}.md · dns · rulesets · pitfalls · ops · gates
+  reference/       8 篇：profiles/{surge,egern,clash}.md · dns.md · rulesets.md
+                   · pitfalls.md · ops.md · gates.md
   scripts/<kern>/  审计 / 生成脚本
   tests/           门禁 + verify_all.py（唯一入口）
 ```
@@ -129,7 +134,7 @@ python skill/tests/verify_all.py --index  # 只列清单（现抓，勿手抄）
 ⚠️ **3 不是绿**（汇总表显示 ⚠️ 且不计入 passed）。
 分界线只有一条：**没读到远端真值 = 3；读到了但不过 = 1。**
 
-判据要改？先读 `reference/gates.md` 的「新增闸门自查清单」——
+判据要改？先读 `skill/reference/gates.md` 的「新增闸门自查清单」——
 **一道从不判红的闸门比没有更糟**，它给虚假的安全感。
 
 ---

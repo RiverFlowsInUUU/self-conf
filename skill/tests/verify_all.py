@@ -3,7 +3,7 @@
 """一键收尾闸门 —— 动线⑤ 的闸门命令合并成 1 条，并行跑、出汇总表。
 
 为什么存在：
-    SKILL.md 动线⑤原来列一堆独立命令，AI 逐条调用 = 多次工具调用、多段输出
+    AGENTS.md 动线原来列一堆独立命令，AI 逐条调用 = 多次工具调用、多段输出
     折进上下文，且任何一次漏跑/跑错参数都算事故。本脚本与 `.github/workflows/ci.yml`
     的步骤**同源**（改 CI 步骤时必须同步这里，反之亦然），并行执行后只输出一张
     「闸门 | 结果 | 耗时」汇总表，红的才展开输出尾部 —— 正常情况一段话看完全部结论。
@@ -536,6 +536,8 @@ def build_gates():
         G.append((name, argv, env or {}))
 
     # ── ① 全局闸门（不按内核分）────────────────────────────────────
+    # AI 入口完整性：保证「换任何 AI 都能维护本仓」（AGENTS.md + 各工具指针）
+    add('AI 入口完整性', [PY, 'skill/tests/check_ai_entry.py'])
     add('secrets 扫描', [PY, 'skill/tests/check_secrets.py'])
     add('未定义名扫描', [PY, 'skill/tests/check_undefined_names.py'])
     add('portability', [PY, 'skill/tests/check_portability.py'])

@@ -17,7 +17,7 @@
 
 </div>
 
-> 🤖 **AI agent 请从这里开始** → [`skill/SKILL.md`](skill/SKILL.md)：动手前的顺序，和三内核各自的判据。
+> 🤖 **AI agent 请从这里开始** → [`AGENTS.md`](AGENTS.md)：动手前的顺序，和三内核各自的判据。
 
 一套配置，覆盖 Surge、Egern、mihomo（Clash Meta）三款内核。
 它们语法不同、机制不同，但在这里**组结构一致、规则次序一致、防泄露底线一致** ——
@@ -71,7 +71,7 @@
 
 ## 📖 按需查阅
 
-操作手册、逐键语义、审计判据与发版规矩都在 [`skill/SKILL.md`](skill/SKILL.md)。
+操作手册、逐键语义、审计判据与发版规矩都在 [`AGENTS.md`](AGENTS.md)。
 
 ---
 
