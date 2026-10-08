@@ -1,7 +1,7 @@
 # AI_Domains.yaml
 # ⚠️ 本文件由 build_rules.py **自动生成**，请勿手工编辑。
 #    真源是同目录的 `AI.list`（共享于三内核），改内容请改真源后重跑：
-#      python skill/scripts/clash/build_rules.py
+#      python tools/run/clash/build_rules.py
 #
 # AI 伴生域 → AI 组
 #
