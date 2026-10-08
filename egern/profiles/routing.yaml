@@ -450,7 +450,7 @@ rules:
 # Egern 虽然有 `disabled: true`，但那条仍然算数组里的一个元素 ⇒ 会比 Surge 多占一位、
 # 把位 ⑲ 错开。Surge 的 `RULE-SET` 根本没有 disabled 字段（只认 no-resolve /
 # extended-matching / update-interval / pre-matching），想不生效只能注释。
-# 两边统一用注释写法，`skill/reference/rulesets.md` §3 的「24 条逐位对齐」才成立。
+# 两边统一用注释写法，`skill/reference/rulesets.md` 的「匹配顺序（Surge / Egern 基准序）」才成立。
 #   # - rule_set:
 #   #     name: Proxy
 #   #     match: https://raw.githubusercontent.com/blackmatrix7/ios_rule_script/master/rule/Surge/Proxy/Proxy.list
@@ -469,7 +469,7 @@ rules:
 
 # 注：本模板 dns.upstreams / proxy_nameservers / bootstrap 均为 IP 字面量，解析器直接以 IP 访问，
 # 因此 rules 中不需要（也没有）钉 DNS 端点域名 / IP 的规则 —— 防 DNS 泄露不依赖它
-# （详见 skill/reference/profiles/egern.md 的「配置框架逐段详解」）。
+# （详见 skill/reference/profiles/egern.md 的「配置框架逐段详解」一节）。
 # ---- 规则段（与 Surge `routing.conf` 同一基准序）----
 - rule_set:
     name: Jinx-CN

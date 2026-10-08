@@ -43,7 +43,7 @@ real_ip_domains:
 #   ① 端点全写 IP 字面量 ⇒ 没有主机名需要解析；
 #   ② forward 有一条 catch-all 兜底，且兜底组不依赖代理也活着 ⇒ 永不触发。
 #      它前面还有三层（白名单 → 两条广告清单 reject），都不新增解析器。
-# 完整推导见 skill/reference/profiles/egern.md。
+# 完整推导见 skill/reference/profiles/egern.md 的「逐段语义」。
 # ============================================================================
 dns:
   # 启动 DNS：唯一无法消除的明文通路，只能约束它。
