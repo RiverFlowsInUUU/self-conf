@@ -749,7 +749,7 @@ for r in c.get("rules") or []:
 
 判据 d 的理由：`nameserver-policy` 是**按顺序**匹配的。一旦 `geosite:private,cn` 先命中，
 国内域名（含广告域）就被送到国内解析器拿真实 IP 了 —— `rcode://success` 永不再看。
-本仓四份 profile 的实际顺序都是广告在前（见 §4.1）。
+本仓四份 profile 的实际顺序都是广告在前（见 `gates.md` 的「12 项判据」§4.1）。
 
 ##### 4.1 现役配置的实际值（`routing.yaml` 为例）
 
@@ -1282,7 +1282,7 @@ on:
 
 #### 12.1 两处必须理解的设计
 
-**① 编码门（ci.yml「Gates」之后那步，按§11 8 行表为 Step 6、按 verify_all 脚注的 5 项清单为第 3 项）**
+**① 编码门（ci.yml「Gates」之后那步，按本文件的「CI 怎么跑」8 行表为 Step 6、按 verify_all 脚注的 5 项清单为第 3 项）**
 
 ```
 中文 Windows 下 print 非 GBK 字符会 UnicodeEncodeError 并以退出码 1 结束，

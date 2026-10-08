@@ -551,6 +551,8 @@ def build_gates():
     # DNS 段跨配置一致性（防泄露标准不因分流粒度而变）
     # —— 文档长期声称有、实际不存在；2026-10-08 用「全新 AI 实测」发现后补上
     add('DNS 段跨配置一致', [PY, 'self-conf-skills/gates/check_dns_parity.py'])
+    # §节号引用的跨话题歧义（合并文档造成的系统性债；实测两轮都撞到）
+    add('§引用无歧义', [PY, 'self-conf-skills/gates/check_section_refs.py'])
     add('secrets 扫描', [PY, 'self-conf-skills/gates/check_secrets.py'])
     add('未定义名扫描', [PY, 'self-conf-skills/gates/check_undefined_names.py'])
     add('portability', [PY, 'self-conf-skills/gates/check_portability.py'])

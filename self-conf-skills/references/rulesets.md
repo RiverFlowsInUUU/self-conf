@@ -46,7 +46,7 @@ python self-conf-skills/gates/verify_all.py
 | `gates/{surge,egern}/audit_ruleset_*.py` | 含 IP 条目的规则集必须带 `no-resolve` |
 | `gates/*/audit_routing_coverage.py` | 应用段「组顺序 ↔ 规则顺序」不许乱序 |
 
-### 自托管 vs 跨仓引用（§8.1 的判据）
+### 自托管 vs 跨仓引用（判据见「本仓的选择：自托管」）
 
 - **自托管**（放 `rules/*.list`）：需跨内核共用、要人工过审、低频更新
 - **跨仓引用**：单内核消费、整份接收、高频更新（上游自己维护）

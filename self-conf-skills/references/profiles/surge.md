@@ -433,7 +433,7 @@ Node-C = https, cdn-relay.example.com, 443, …, underlying-proxy="落地节点�
 
 #### 9 · Fake-IP 与 Real-IP（`always-real-ip` 的机制）
 
-键本身的取值与两类主机名见 §1.8；**本节讲机制**，两处不重复。
+键本身的取值与两类主机名见「加固模板」章的 `always-real-ip` 节；**本节讲机制**，两处不重复。
 
 | 模式 | 对应用返回什么 | 后果 |
 |:-----|:---------------|:-----|

@@ -5,7 +5,7 @@
 
 > 由原手册 03、04、06 三章合并。装完之后怎么改、怎么维护，都在这一篇。
 > mihomo 章是整合后新增 —— 那一侧的目录与生成链跟 Surge / Egern **不是同一套**
-> （配置真源是覆写脚本，不是静态 profile），动手前先读 §5.2 的动线。
+> （配置真源是覆写脚本，不是静态 profile），动手前先读本篇「mihomo 操作」的「改配置的正确顺序」。
 
 ### 三侧共通：动手前先记住五条
 
@@ -17,8 +17,8 @@
 | 1 | **固定名四件**：每侧现役只有 `routing` / `lazy` × 完整版 / `.min` 共四件，订阅地址不随版本改名 | 三侧一致，见 §6.1 |
 | 2 | **`.min` 不手工编辑**：它是"同一份配置去掉注释"，漂了肉眼看不出来 | Surge / Egern → `make_min.py`；mihomo → `build_profiles.py`（见下表） |
 | 3 | **改完跑全套闸门**：`python self-conf-skills/gates/verify_all.py`（全套闸门（含 mihomo 相关）） | §6.2 动线⑤ |
-| 4 | **不提交真实地址 / 凭据 / token** | `check_secrets.py` 两份都跑（跨内核版 + mihomo 版，见 §5.9） |
-| 5 | **改配置去适配判据，不是改判据去适配配置** | §6.8 |
+| 4 | **不提交真实地址 / 凭据 / token** | `check_secrets.py` 两份都跑（跨内核版 + mihomo 版，见「两份 secrets 扫描」） |
+| 5 | **改配置去适配判据，不是改判据去适配配置** | 本篇「判据脚本的纪律」 |
 
 三侧现役件与生成器对照 —— **生成器这一列是本仓最容易记错的地方**：
 
@@ -29,7 +29,7 @@
 | mihomo | `clash/profiles/{routing,lazy}.yaml` + `.min.yaml` | `self-conf-skills/run/clash/build_profiles.py` | **`clash/override/*.js`**（脚本才是真源） |
 
 > ⚠️ mihomo 那一行的"配置真源"是三侧里唯一的例外：Surge / Egern 改**完整版**，
-> mihomo 改**覆写脚本**、再由脚本生成静态 profile（§5.2）。别把两侧的习惯带过去 ——
+> mihomo 改**覆写脚本**、再由脚本生成静态 profile（见本篇「mihomo 操作」）。别把两侧的习惯带过去 ——
 > 手工改 `clash/profiles/*.yaml` 会被下一次重生成整份覆盖（§5.3）。
 >
 > ℹ️ 版本头注**三内核通用**：mihomo 静态 profile 也带 `#! version=` 头注，三内核同号（§5.10）。
@@ -182,7 +182,7 @@ Hong Kong = smart, include-all-proxies=true, include-other-group="Airport", poli
 
 | 下一步 | 去处 |
 |:-------|:-----|
-| 对侧内核的操作章 | 本篇「Egern 操作」章（已并入本篇）·「mihomo 操作」章（§5） |
+| 对侧内核的操作章 | 本篇「Egern 操作」章 ·「mihomo 操作」章（均已并入本篇） |
 | 换、加、删任何规则集之前 | [规则集与素材](./rulesets.md) |
 | 出问题了 | [故障排查 · FAQ](./pitfalls.md) |
 | 把本篇改动搬到 Egern 侧 | [跨内核移植](./rulesets.md) |
@@ -278,7 +278,7 @@ python self-conf-skills/gates/egern/check_egern_dns.py egern/profiles/lazy.yaml 
 
 | 下一步 | 去处 |
 |:-------|:-----|
-| 对侧内核的操作章 | 本篇「Surge 操作」章（已并入本篇）·「mihomo 操作」章（§5） |
+| 对侧内核的操作章 | 本篇「Surge 操作」章 ·「mihomo 操作」章（均已并入本篇） |
 | 换、加、删任何规则集之前 | [规则集与素材](./rulesets.md) |
 | 出问题了 | [故障排查 · FAQ](./pitfalls.md) |
 | 把本篇改动搬到 Surge 侧 | [跨内核移植](./rulesets.md) |
@@ -1353,7 +1353,7 @@ nslookup -type=A whoami.akamai.net 192.168.2.168    # 若返回 198.18.x 说明�
 > 三侧的**归并方式一致**（按「谁触发了一次明文查询」分类），但**通道清单不同**：
 > mihomo 侧多一条 IPv6 面，且引导链的键名与语义完全不同。
 
-<!-- Egern 侧同 Surge 侧，见上方 §0 —— 唯一差异：mihomo 侧多一类 fake-ip 假象（见下） -->
+<!-- Egern 侧同 Surge 侧（见上方「先分清三类泄露」）—— 唯一差异：mihomo 侧多一类 fake-ip 假象（见下） -->
 
 #### 2 · mihomo 的 DNS 通路图
 
@@ -1428,7 +1428,7 @@ tun:
 
 #### 3.2 抓包命令
 
-同 Surge 侧 §1.2（`tcpdump` 命令逐字相同）。
+同 Surge 侧的「抓包命令」（`tcpdump` 逐字相同）。
 
 #### 3.3 读结果
 
@@ -1904,7 +1904,7 @@ if dns.get("ipv6") is not False:
 9. 实测：国内直连；游戏机 NAT 正常；IPv6 侧不再露真实地址
 ```
 
-⚠️ 第 8 步的解读见 §1 —— **leak test 显示节点出口城市不是泄露**；
+⚠️ 第 8 步的解读见「leak test 结果的解读」—— **显示节点出口城市不是泄露**；
 显示 `198.18.x.x` 也不是泄露（那是 fake-ip，说明被接住了）。
 
 #### 9 · 结论：五类必须全堵
@@ -1968,7 +1968,7 @@ if dns.get("ipv6") is not False:
 | 企业内网 DNS（`192.168.x.1:53`）| 那是本地网络的一部分，不是"泄露到运营商" |
 | `dns-hijack` 没穷举全部解析器 | `:53` 地址空间无限，列不全。用 `any:53` 才是正解 |
 | 自建 DNS 服务器上的明文查询 | 那是你自己控制的链路，不是第三方 |
-| 见到 `198.18.x.x` | **不是泄露** —— 是 fake-ip，说明查询被 mihomo 接住了（§1）|
+| 见到 `198.18.x.x` | **不是泄露** —— 是 fake-ip，说明查询被 mihomo 接住了 |
 
 > 📌 判断标准始终是同一条：**这条明文通路是否"必然会被走到"？**
 > 一次性、可控、且能说清收益的通路，不算必须消除的泄露面。
