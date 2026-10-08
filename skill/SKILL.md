@@ -10,13 +10,18 @@ description: Surge / Egern / mihomo（Clash Meta）三内核代理配置模板�
 
 ---
 
-## 0 · 三条底线
+## 0 · 四条底线
 
 1. **改配置 = 改两份**。每份 profile 有 `.conf`/`.yaml` 与 `.min` 两份形态，**只差注释、
    内容必须逐字相同**。改完整版后跑 `make_min.py --apply` 同步（漂移由 `check_min_pair.py` 兜底）。
-2. **`rules/*.yaml` 是生成物，不手改**。真源是 `rules/*.list`，跑
+2. **clash 的 profile 是生成物，改 JS 不改 YAML**。`clash/profiles/*.yaml` 由
+   `clash/override/my_clash*.js` 生成 ⇒ **改配置要改那份 JS**，然后
+   `python skill/scripts/clash/build_profiles.py` 重生成（`--check` 在门禁里，过期即判负）。
+   ⚠️ 直接改 YAML 会在下次生成时被覆盖。
+   （Surge / Egern 的 profile **不是**生成物 —— 那两侧直接改 `.conf` / `.yaml`。）
+3. **`rules/*.yaml` 是生成物，不手改**。真源是 `rules/*.list`，跑
    `python skill/scripts/clash/build_rules.py` 重生成。
-3. **改完必须跑门禁**：`python skill/tests/verify_all.py` —— 唯一入口，与 CI 同源。
+4. **改完必须跑门禁**：`python skill/tests/verify_all.py` —— 唯一入口，与 CI 同源。
    **"我改对了"不算做完，门禁绿了才算。**
 
 ---
@@ -32,16 +37,16 @@ grep -n "include-all" skill/reference/profiles/clash.md
 # ② 只读那一节：从命中行往上找最近的标题，往下读到下一个同级标题
 ```
 
-| 你要做的事 | 读哪份 | 常见 grep 关键词 |
-|:--|:--|:--|
-| 改 Surge 配置的某个键 | `reference/profiles/surge.md` | 键名（`hijack-dns` / `ipv6` / `proxy-test-url`） |
-| 改 Egern 配置 | `reference/profiles/egern.md` | 键名（`forward` / `policy_groups` / `proxy_nameservers`） |
-| 改 mihomo 配置 / 覆写脚本 | `reference/profiles/clash.md` | 键名（`include-all` / `fake-ip-filter` / `nameserver-policy`） |
-| 动 DNS / 防泄露逻辑 | `reference/dns.md` | `泄露` / `引导` / `no-resolve` / `明文` |
-| 加 / 换 / 删规则集 | `reference/rulesets.md` | 规则集名（`AI.list` / `Jinja` / `mrs`） |
-| 排查拦截失效、分流异常 | `reference/pitfalls.md` | 现象词（`没有拦截` / `走直连` / `解析`） |
-| 日常操作 / 发版 / 加固清单 | `reference/ops.md` | `升号` / `Release` / `加固清单` |
-| 改门禁脚本 / 改判据 | `reference/gates.md` | `判据` / `退出码` / `新增闸门` |
+| 你要做的事 | 读哪份 | 改哪个文件 | 常见 grep 关键词 |
+|:--|:--|:--|:--|
+| 改 Surge 配置的某个键 | `reference/profiles/surge.md` | `surge/profiles/*.conf` | 键名（`hijack-dns` / `ipv6` / `proxy-test-url`） |
+| 改 Egern 配置 | `reference/profiles/egern.md` | `egern/profiles/*.yaml` | 键名（`forward` / `policy_groups` / `proxy_nameservers`） |
+| 改 mihomo 配置 | `reference/profiles/clash.md` | ⚠️ **`clash/override/my_clash*.js`**（不是 yaml，见底线 2） | 键名（`include-all` / `fake-ip-filter` / `nameserver-policy`） |
+| 动 DNS / 防泄露逻辑 | `reference/dns.md` | 三处对应文件 | `泄露` / `引导` / `no-resolve` / `明文` |
+| 加 / 换 / 删规则集 | `reference/rulesets.md` | `rules/*.list` + 三侧 profile | 规则集名（`AI.list` / `Jinja` / `mrs`） |
+| 排查拦截失效、分流异常 | `reference/pitfalls.md` | — | 现象词（`没有拦截` / `走直连` / `解析`） |
+| 日常操作 / 发版 / 加固清单 | `reference/ops.md` | — | `升号` / `Release` / `加固清单` |
+| 改门禁脚本 / 改判据 | `reference/gates.md` | `skill/tests/` · `skill/scripts/` | `判据` / `退出码` / `新增闸门` |
 
 **每条配置键的权威解释，是它自己在 profile 里的注释**（写满了理由）。
 文档是「跨键的机制与取舍」，不是注释的复述。改键之前先读那个键的注释。
@@ -132,6 +137,7 @@ python skill/tests/verify_all.py --index  # 只列清单（现抓，勿手抄）
 ## 7 · 红线
 
 - ❌ 不手工编辑 `rules/*.yaml`（生成物，改真源 `.list`）
+- ❌ 不手工编辑 `clash/profiles/*.yaml`（生成物，改 `override/my_clash*.js`）
 - ❌ 不让 `.min` 与完整版漂移（改一份必须同步另一份）
 - ❌ 不为让门禁变绿而改判据 —— 改判据需要先说明「原判据错在哪」
 - ❌ 不把「文档里写的数字」当权威 —— 组数/条数一律现抓（`verify_all --index` / 脚本输出）
