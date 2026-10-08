@@ -5,10 +5,11 @@ Surge / Egern / mihomo（Clash Meta）**三内核代理配置模板**。
 
 > 本文件是各 AI 工具入口的**唯一真源**。`CLAUDE.md` · `GEMINI.md` · `.cursorrules` ·
 > `.github/copilot-instructions.md` 是薄指针，内容以本文件为准。
+> ⚠️ `clash/` 有独立的生成链，**在那里工作时先读 [`clash/AGENTS.md`](./clash/AGENTS.md)**（就近生效）。
 
 ---
 
-## 命令（先看这个）
+## 命令
 
 ```bash
 python tools/gates/verify_all.py          # 门禁唯一入口（与 CI 同源）。绿了才算改完
@@ -22,7 +23,7 @@ python tools/run/repo_state.py                    # 一屏现状：版本 / Rele
 ```
 
 退出码：**0 = 全过 · 1 = 判负 · 2 = 环境不达标（先修环境，别读判据）· 3 = 未验证**。
-⚠️ **3 不是绿**（汇总表显示 ⚠️，不计入 passed）。**没读到远端真值 = 3；读到了但不过 = 1。**
+⚠️ **3 不是绿**（显示 ⚠️，不计入 passed）。**没读到远端真值 = 3；读到了但不过 = 1。**
 
 ---
 
@@ -38,24 +39,22 @@ python tools/run/repo_state.py                    # 一屏现状：版本 / Rele
 - 结构性调整（先补判据，不靠"再跑一遍"）
 
 **🚫 从不**
-- 手工编辑 `rules/*.yaml`（生成物 ⇒ 改真源 `rules/*.list`）
-- 手工编辑 `clash/profiles/*.yaml`（生成物 ⇒ 改 `clash/override/my_clash*.js`）
-- 手工编辑 `clash/profiles/*.min.*`（生成物 ⇒ 跑 `make_min.py --apply`）
+- 手工编辑生成物：`rules/*.yaml`（改 `rules/*.list`）、
+  `clash/profiles/*.yaml`（改 `clash/override/my_clash*.js`）、`*.min.*`（跑 `make_min.py --apply`）
 - 为了「让门禁变绿」而改判据
 - 把文档里写的数字当权威（组数/条数一律现抓）
-- **把三内核「对齐」** —— 它们机制不同（见下），看起来的不一致常是刻意的
+- **把三内核「对齐」** —— 机制不同，看起来的不一致常是刻意的
 
 ---
 
-## 改动去哪（**agent 推不出来的部分**）
+## 改动去哪（**推不出来的部分**）
 
 | 改什么 | 改哪个文件 | ⚠️ 易错 |
 |:--|:--|:--|
 | Surge 配置 | `surge/profiles/*.conf` | **不是**生成物，直接改 |
 | Egern 配置 | `egern/profiles/*.yaml` | **不是**生成物，直接改 |
-| mihomo 配置 | `clash/override/my_clash*.js` | ⚠️ **是生成物** ⇒ 改 JS 再 build_profiles |
+| mihomo 配置 | `clash/override/my_clash*.js` | ⚠️ **是**生成物 ⇒ 改 JS 再 build |
 | 规则集内容 | `rules/*.list` | ⚠️ `.yaml` 是生成的 |
-| 知识文档 | `tools/reference/` | 8 篇，每篇 45~135 KB |
 
 **三内核机制差异**（看起来不一致 ≠ 漂移）：地区组 Surge/Egern 用 `smart`、mihomo 用
 `url-test`；订阅源前者是 external 组、后者是 `proxy-provider`；倍率分档 mihomo 的
@@ -70,27 +69,14 @@ python tools/run/repo_state.py                    # 一屏现状：版本 / Rele
 用 `grep` 定位到节，通常只需读 2~5 KB：
 
 ```bash
-grep -n "include-all" tools/reference/profiles/clash.md   # ① 拿行号与节标题
-# ② 只读那一节（从命中行往上找最近标题，往下读到下一个同级标题）
+grep -n "include-all" tools/reference/profiles/clash.md   # 拿行号与节标题，只读那一节
 ```
-
-| 问题 | 文件 |
-|:--|:--|
-| 改某个配置键的语义与边界 | `reference/profiles/{surge,egern,clash}.md` |
-| DNS / 防泄露原理与三内核落地 | `reference/dns.md` |
-| 规则集选型、权重、跨内核差异 | `reference/rulesets.md` |
-| 排查拦截失效 / 分流异常 | `reference/pitfalls.md` |
-| 日常操作 / 发版 / 加固清单 | `reference/ops.md` |
-| 门禁判据与纪律 | `reference/gates.md` |
 
 ---
 
 ## 一件事：本地全绿 ≠ 线上能跑
 
-路径探测、编码、网络这类**环境相关**的东西，必须让 CI 跑一遍才算数。
-历史上栽过：Linux CI 上路径探测算错目录（本地全过）、中文 Windows 管道 GBK
-解码崩溃（退出码 1 被读成"判负"，而 1 恰恰是判负码）。
-⇒ 改动涉及**路径 / 编码 / 联网**时，**等 CI 结果**，别只看本地。
+改动涉及**路径 / 编码 / 联网**时，**等 CI 结果**，别只看本地 —— 这三类历史上都栽过
+（Linux 上路径探测算错目录；中文 Windows 管道 GBK 崩成退出码 1，而 1 恰是判负码）。
 
-同理：**闸门"跑了没红"时，先怀疑自己的注错没落在判据的扫描面上**，再怀疑判据失灵
-（详见 `reference/gates.md` 的注错三铁律）。
+同理：闸门「跑了没红」时，**先怀疑自己的注错没落在判据的扫描面上**，再怀疑判据失灵。

@@ -16,3 +16,5 @@
 **🚫 从不**：手工编辑生成物 —— `rules/*.yaml`（改真源 `rules/*.list`）、
 `clash/profiles/*.yaml`（改 `clash/override/my_clash*.js`）；
 不要为「让门禁变绿」而改判据；不要把三内核「对齐」（机制不同，差异常是刻意的）。
+
+📌 在 `clash/` 下工作时，先读就近的 `clash/AGENTS.md`（该目录有独立生成链）。

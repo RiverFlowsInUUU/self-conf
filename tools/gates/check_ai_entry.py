@@ -33,6 +33,9 @@ HERE = os.path.dirname(os.path.abspath(__file__))
 ROOT = os.path.dirname(os.path.dirname(HERE))
 
 MAIN = "AGENTS.md"
+# 嵌套 AGENTS.md（就近生效）。加它的条件：该目录有**独立的工具链或约定**，
+# 且 agent 在此处会反复犯同一个错。不重复根文件的内容。
+NESTED = ["clash/AGENTS.md"]
 # 各 AI 工具的约定入口（都应有，且都是薄指针）
 POINTERS = ["CLAUDE.md", "GEMINI.md", ".cursorrules",
             ".github/copilot-instructions.md"]
@@ -114,7 +117,23 @@ def main():
         bad.append("%s 缺这些核心域：%s（GitHub 2500 仓分析：缺域是第二常见失败模式）"
                    % (MAIN, " / ".join(miss)))
 
-    # ⑥ 命令要在**前半部分**（研究：把可执行命令放前面，agent 会频繁引用）
+    # ⑥ 嵌套 AGENTS.md：体积纪律同样适用，且不得重复根文件
+    for nf in NESTED:
+        np_ = os.path.join(ROOT, nf.replace("/", os.sep))
+        if not os.path.isfile(np_):
+            bad.append("缺嵌套 %s —— 该目录有独立生成链，agent 会改错文件" % nf)
+            continue
+        nt = io.open(np_, encoding="utf-8").read()
+        nl = len(nt.splitlines())
+        if nl > MAIN_MAX_LINES:
+            bad.append("%s 有 %d 行 > %d 行上限" % (nf, nl, MAIN_MAX_LINES))
+        # 不得整段重复根文件（抽查根文件里最长的句子）
+        for cand in ("退出码：**0 = 全过", "改配置 = 改两份"):
+            if cand in nt:
+                bad.append("%s 重复了根 AGENTS.md 的内容（`%s`）——"
+                           "嵌套文件只写本目录特有、且推不出来的" % (nf, cand[:14]))
+
+    # ⑦ 命令要在**前半部分**（研究：把可执行命令放前面，agent 会频繁引用）
     _lines = main_txt.splitlines()
     head = chr(10).join(_lines[:len(_lines) // 2])
     if "verify_all" not in head:
@@ -129,7 +148,13 @@ def main():
         print("-" * 78)
         print("入口不完整 %d 处" % len(bad))
         return 1
-    print("  OK %s（%d 字节）· 指针 4 个，均薄且含关键红线" % (MAIN, main_size))
+    print("  OK %s（%d 字节 / %d 行）· 指针 4 个，均薄且含关键红线"
+          % (MAIN, main_size, len(main_txt.splitlines())))
+    for nf in NESTED:
+        np_ = os.path.join(ROOT, nf.replace('/', os.sep))
+        if os.path.isfile(np_):
+            print("  OK 嵌套 %s（%d 行）"
+                  % (nf, len(io.open(np_, encoding='utf-8').read().splitlines())))
     print("  OK 任一 AI 工具（Codex/Cursor/Copilot/Claude/Gemini）都能找到入口")
     print("-" * 78)
     return 0
