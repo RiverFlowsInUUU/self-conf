@@ -570,21 +570,38 @@ def build_gates():
     # ── ② 三内核审计（每内核按现役文件各一道；脚本支持多文件）────────
     # 每项 = (闸门名, 脚本相对路径模板, 参数模板)
     #   {k}=内核  {files}=该内核全部现役 profile
+    # ⚠️ 每个内核**未必都有**每一项 —— 缺的必须**显式登记理由**，不许静默跳过。
+    #    用 None 表示「该内核设计上就没有这一项」。
     AUDITS = [
-        ('DNS 审计',        'self-conf-skills/run/{k}/{dns}',            ['{files}']),
-        ('分流覆盖',        'self-conf-skills/run/{k}/audit_routing_coverage.py', ['{files}']),
-        ('地区组判别力',    'self-conf-skills/run/{k}/audit_region_filters.py',   ['{routing}']),
-        ('规则集刷新周期',  'self-conf-skills/run/{k}/audit_ruleset_refresh.py',  ['--strict', '{routing}']),
+        # ⚠️ DNS 审计器在 gates/（它们是判据，不是工具）—— 见「目录重组」的说明
+        ('DNS 审计',        'self-conf-skills/gates/{k}/{dns}',           ['{files}'], None),
+        ('分流覆盖',        'self-conf-skills/run/{k}/audit_routing_coverage.py', ['{files}'], None),
+        ('地区组判别力',    'self-conf-skills/run/{k}/audit_region_filters.py',   ['{routing}'], None),
+        # clash 无独立脚本：刷新周期写在 rule-providers 的 interval 字段，
+        # 由 check_structure.py / check_ruleset_doc_sync.py 间接覆盖。
+        ('规则集刷新周期',  'self-conf-skills/run/{k}/audit_ruleset_refresh.py',  ['--strict', '{routing}'],
+         {'clash': '该内核的刷新周期写在 rule-providers 的 `interval` 字段，'
+                   '由 clash 结构与规则集来源判据覆盖，无需独立脚本'}),
     ]
     DNS_SCRIPT = {'surge': 'check_surge_dns.py', 'egern': 'check_egern_dns.py',
                   'clash': 'check_clash_dns.py'}
     for kern in KERNS:
         files = ALL_PROFILES[kern]          # list：每个文件是独立的 argv 元素
         routing = ROUTING[kern]
-        for label, tpl, args in AUDITS:
+        for label, tpl, args, absent in AUDITS:
+            if absent and kern in absent:
+                continue          # 显式登记「该内核设计上无此项」
             path = tpl.format(k=kern, dns=DNS_SCRIPT[kern])
+            # ⚠️ 2026-10-08 修：原为 `if not isfile: continue` —— **静默跳过**。
+            #    目录重组时 DNS 审计器的路径模板没更新（run/ → gates/），
+            #    于是三道 DNS 审计**静默消失**，而汇总表看不出少了什么。
+            #    缺失必须报错，不能静默（判据列表本身就是被验证的对象）。
             if not os.path.isfile(os.path.join(ROOT, path)):
-                continue
+                raise SystemExit(
+                    '❌ 闸门「%s·%s」的脚本不存在：%s' % (label, kern, path)
+                    + chr(10)
+                    + '   —— 目录重组后路径模板没更新？**不许静默跳过**'
+                      '（少一道闸门必须显式报出）')
             a = []
             for x in args:
                 if x == '{files}':
