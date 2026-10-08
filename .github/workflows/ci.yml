@@ -43,6 +43,17 @@ jobs:
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 
+      - name: Undefined names (F821)
+        # ⚠️ 第十五轮新增（2026-10-08）。为什么值得单独一个 step：
+        #    本仓两次栽在**同一类** bug —— `check_script_sync.py` 引用未定义的 `diff`、
+        #    `check_badges.py` 引用未定义的 `NL`。两次都只在「异常/判负路径」上才炸：
+        #    现役配置恒好 ⇒ 永不执行 ⇒ 本地与 CI 全绿，一旦真出事就给不出诊断，
+        #    还会把「环境不达标(2)」变成「判负(1)」—— 环境坏了被读成判据判负。
+        #    它也已进 verify_all（同源），此处**再跑一遍**是为了在 CI 日志里
+        #    有一行**独立的、一眼可见的**结果，不必翻 48 道的汇总。
+        #    刻意不用 pyflakes：外部依赖 + 29 条噪声里只 1 条真 bug，信噪比太低。
+        run: python skill/tests/check_undefined_names.py
+
       - name: Encoding gate (cp936)
         # 中文 Windows 下 print 非 GBK 字符会 UnicodeEncodeError 并以退出码 1 结束，
         # 而 1 恰是判负码 ⇒ 崩溃会被读成「判负」，整轮看着对其实判据没跑。
@@ -57,7 +68,7 @@ jobs:
         continue-on-error: ${{ github.event_name == 'pull_request' }}
 
       - name: Encrypted DNS endpoints reachability (Egern)
-        # 需联网实测每个加密 DNS 端点 ⇒ 不进 47 道（抖动会假红），放在这里兜底。
+        # 需联网实测每个加密 DNS 端点 ⇒ 不进 48 道（抖动会假红），放在这里兜底。
         # 判负语义：脚本末尾会报「失效端点：N / 总数」。
         run: python skill/scripts/egern/probe_dns_endpoints.py egern/profiles/routing.yaml
         continue-on-error: ${{ github.event_name == 'pull_request' }}

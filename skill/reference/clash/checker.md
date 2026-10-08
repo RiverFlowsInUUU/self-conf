@@ -12,7 +12,7 @@
 | 1 | 环境要求 | 8 | 生成物新鲜度（`build_rules.py`） |
 | 2 | 命令 | 9 | 判别力：怎么证明门禁真的会判负 |
 | 3 | 退出码约定 | 10 | 已知豁免项（豁免 ≠ 通过） |
-| 4 | 结构判据（`clash/check_structure.py`） | 11 | 47 道总览表 |
+| 4 | 结构判据（`clash/check_structure.py`） | 11 | 48 道总览表 |
 | 5 | 两形态对拍（`clash/check_min_pair.py`） | 12 | CI 怎么跑 |
 | 6 | 脚本 ↔ 静态对拍（`clash/check_script_sync.py`） | 13 | 判据演进史 |
 | 7 | 远程集可达性（`clash/check_remote_urls.py`） | 14 | 全绿 ≠ 可用 · FAQ · 维护者须知 |
@@ -69,7 +69,7 @@ def _default_root():
 ## 2 · 命令
 
 ```bash
-# ── 一键总入口（47 道并行，含三内核）────────────────────────────
+# ── 一键总入口（48 道并行，含三内核）────────────────────────────
 python skill/tests/verify_all.py                  # 期望 exit 0
 python skill/tests/verify_all.py -v               # 无论红绿都打印每个闸门输出尾部
 python skill/tests/verify_all.py --index          # 只读列闸门清单（不跑、不判负、exit 0）
@@ -97,7 +97,7 @@ python skill/tests/check_selfcontained.py         # 整合仓自洽性
 
 | 脚本 | 扫描面 | 判据 |
 |:-----|:-------|:-----|
-| `skill/tests/check_secrets.py`（跨内核，进 47 道）| 全仓 walk 到的 `.conf` / `.yaml` / `.yml`，**跳过 `icons/`** | 禁串 `tange365.com` / `wangxinyu`；IPv4 白名单；`YAML_CRED_KEYS` 值必须占位 |
+| `skill/tests/check_secrets.py`（跨内核，进 48 道）| 全仓 walk 到的 `.conf` / `.yaml` / `.yml`，**跳过 `icons/`** | 禁串 `tange365.com` / `wangxinyu`；IPv4 白名单；`YAML_CRED_KEYS` 值必须占位 |
 | `skill/tests/clash/check_secrets.py`（mihomo 版）| 全仓 walk 到的 `.js` / `.yaml` / `.yml` / `.md` / `.conf` / `.list` / `.txt` / `.json`，**跳过 `icons/` 与 `rules/` 的主机扫描** | 凭据字段非占位即报；IPv4 白名单；主机白名单；私钥头无条件报 |
 
 两者互不可替代：mihomo 版能扫 `.js`（脚本里也有订阅 URL），跨内核版带禁串黑名单
@@ -648,7 +648,7 @@ python skill/tests/clash/check_script_sync.py "$SB"   # 期望 0
 | `check_remote_urls.py` | ⚠️ 联网依赖，未逐个固定 | ❌ 无 |
 | `check_region_filters.py`（跨内核）| ✅ | ✅ **有**（唯一定期跑判负 fixture 的闸门）|
 
-> 📌 跨内核的 `check_region_filters.py` 是**唯一**把「判负 fixture」做进 47 道的闸门，
+> 📌 跨内核的 `check_region_filters.py` 是**唯一**把「判负 fixture」做进 48 道的闸门，
 > 且它对每个判负用例断言**退出码 + 输出标记**两条。mihomo 侧**还没有对应的自动化回归** ——
 > 上表前五行的"已实测"是**本次文档编写时人工跑出来的**，不是常驻 CI 的保证。
 >
@@ -706,11 +706,11 @@ _skip_v7 = {'SKIP_V7': '1'}
 3. **豁免项要么进 `build_gates()` 带 SKIP 标记、要么显式注释掉**。
    绝不允许"跑一遍然后无视结果" —— 那是静默假绿。
 
-## 11 · 47 道总览表
+## 11 · 48 道总览表
 
 > ⚠️ **关于道数（含近重复，对外说数量时心里有数）**：
-> 47 道里有 2 组近重复 —— #9 与 #42（分流覆盖·mihomo|clash 分流覆盖）；#11 与 #46（规则集内容·mihomo|clash 规则集内容）。**刻意保留**：双档覆盖能让分流版与
-> 懒人版都查到；合并会让其中一档漏检。故这个数**含重复劳动**，不是 47 种独立检查。
+> 48 道里有 2 组近重复 —— #9 与 #43（分流覆盖·mihomo|clash 分流覆盖）；#11 与 #47（规则集内容·mihomo|clash 规则集内容）。**刻意保留**：双档覆盖能让分流版与
+> 懒人版都查到；合并会让其中一档漏检。故这个数**含重复劳动**，不是 48 种独立检查。
 >
 > ✅ **本表由 `python skill/scripts/gen_gate_table.py --apply` 生成**，
 > 真源是 `verify_all.py --index`，**不要手抄**。
@@ -743,32 +743,33 @@ _skip_v7 = {'SKIP_V7': '1'}
 | 19 | 自托管清单·裸IP检测(emby) | `skill/scripts/egern/profile_ruleset.py --offline rules/emby.list` |
 | 20 | 闸门总览表同步 | `skill/scripts/gen_gate_table.py` |
 | 21 | 闸门清单对账 | `skill/tests/check_gate_manifest.py` |
-| 22 | CHANGELOG 漂移 | `skill/tests/check_changelog_drift.py` |
-| 23 | Release 断言  [需 GITHUB_TOKEN] | `skill/tests/check_releases.py` |
-| 24 | clash secrets 扫描 | `skill/tests/clash/check_secrets.py` |
-| 25 | portability | `skill/tests/check_portability.py` |
-| 26 | min-pair 一致 | `skill/tests/check_min_pair.py` |
-| 27 | README 徽章 | `skill/tests/check_badges.py` |
-| 28 | markdown 链接 | `skill/tests/check_links.py .` |
-| 29 | Surge DNS lazy | `skill/scripts/surge/check_surge_dns.py surge/profiles/lazy.conf` |
-| 30 | Surge DNS routing | `skill/scripts/surge/check_surge_dns.py surge/profiles/routing.conf` |
-| 31 | Egern DNS 双份 | `skill/scripts/egern/check_egern_dns.py egern/profiles/lazy.yaml egern/profiles/routing.yaml` |
-| 32 | mihomo DNS 双份 | `skill/scripts/clash/check_clash_dns.py clash/profiles/lazy.yaml clash/profiles/routing.yaml` |
-| 33 | .min 漂移 | `skill/tests/make_min.py --check` |
-| 34 | 地区组判别力 | `skill/tests/check_region_filters.py` |
-| 35 | profile 结构 | `skill/tests/check_structure.py` |
-| 36 | 文档 AUTO 同步 | `skill/tests/sync_docs.py --check` |
-| 37 | clash 结构 | `skill/tests/clash/check_structure.py` |
-| 38 | clash min 版一致 | `skill/tests/clash/check_min_pair.py` |
-| 39 | clash 脚本/静态对拍 | `skill/tests/clash/check_script_sync.py` |
-| 40 | clash 规则集生成物 | `skill/scripts/clash/build_rules.py --check` |
-| 41 | clash 头注数字新鲜度 | `skill/tests/clash/check_header_numbers.py` |
-| 42 | clash 分流覆盖 | `skill/scripts/clash/audit_routing_coverage.py clash/profiles/routing.yaml clash/profiles/lazy.yaml` |
-| 43 | 自洽性 | `skill/tests/check_selfcontained.py` |
-| 44 | smart 权重口径 | `skill/tests/check_priority_weight.py` |
-| 45 | 版本头注 | `skill/tests/clash/check_version_header.py` |
-| 46 | clash 规则集内容 | `skill/scripts/clash/audit_ruleset_content.py clash/profiles/routing.yaml clash/profiles/lazy.yaml` |
-| 47 | clash 静态 profile 新鲜度 | `skill/scripts/clash/build_profiles.py --check` |
+| 22 | 未定义名扫描 | `skill/tests/check_undefined_names.py` |
+| 23 | CHANGELOG 漂移 | `skill/tests/check_changelog_drift.py` |
+| 24 | Release 断言  [需 GITHUB_TOKEN] | `skill/tests/check_releases.py` |
+| 25 | clash secrets 扫描 | `skill/tests/clash/check_secrets.py` |
+| 26 | portability | `skill/tests/check_portability.py` |
+| 27 | min-pair 一致 | `skill/tests/check_min_pair.py` |
+| 28 | README 徽章 | `skill/tests/check_badges.py` |
+| 29 | markdown 链接 | `skill/tests/check_links.py .` |
+| 30 | Surge DNS lazy | `skill/scripts/surge/check_surge_dns.py surge/profiles/lazy.conf` |
+| 31 | Surge DNS routing | `skill/scripts/surge/check_surge_dns.py surge/profiles/routing.conf` |
+| 32 | Egern DNS 双份 | `skill/scripts/egern/check_egern_dns.py egern/profiles/lazy.yaml egern/profiles/routing.yaml` |
+| 33 | mihomo DNS 双份 | `skill/scripts/clash/check_clash_dns.py clash/profiles/lazy.yaml clash/profiles/routing.yaml` |
+| 34 | .min 漂移 | `skill/tests/make_min.py --check` |
+| 35 | 地区组判别力 | `skill/tests/check_region_filters.py` |
+| 36 | profile 结构 | `skill/tests/check_structure.py` |
+| 37 | 文档 AUTO 同步 | `skill/tests/sync_docs.py --check` |
+| 38 | clash 结构 | `skill/tests/clash/check_structure.py` |
+| 39 | clash min 版一致 | `skill/tests/clash/check_min_pair.py` |
+| 40 | clash 脚本/静态对拍 | `skill/tests/clash/check_script_sync.py` |
+| 41 | clash 规则集生成物 | `skill/scripts/clash/build_rules.py --check` |
+| 42 | clash 头注数字新鲜度 | `skill/tests/clash/check_header_numbers.py` |
+| 43 | clash 分流覆盖 | `skill/scripts/clash/audit_routing_coverage.py clash/profiles/routing.yaml clash/profiles/lazy.yaml` |
+| 44 | 自洽性 | `skill/tests/check_selfcontained.py` |
+| 45 | smart 权重口径 | `skill/tests/check_priority_weight.py` |
+| 46 | 版本头注 | `skill/tests/clash/check_version_header.py` |
+| 47 | clash 规则集内容 | `skill/scripts/clash/audit_ruleset_content.py clash/profiles/routing.yaml clash/profiles/lazy.yaml` |
+| 48 | clash 静态 profile 新鲜度 | `skill/scripts/clash/build_profiles.py --check` |
 
 另有**不进闸门**的 4 项 —— 下表由 `check_gate_manifest.KNOWN_SEPARATE` **直接生成**，
 > 与它不会分叉（第九轮问题 1：此前硬编码且谎称对账，两边曾不一致）：
@@ -777,7 +778,7 @@ _skip_v7 = {'SKIP_V7': '1'}
 |:---|:-----|:-----------|
 | `check_real_kernel.py` | 手动（不在任何闸门） | 需真内核 + 真网络，仅本地人工跑（ops.md §6.8.1） |
 | `check_remote_urls.py` | CI 独立 step | CI 独立 step（慢，需联网探测数十个 URL） |
-| `probe_dns_endpoints.py` | CI 独立 step | CI 独立 step —— 需联网实测加密 DNS 端点，有判负语义但抖动会假红，故不进 47 道 |
+| `probe_dns_endpoints.py` | CI 独立 step | CI 独立 step —— 需联网实测加密 DNS 端点，有判负语义但抖动会假红，故不进 48 道 |
 | `verify_all.py` | CI 独立 step（总入口本身） | 它自己就是总入口，不是被调的判据 |
 ⚠️ `min-pair 一致` 一道含 V7「一天至多一版」两条断言；本仓以 `SKIP_V7=1` 豁免
 ⇒ 该两条记为 **未验证**（⚠️）而非通过，本道以 exit 3 结束，上层显示 ⚠️。
@@ -873,7 +874,7 @@ push 时严格，PR 时网络抖动不阻塞。⚠️ 这是**有意的非对称
 > **与 CI 同源是铁律** —— 本地绿但 CI 红属于竞态 / 环境差，不允许有"第三套判据"。
 
 ✅ **挂账已消（2026-10-07）**：新增 `skill/tests/check_gate_manifest.py` 做机器对账，
-**已进 47 道**（`闸门清单对账`）。它判四件事（前三件 + 第四轮新增的孤儿检查）：
+**已进 48 道**（`闸门清单对账`）。它判四件事（前三件 + 第四轮新增的孤儿检查）：
 ① `ci.yml` 里被调用的判据必须在 `verify_all` 清单里（豁免项逐条点名）；
 ② `verify_all` 列出的每一道，文件必须真实存在；
 ③ `skill/tests/` 下既没进闸门、也没登记在 `ops.md` §6.8.1 的脚本 ⇒ 报「永远不会跑」。
@@ -908,7 +909,8 @@ CI 偶发 3（共享 runner IP 被限流）→ 重跑即可。
 | v1 | 无远程可达性门禁 | 本仓当时没有 CI |
 | v2 | 加 `check_remote_urls.py` + CI `schedule` 每周任务 | **Jinx 上游改名致死链，懒人版挂了死链没人察觉** |
 | v1 | `check_script_sync.py` 引用未定义的 `diff` | 初版即存在 |
-| v2 | （未修）| 现役配置恒一致 ⇒ `diff` 从未被调用 ⇒ bug 潜伏；**判负时才 `NameError`**（2026-10-07 文档编写实测发现，见 §6.2）|
+| v2 | ✅ **已修**（commit `7d7250c`）：补上 `diff()` 定义（本文件第 94 行）+ `--self-test` 自检 | 现役配置恒一致 ⇒ `diff` 从未被调用 ⇒ bug 潜伏；**判负时才 `NameError`**（2026-10-07 文档编写实测发现，见 §6.2）|
+| v3 | ⚠️ 第十五轮：本表此前仍写「（未修）」，而 §6.2 正文与代码都已是「已修」 —— **同一事实两处相反**。已对齐为「已修」 | 文档滞后本身就是本仓最忌讳的「文档在为不存在的事实背书」，零信任自查时被发现 |
 | v1 | `198.18.0.1` 被跨内核 secrets 扫描判为真实 IP | 那是 mihomo 的 fake-ip 段（RFC 6815），Surge/Egern 侧不认识 |
 | v2 | 给 `DOC_NETS` 加 `198.18.` | 整合必须处理这类"各内核的常识不同" |
 | v1 | Clash 侧 3 个文件是 CRLF，门禁判负 | 初版 |
@@ -958,7 +960,7 @@ mihomo 侧的实例：
 
 **Q：`skill/tests/clash/check_secrets.py` 和 `skill/tests/check_secrets.py` 该跑哪个？**
 
-两个都跑 —— 47 道里进的是**跨内核版**（`skill/tests/check_secrets.py`，带禁串黑名单）。
+两个都跑 —— 48 道里进的是**跨内核版**（`skill/tests/check_secrets.py`，带禁串黑名单）。
 mihomo 版（`skill/tests/clash/check_secrets.py`）覆盖 `.js`、且跳过 `rules/` 的主机扫描
 （那目录内容本身就是域名清单，扫了全是误报）。**两者判据不同，互不可替代，别合并。**
 
@@ -1029,7 +1031,7 @@ python skill/tests/clash/check_min_pair.py
 python skill/tests/clash/check_script_sync.py
 python skill/scripts/clash/build_rules.py --check
 
-# 4. 总入口（47 道）
+# 4. 总入口（48 道）
 python skill/tests/verify_all.py
 
 # 5. 慢门，按需（联网）
@@ -1054,14 +1056,24 @@ python skill/tests/clash/check_remote_urls.py
 4. **动 `rules/*.list` 做实验前先备份真源**，做完立刻还原并 `git diff rules/` 确认为空。
 5. **改 `build_gates()` 就要改 `ci.yml`**（同源铁律）。引用清单用 `--index` 现抓，别手抄。
 
-### 16.4 四条已知挂账（接手时先看这里）
+### 16.4 已知挂账（接手时先看这里）
 
-| # | 挂账 | 触发修补的条件 |
-|:-:|:-----|:---------------|
-| 1 | `check_script_sync.py` 的 `diff` 未定义 ⇒ 判负时 `NameError`，无诊断 | 出现第一次真实漂移且需要定位时，必须修 |
-| 2 | 闸门清单 `ci.yml` ↔ `verify_all.py` 人工双写、机器对账未做 | 出现一侧增删而另一侧未同步、且造成本地/CI 结论分歧时 |
-| 3 | mihomo 侧门禁**没有常驻的判负 fixture 回归**（判别力靠人记得跑）| 出现「判据改坏、不再判负、现役仍全绿」时 |
-| 4 | **clash 侧没有 `.min` 生成器**（`make_min.py` 只含 surge / egern 两族）⇒ `.min.yaml` 靠手工同步 + 对拍兜底 | 出现第一次「手工同步漏改、对拍才发现」时；修法是给 `FAMILIES` 加一族 clash |
+> ⚠️ **2026-10-08 第十五轮：本表已逐条核实并消掉两条。**
+> 原表写的是「四条」，但其中**两条早已修好、表格却未同步** ——
+> 这正是本仓最忌讳的「文档在为不存在的事实背书」（维护者会以为坑还在而重复劳动）。
+> 表格是**挂账清单**，不是历史；修好就该消账（历史在 `CHANGELOG.md`）。
+
+| # | 挂账 | 状态 | 触发修补的条件 |
+|:-:|:-----|:-----|:---------------|
+| ~~1~~ | ~~`check_script_sync.py` 的 `diff` 未定义~~ | ✅ **已消**（commit `7d7250c`）| — 已补定义（本文件 L94）+ `--self-test` 自检已进闸门；实测真实漂移时给 `rules[6] 不同: …` 精确诊断，**不再** `NameError` |
+| ~~2~~ | ~~闸门清单 `ci.yml` ↔ `verify_all.py` 人工双写、机器对账未做~~ | ✅ **已消** | — `check_gate_manifest.py` 已做机器对账（含「孤儿探测」），**已进 48 道** |
+| 3 | mihomo 侧门禁**没有常驻的判负 fixture 回归**（判别力靠人记得跑）| ⚠️ 仍在 | 出现「判据改坏、不再判负、现役仍全绿」时。（注：地区组那一块已有 fixture，见闸门「地区组判别力·mihomo」；此条指**其余** clash 门禁）|
+| 4 | **clash 侧没有 `.min` 生成器**（`make_min.py` 只含 surge / egern 两族）⇒ `.min.yaml` 靠手工同步 + 对拍兜底 | ⚠️ 仍在 | 出现第一次「手工同步漏改、对拍才发现」时；修法是给 `make_min.py` 的 `FAMILIES` 加一族 clash |
+| 5 | `_default_root()` 在 clash 侧有**6 份拷贝**（`check_structure` / `check_min_pair` / `check_script_sync` / `check_remote_urls` / `check_header_numbers` / `audit_ruleset_content`）| ⚠️ 仍在 | 六份逻辑出现分歧时。未名扫描能抓住「拷贝时漏了名字」，但抓不住「逻辑各自漂移」 |
+
+> 📌 第 5 条是本轮新增的挂账 —— 顺带把它记下来的原因：
+> 本轮修的那个 `NL` bug 正是「拷贝时带进了一个本文件没有的名字」。
+> 未定义名扫描能抓住那一次，**但抓不住这个结构性问题本身**。
 
 ### 16.5 退出码速查
 

@@ -613,7 +613,7 @@ if dns.get("ipv6") is not False:
 4. python skill/tests/clash/check_script_sync.py      → exit 0
 5. python skill/scripts/clash/build_rules.py --check   → exit 0
 6. python skill/tests/clash/check_remote_urls.py      → exit 0（慢，按需）
-7. python skill/tests/verify_all.py                   → exit 0（47 道）
+7. python skill/tests/verify_all.py                   → exit 0（48 道）
 8. leak test 网站复测 → 不再显示运营商 DNS
 9. 实测：国内直连；游戏机 NAT 正常；IPv6 侧不再露真实地址
 ```
@@ -665,7 +665,7 @@ if dns.get("ipv6") is not False:
 >
 > ⇒ 上表里 ② ③ 的「✅ 收口」是**当前文件的状态**，不是**被机器守住的状态**。
 > 哪天有人把 `dns-hijack` 删掉、或把 `fallback` 改成明文解析器，
-> **47 道门禁会全绿**。
+> **48 道门禁会全绿**。
 >
 > ⇒ 参照姊妹仓：Surge 侧有 `check_surge_dns.py`（12 项判据）、
 > Egern 侧有 `check_egern_dns.py` + `audit_ruleset_noresolve.py`。

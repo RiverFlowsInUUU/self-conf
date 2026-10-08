@@ -95,7 +95,16 @@ def main():
             clash = (len(dc.get("proxy-groups") or []),
                      len(dc.get("rules") or []))
     except Exception as e:
-        sys.stderr.write("profiles 解析失败" + chr(58) + " " + str(e) + NL)
+        # ⚠️ 2026-10-08 第十五轮：此处原写 `+ NL`，而本文件**从未定义过 `NL`**
+        #    ⇒ 一旦真的走到这个分支（profiles 解析失败），先炸 `NameError` 而不是
+        #    返回 2。后果比"崩溃"更糟：
+        #      · 本意是 2（前置环境不达标 —— 先修环境，别读判据）
+        #      · 实际退出码变成 1（**判负**）
+        #    ⇒ 环境坏了被读成"判据判负"，正是本仓全仓在防的那件事。
+        #    与 `check_script_sync.py` 的 `diff` 未定义是**同一类** bug（只在异常/判负
+        #    路径上才炸，现役恒好时永远潜伏）。
+        #    现由 `skill/tests/check_undefined_names.py` 常驻守着（已接进 verify_all）。
+        sys.stderr.write("profiles 解析失败" + chr(58) + " " + str(e) + chr(10))
         return 2
 
     kernels = [("surge", surge), ("egern", egern)]

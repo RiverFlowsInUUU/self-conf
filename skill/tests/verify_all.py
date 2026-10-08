@@ -163,8 +163,183 @@ def _assert_allowlist_registered():
             % '、'.join(missing))
 
 
+def _scan_env_reads_in(tree, pat):
+    """对**单棵** AST 做「污点传播 + 取值点」判定。返回 (名字集合, 是否有动态读取)。
+
+    ⚠️ 这是第十五轮重写的核心。上一版（第十三/十四轮）的失败根因是
+    **判据挂在语法位置上**（`base.attr == 'environ' and base.value.id in os_names`）
+    ⇒ 只认「直接成员访问」这一种写法，把对象搬到一个新名字上就整类失明。
+
+    本版改为**按名字 + 污点判定**：
+      ① 建家族：os 模块名 / environ 家族名 / getenv 家族名 / environ 取值函数家族名；
+         `from os import *` ⇒ 三个家族名全部入场。
+      ② 迭代传播（fixpoint）：`x = <污名>` / `x = <污名>.environ` / `x = <污名>.getenv` /
+         `x = getattr(<污名>, 'environ'|'getenv')` / `x = globals()['os']` /
+         `x = getattr(<environ污名>, 'get')` —— 把污点搬到新名字上。
+      ③ 只看两件事：**基名是否污点** + **是不是取值动作**。于是
+         `E.get("X")`（E = os.environ）与 `os.environ.get("X")` 一视同仁。
+
+    ⚠️ 刻意区分「整体搬走」与「取值」（第十四轮回滚的教训）：
+      · `dict(os.environ)` / `os.environ.copy()` / `env=os.environ`
+        ⇒ **只取快照，没取任何键** ⇒ 不算读取，**不标 dynamic**
+        （上一版把它判成动态 ⇒ 10 个文件假红 ⇒ 门禁判负 ⇒ 整轮回滚）
+      · `.get/.pop/.setdefault/[]/getenv(...)` 才计。
+    这条边界写在 release-rules.md §4.2.3。
+    """
+    os_mod = {'os'}
+    environ_fam = set()
+    getenv_fam = set()
+    envgetter_fam = set()      # getattr(os.environ, 'get') 这类「取值函数被取出」
+    star_import = False
+    for nd in ast.walk(tree):
+        if isinstance(nd, ast.Import):
+            for al in nd.names:
+                if al.name == 'os':
+                    os_mod.add(al.asname or 'os')
+        elif isinstance(nd, ast.ImportFrom) and nd.module == 'os':
+            for al in nd.names:
+                nm = al.asname or al.name
+                if al.name == 'environ':
+                    environ_fam.add(nm)
+                elif al.name == 'getenv':
+                    getenv_fam.add(nm)
+                elif al.name == '*':
+                    star_import = True
+    if star_import:
+        environ_fam.add('environ')
+        getenv_fam.add('getenv')
+
+    def _resolve(node, depth=0):
+        """把一个表达式解析成污点类别：
+        'os' / 'environ' / 'getenv' / 'envgetter' / None。
+        """
+        if depth > 8:
+            return None
+        if isinstance(node, ast.Name):
+            if node.id in os_mod:
+                return 'os'
+            if node.id in environ_fam:
+                return 'environ'
+            if node.id in getenv_fam:
+                return 'getenv'
+            if node.id in envgetter_fam:
+                return 'envgetter'
+            return None
+        if isinstance(node, ast.Attribute):
+            base = _resolve(node.value, depth + 1)
+            if base == 'os' and node.attr == 'environ':
+                return 'environ'
+            if base == 'os' and node.attr == 'getenv':
+                return 'getenv'
+            return None
+        if isinstance(node, ast.Subscript):
+            sl = node.slice
+            # globals()['os'] —— 把模块从 globals 字典里捞出来
+            if isinstance(node.value, ast.Call) \
+                    and isinstance(node.value.func, ast.Name) \
+                    and node.value.func.id == 'globals':
+                if isinstance(sl, ast.Constant) and sl.value == 'os':
+                    return 'os'
+                return None
+            base = _resolve(node.value, depth + 1)
+            if base == 'os' and isinstance(sl, ast.Constant):
+                if sl.value == 'environ':
+                    return 'environ'
+                if sl.value == 'getenv':
+                    return 'getenv'
+            return None
+        if isinstance(node, ast.Call):
+            f = node.func
+            if isinstance(f, ast.Name) and f.id == 'getattr' and len(node.args) >= 2:
+                base = _resolve(node.args[0], depth + 1)
+                a1 = node.args[1]
+                key = a1.value if isinstance(a1, ast.Constant) else None
+                if key == 'environ':
+                    return 'environ'
+                if key == 'getenv':
+                    return 'getenv'
+                # getattr(os.environ, 'get') ⇒ 取值函数被取出
+                if base == 'environ' and key in ('get', 'pop', 'setdefault'):
+                    return 'envgetter'
+                return None
+            return None
+        return None
+
+    def _names_in(target):
+        """赋值目标里的名字（支持 a = b = ... 与元组解包）。"""
+        if isinstance(target, ast.Name):
+            return [target.id]
+        if isinstance(target, (ast.Tuple, ast.List)):
+            out = []
+            for e in target.elts:
+                out.extend(_names_in(e))
+            return out
+        return []
+
+    fam_of = {'os': os_mod, 'environ': environ_fam,
+              'getenv': getenv_fam, 'envgetter': envgetter_fam}
+
+    # ── 污点传播到不动点 ──
+    for _ in range(12):
+        added = False
+        for nd in ast.walk(tree):
+            tgts, val = None, None
+            if isinstance(nd, ast.Assign):
+                tgts, val = nd.targets, nd.value
+            elif isinstance(nd, ast.AnnAssign) and nd.value is not None:
+                tgts, val = [nd.target], nd.value
+            if not tgts or val is None:
+                continue
+            kind = _resolve(val)
+            if not kind:
+                continue
+            grp = fam_of[kind]
+            for t in tgts:
+                for nm in _names_in(t):
+                    if nm not in grp:
+                        grp.add(nm)
+                        added = True
+        if not added:
+            break
+
+    VALUE_METHODS = ('get', 'pop', 'setdefault')
+
+    def _lit_str(node):
+        if isinstance(node, ast.Constant) and isinstance(node.value, str) \
+                and pat.match(node.value):
+            return node.value
+        return None
+
+    got, dyn = set(), False
+    for nd in ast.walk(tree):
+        # ── ① 取值类方法调用 ──
+        if isinstance(nd, ast.Call):
+            f = nd.func
+            is_value_read = False
+            if isinstance(f, ast.Attribute) and f.attr in VALUE_METHODS:
+                if _resolve(f.value) == 'environ':
+                    is_value_read = True
+            r = _resolve(f)
+            if r in ('getenv', 'envgetter'):
+                is_value_read = True
+            if is_value_read:
+                v = _lit_str(nd.args[0]) if nd.args else None
+                if v:
+                    got.add(v)
+                else:
+                    dyn = True        # 名字不是字面量 ⇒ 静态判不出
+        # ── ② 下标取值：<environ 家族>["N"] ──
+        if isinstance(nd, ast.Subscript) and _resolve(nd.value) == 'environ':
+            v = _lit_str(nd.slice)
+            if v:
+                got.add(v)
+            else:
+                dyn = True
+    return got, dyn
+
+
 def _collect_env_reads():
-    """抓 `skill/**/*.py` 读取的环境变量名 —— 返回 {相对路径: [名字]}。
+    """抓 `skill/**/*.py` 读取的环境变量名 —— 返回 ({相对路径: [名字]}, {相对路径: True})。
 
     ⚠️ 演进（每一轮都是被指出打脸后才补的，记下来防止再退化）：
       · 第十二轮：只认 `b.value.id == 'os'` ⇒ `import os as _os` 写的 SKIP_V7 **整个消失**
@@ -174,9 +349,20 @@ def _collect_env_reads():
           `from os import getenv` 后 `getenv("X")` / `from os import environ as e` 后 `e.get("X")` /
           `getattr(os.environ, "get")("X")` / 二次别名 `_oo = _o` /
           **名字存在变量里** `_KEY="X"; os.environ.get(_KEY)`
+      · 第十四轮：作者重写后**引入 DYNAMIC 兜底过宽**（`dict(os.environ)` 也被判动态）
+          ⇒ 10 个文件假红、门禁判负 ⇒ **权衡后回滚，7 种写法继续溜过，只记账未修**。
+          那 7 种（已逐个注错复现，全部 rc=0 溜过）：
+          `E = os.environ; E.get("X")` / `environ = os.environ; environ.get("X")` /
+          `g = os.getenv; g("X")` / `getattr(os,'environ')["X"]` /
+          `getattr(os,'getenv')("X")` / `globals()['os'].environ.get("X")` /
+          `from os import *` 后 `environ.get("X")`
 
-    本版做法：先按文件做**局部符号解析**（`os` 的别名、`environ`/`getenv` 的 from-import
-    别名、简单的 `_oo = _o` 赋值链），把所有能静态判定的形态都覆盖；
+    第十五轮（本版）：判据从「按语法位置」改为「**按名字 + 污点传播**」，
+    上面 7 种与第十三轮那批**一并用同一套判据覆盖**（见 `_scan_env_reads_in`），
+    并且**显式区分「整体搬走」与「取值」**，避免第十四轮那种过宽假红。
+    回归测试见 `_ENV_SCAN_FIXTURES` / `_selftest_env_scan()` —— 注错用例已固化进代码，
+    不再是"改完手测一遍"。
+
     **剩下的动态形态（名字不是字面量）静态本质上判不出** ⇒ 不假装能抓，
     改为 **fail-closed**：单独收集到 `dynamic`，由 `_assert_escapes_registered()`
     要求其所在文件显式登记豁免（否则报错），把"看不见"变成"看得见的待办"。
@@ -188,7 +374,7 @@ def _collect_env_reads():
     dynamic = {}
     for dp, dirs, files in os.walk(skill):
         dirs[:] = [d for d in dirs if d != '__pycache__']
-        for fn in files:
+        for fn in sorted(files):
             if not fn.endswith('.py'):
                 continue
             fp = os.path.join(dp, fn)
@@ -197,118 +383,80 @@ def _collect_env_reads():
             except Exception:
                 continue
             rel = os.path.relpath(fp, skill)
-            got = set()
-            dyn = False
-
-            # ── ① 收集 os 模块的本地名：import os / import os as X ──
-            os_names = {'os'}
-            # ── ② environ 的本地名：from os import environ [as X] ──
-            env_names = set()
-            # ── ③ getenv 的本地名：from os import getenv [as X] ──
-            getenv_names = set()
-            for nd in ast.walk(tree):
-                if isinstance(nd, ast.Import):
-                    for al in nd.names:
-                        if al.name == 'os':
-                            os_names.add(al.asname or 'os')
-                elif isinstance(nd, ast.ImportFrom) and nd.module == 'os':
-                    for al in nd.names:
-                        nm = al.asname or al.name
-                        if al.name == 'environ':
-                            env_names.add(nm)
-                        elif al.name == 'getenv':
-                            getenv_names.add(nm)
-            # ── ④ 简单别名赋值链 `_oo = _o`（一层，够挡住常见写法）──
-            for _ in range(3):
-                added = False
-                for nd in ast.walk(tree):
-                    if isinstance(nd, ast.Assign) and len(nd.targets) == 1 \
-                            and isinstance(nd.targets[0], ast.Name) \
-                            and isinstance(nd.value, ast.Name):
-                        src, dst = nd.value.id, nd.targets[0].id
-                        for grp in (os_names, env_names, getenv_names):
-                            if src in grp and dst not in grp:
-                                grp.add(dst)
-                                added = True
-                if not added:
-                    break
-
-            def _lit(node):
-                """取第一个参数的字符串字面量；拿不到返回 None。"""
-                if node.args and isinstance(node.args[0], ast.Constant) \
-                        and isinstance(node.args[0].value, str) \
-                        and pat.match(node.args[0].value):
-                    return node.args[0].value
-                return None
-
-            for nd in ast.walk(tree):
-                # 形态 A：X.environ.get("N") / X.environ["N"]
-                #   （X ∈ os 别名；含 getattr(os.environ, "get")("N") 的退化情况）
-                if isinstance(nd, ast.Call) and isinstance(nd.func, ast.Attribute) \
-                        and nd.func.attr in ('get', 'pop', 'setdefault'):
-                    base = nd.func.value
-                    hit = False
-                    if isinstance(base, ast.Attribute) and base.attr == 'environ' \
-                            and isinstance(base.value, ast.Name) \
-                            and base.value.id in os_names:
-                        hit = True
-                    elif isinstance(base, ast.Name) and base.id in env_names:
-                        hit = True      # from os import environ → environ.get("N")
-                    if hit:
-                        v = _lit(nd)
-                        if v:
-                            got.add(v)
-                        else:
-                            dyn = True      # 名字不是字面量 ⇒ 静态判不出
-                if isinstance(nd, ast.Subscript):
-                    base = nd.value
-                    hit = False
-                    if isinstance(base, ast.Attribute) and base.attr == 'environ' \
-                            and isinstance(base.value, ast.Name) \
-                            and base.value.id in os_names:
-                        hit = True
-                    elif isinstance(base, ast.Name) and base.id in env_names:
-                        hit = True
-                    if hit:
-                        sl = nd.slice
-                        if isinstance(sl, ast.Constant) and isinstance(sl.value, str) \
-                                and pat.match(sl.value):
-                            got.add(sl.value)
-                        else:
-                            dyn = True
-                # 形态 B：os.getenv("N") / getenv("N")（from os import getenv [as X]）
-                if isinstance(nd, ast.Call):
-                    f = nd.func
-                    is_getenv = False
-                    if isinstance(f, ast.Attribute) and f.attr == 'getenv' \
-                            and isinstance(f.value, ast.Name) and f.value.id in os_names:
-                        is_getenv = True
-                    elif isinstance(f, ast.Name) and f.id in getenv_names:
-                        is_getenv = True
-                    if is_getenv:
-                        v = _lit(nd)
-                        if v:
-                            got.add(v)
-                        else:
-                            dyn = True
-                # 形态 C：os.environ 被以任何方式取出来（如 getattr(os.environ,"get")）
-                #   ⇒ 必然是动态，标记之
-                if isinstance(nd, ast.Attribute) and nd.attr == 'environ' \
-                        and isinstance(nd.value, ast.Name) and nd.value.id in os_names:
-                    # getattr(os.environ, ...) 这种会把 environ 当参数传走
-                    parent_is_plain = True
-                    for p in ast.walk(tree):
-                        if isinstance(p, ast.Call) and nd in ast.iter_child_nodes(p) \
-                                and isinstance(p.func, ast.Name) and p.func.id == 'getattr':
-                            parent_is_plain = False
-                    if not parent_is_plain:
-                        dyn = True
-
+            got, dyn = _scan_env_reads_in(tree, pat)
             if got:
                 names[rel] = sorted(got)
             if dyn:
                 dynamic[rel] = True
     return names, dynamic
+
+
+# ─────────────────────────────────────────────────────────────────────
+# 注错回归（第十五轮新增）：把「曾经溜过的写法」固化成用例。
+#
+# 为什么必须有：第十三、十四两轮都是「改完手测一遍」——手测不留痕，下一轮重写
+# 时同样的洞会再开一次（第十四轮就是这么回滚的：改对了 7 种，却因过宽假红被整体
+# 回滚，那 7 种于是继续溜）。用例进仓后，**判据失效会当场红**，不再靠人的记忆。
+#
+# 每条用例 = (说明, 源码片段, 期望抓到的名字集合, 期望是否判为动态)。
+# 空集合 + 动态 False ⇒ 该写法**本就不该被算作读取**（防过宽，第十四轮的坑）。
+# ─────────────────────────────────────────────────────────────────────
+_ENV_SCAN_FIXTURES = (
+    # ── 第十三轮那批（曾整类失明）──
+    ('裸成员访问', 'import os\nX = os.environ.get("A_1")', {'A_1'}, False),
+    ('import os as 别名', 'import os as _os\nX = _os.environ.get("A_2")', {'A_2'}, False),
+    ('os.getenv', 'import os\nX = os.getenv("A_3")', {'A_3'}, False),
+    ('from os import environ', 'from os import environ\nX = environ.get("A_4")', {'A_4'}, False),
+    ('from os import environ as', 'from os import environ as e\nX = e.get("A_5")', {'A_5'}, False),
+    ('from os import getenv', 'from os import getenv\nX = getenv("A_6")', {'A_6'}, False),
+    ('getattr 取 environ 的 get',
+     'import os\nX = getattr(os.environ, "get")("A_7")', {'A_7'}, False),
+    ('二次别名', 'import os as _o\n_oo = _o\nX = _oo.environ.get("A_8")', {'A_8'}, False),
+    ('名字存在变量里',
+     'import os\n_K = "A_9"\nX = os.environ.get(_K)', set(), True),
+    ('下标取值', 'import os\nX = os.environ["A_10"]', {'A_10'}, False),
+    # ── 第十四轮记账未修的 7 种（本轮目标）──
+    ('environ 整体搬到新名', 'import os\nE = os.environ\nX = E.get("B_1")', {'B_1'}, False),
+    ('environ 赋给同名变量', 'import os\nenviron = os.environ\nX = environ.get("B_2")', {'B_2'}, False),
+    ('getenv 搬到新名', 'import os\ng = os.getenv\nX = g("B_3")', {'B_3'}, False),
+    ('getattr 取 os 的 environ 再下标',
+     'import os\nX = getattr(os, "environ")["B_4"]', {'B_4'}, False),
+    ('getattr 取 os 的 getenv',
+     'import os\nX = getattr(os, "getenv")("B_5")', {'B_5'}, False),
+    ('globals 里捞 os',
+     'import os\nX = globals()["os"].environ.get("B_6")', {'B_6'}, False),
+    ('from os import *', 'from os import *\nX = environ.get("B_7")', {'B_7'}, False),
+    ('from os import * 用 getenv', 'from os import *\nX = getenv("B_8")', {'B_8'}, False),
+    # ── 防过宽（第十四轮假红的根因，必须**不**判动态）──
+    ('dict(os.environ) 只取快照', 'import os\nX = dict(os.environ)', set(), False),
+    ('environ.copy() 只取快照', 'import os\nX = os.environ.copy()', set(), False),
+    ('整体传引用', 'import os\nX = os.environ', set(), False),
+    ('os.environ 出现在比较里', 'import os\nX = (os.environ is not None)', set(), False),
+    ('无关的 .get 调用', 'import os\nX = {}.get("C_1")', set(), False),
+    ('同名但非 os 的 environ', 'environ = {}\nX = environ.get("C_2")', set(), False),
+)
+
+
+def _selftest_env_scan():
+    """注错回归：判据失效即报错（fail-closed）。
+
+    ⚠️ 这是**自检**，不是闸门 —— 但它必须跑在真正入口（`main()`），否则等于摆设。
+    历史上「写了没接进去」在本仓发生过多次，故此处与 `_assert_*` 并列。
+    """
+    pat = re.compile(r'^[A-Z_][A-Z0-9_]*$')
+    bad = []
+    for label, code, want_got, want_dyn in _ENV_SCAN_FIXTURES:
+        got, dyn = _scan_env_reads_in(ast.parse(code), pat)
+        if got != want_got or dyn != want_dyn:
+            bad.append('     %s：期望 names=%s dyn=%s，实得 names=%s dyn=%s'
+                       % (label, sorted(want_got) or '{}', want_dyn,
+                          sorted(got) or '{}', dyn))
+    if bad:
+        raise SystemExit(
+            '❌ 环境变量 AST 判据自检失败 —— 有写法会溜过或误报（共 %d 条）：\n%s\n'
+            '   —— 这层判据是「反查每一个环境变量名」的凭据，失真即等于后门敞开。不放行。'
+            % (len(bad), '\n'.join(bad)))
+
 
 
 
@@ -443,7 +591,9 @@ def build_gates():
     豁免项在输出里会点名，不冒充通过。
     另：追加 mihomo（clash/）专属门禁，使总入口真正覆盖三内核。
     """
-    import os as _os
+    # ⚠️ 2026-10-08 第十五轮：此处原有一句 `import os as _os`，**全函数未使用**。
+    #    它是第十二轮为演示"别名逃逸"留下的残留，被静态检查报 unused import。
+    #    留着会稀释"零告警"的信号（新告警淹没在旧噪声里）⇒ 删除。
     # ⚠️ 2026-10-08 第四轮审查 P4-a：min-pair 这道带 SKIP_V7=1，
     # 其中 V7 两条会返回「未验证」。verify_all 不能把它显示成 ✅。
     # 下面用 exit code 3 的约定：脚本以 3 结束 = 未验证（见本文件头注）。
@@ -510,6 +660,13 @@ def build_gates():
         # 现由 gen_gate_table.py 生成 + 同一脚本 --check 判负。
         ('闸门总览表同步', [PY, 'skill/scripts/gen_gate_table.py'], {}),
         ('闸门清单对账', [PY, 'skill/tests/check_gate_manifest.py'], {}),
+        # 第十五轮新增：未定义名扫描。本仓已两次栽在**同一类** bug 上
+        # （`check_script_sync.py` 的 `diff` / `check_badges.py` 的 `NL`），
+        # 两次都只在「异常/判负路径」上才炸 ⇒ 现役恒好时永远潜伏，
+        # 而真炸时会把「环境不达标(2)」变成「判负(1)」。
+        # 刻意不引 pyflakes：外部依赖 + 29 条噪声里只 1 条真 bug（信噪比 1/29）
+        # ⇒ 自实现窄判据（仅 F821 类），零依赖、零豁免。详见该脚本 docstring。
+        ('未定义名扫描', [PY, 'skill/tests/check_undefined_names.py'], {}),
         # 2026-10-08：本仓已发布首个 Release ⇒ R1–R5 判据启用。
         # 需网络 + GITHUB_TOKEN（缺省回退 gh auth token）；不可达时走 SKIP(3)=未验证。
         ('CHANGELOG 漂移', [PY, 'skill/tests/check_changelog_drift.py'], {}),
@@ -618,6 +775,7 @@ def print_index():
 
 def main():
     _assert_allowlist_registered()   # 护栏必须在**真正入口**跑（第八轮审查问题 1）
+    _selftest_env_scan()             # AST 判据注错回归（第十五轮）
     _assert_escapes_registered()     # 逃生门登记（第十一轮问题 4）
     if '--index' in sys.argv:
         print_index()

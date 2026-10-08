@@ -40,9 +40,9 @@ CI = os.path.join(ROOT, ".github", "workflows", "ci.yml")
 #   将来若加「新增脚本必须登记」的流程，再把这条扩成全覆盖。
 KNOWN_SEPARATE = {"check_remote_urls.py": "CI 独立 step（慢，需联网探测数十个 URL）",
                   "probe_dns_endpoints.py": ("CI 独立 step —— 需联网实测加密 DNS 端点，"
-                                             "有判负语义但抖动会假红，故不进 47 道"),
+                                             "有判负语义但抖动会假红，故不进 48 道"),
                   "check_real_kernel.py": "需真内核 + 真网络，仅本地人工跑（ops.md §6.8.1）",
-                  # 2026-10-08：首个 Release（v2026-10-08）已发布 ⇒ 判据启用并进 47 道，
+                  # 2026-10-08：首个 Release（v2026-10-08）已发布 ⇒ 判据启用并进 48 道，
                   # 不再豁免。此处保留注释以存其沿革。
                   "verify_all.py": "它自己就是总入口，不是被调的判据"}
 
