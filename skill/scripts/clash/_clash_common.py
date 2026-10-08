@@ -85,3 +85,34 @@ def run_main(path, config=None):
             os.remove(tmp)
         except Exception:
             pass
+
+
+def default_root(here=None):
+    """定位 clash 配置目录（含 `profiles/` 与 `override/`）。
+
+    **全仓唯一实现**（2026-10-08 收敛：此前有 6 份拷贝，3 份是退化变体）。
+
+    两种布局都支持：
+      · 整合仓 self-conf：配置在 `<root>/clash/` 下
+      · 单仓 Clash：配置就在 `<root>` 下
+
+    探测顺序：**当前工作目录 → CWD/clash → 从脚本位置逐级向上**。
+    优先 CWD 是因为 CI 从仓库根调用，而 `__file__` 在符号链接 / 不同调用
+    方式下可能算错（**实测 GitHub Actions 上 __file__ 探测失败**）。
+    """
+    import os as _os
+    cands = []
+    cwd = _os.getcwd()
+    cands.append(cwd)
+    cands.append(_os.path.join(cwd, "clash"))
+    here = here or _os.path.dirname(_os.path.abspath(__file__))
+    up = here
+    for _ in range(5):
+        cands.append(up)
+        cands.append(_os.path.join(up, "clash"))
+        up = _os.path.dirname(up)
+    for c in cands:
+        if _os.path.isdir(_os.path.join(c, "profiles")) and \
+                _os.path.isdir(_os.path.join(c, "override")):
+            return _os.path.abspath(c)
+    return _os.path.abspath(cwd)

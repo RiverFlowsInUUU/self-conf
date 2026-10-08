@@ -23,6 +23,9 @@
 """
 
 import os
+import sys as _sys
+_sys.path.insert(0, os.path.join(os.path.dirname(os.path.abspath(__file__)), '..', '..', 'scripts', 'clash'))
+from _clash_common import default_root  # noqa: E402  全仓唯一实现
 import re
 import sys
 
@@ -41,14 +44,9 @@ HERE = os.path.dirname(os.path.abspath(__file__))
 sys.path.insert(0, os.path.abspath(os.path.join(HERE, "..", "..", "scripts", "clash")))
 
 
-def _default_root():
-    r = os.path.abspath(os.path.join(HERE, "..", "..", ".."))
-    if os.path.isdir(os.path.join(r, "clash", "profiles")):
-        return os.path.join(r, "clash")
-    return r
 
 
-ROOT = sys.argv[1] if len(sys.argv) > 1 else _default_root()
+ROOT = sys.argv[1] if len(sys.argv) > 1 else default_root()
 
 # (脚本, 关键规模上下文的正则, 说明)
 # 只匹配「N 个策略组」「N 份规则集」「N 条规则」这类明确声明

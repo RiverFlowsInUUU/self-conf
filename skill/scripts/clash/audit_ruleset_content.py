@@ -31,6 +31,9 @@
 """
 
 import os
+import sys as _sys
+_sys.path.insert(0, os.path.join(os.path.dirname(os.path.abspath(__file__)), '..', '..', 'scripts', 'clash'))
+from _clash_common import default_root  # noqa: E402  全仓唯一实现
 import sys
 import argparse
 
@@ -54,14 +57,9 @@ except ImportError:
 from audit_routing_coverage import load_provider, CACHE_MAX_AGE  # noqa: E402
 
 
-def _default_root():
-    r = os.path.abspath(os.path.join(HERE, "..", ".."))
-    if os.path.isdir(os.path.join(r, "clash", "profiles")):
-        return os.path.join(r, "clash")
-    return r
 
 
-ROOT = sys.argv[1] if len(sys.argv) > 1 and not sys.argv[1].startswith("-") else _default_root()
+ROOT = sys.argv[1] if len(sys.argv) > 1 and not sys.argv[1].startswith("-") else default_root()
 
 
 def norm_behavior(prov, name, url):
