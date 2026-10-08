@@ -129,6 +129,11 @@ def main():
     ):
         fp = os.path.join(ROOT, path.replace("/", os.sep))
         if not os.path.isfile(fp):
+            # ⚠️ 跳过是**安全**的：下面的 V5 判据用 `seen.get()`，
+            #    缺失的键会是 None ⇒ `None in uniq` ⇒ **判负**。
+            #    （即「文件没了」不会被静默吞掉，而会报「未统一」。）
+            #    ⚠️ 改这段时**必须保留这个性质** —— 若改成只在 seen 里有的键上比对，
+            #       缺文件就会静默少检一个。
             continue
         with open(fp, encoding="utf-8") as fh:
             first = fh.readline().strip()
