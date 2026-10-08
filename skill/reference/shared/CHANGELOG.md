@@ -116,6 +116,7 @@ C 行内代码算、D 代码块算。
 `skill/tests/check_undefined_names.py`（新增）·
 `skill/tests/check_badges.py`（`NL` 真 bug）·
 `skill/tests/check_changelog_drift.py`（两条边界）·
+`skill/scripts/egern/probe_dns_endpoints.py`（联网重试）·
 `skill/reference/shared/release-rules.md`（§4.2.3.1 判据边界）·
 `skill/reference/clash/checker.md`（§15/§16.4 过时记录 + §11 表）·
 `.github/workflows/ci.yml`（新 step）· 及 32 处道数散文。
@@ -127,6 +128,35 @@ C 行内代码算、D 代码块算。
 - `_default_root()` 仍是**多份拷贝**（clash 侧已 6 份）。本轮的未定义名扫描
   能抓住「拷贝时漏了某个名字」，但抓不住「六份逻辑各自漂移」——
   抽公共模块会动 6 个文件的导入结构，收益与风险需单独评估。
+
+### 9. 联网探测加重试：修掉 CI 「绿不绿看运气」的缺口
+
+**事件**：推完本轮后 CI 红了 —— 红的不是本轮新增的 step，而是**原有**的
+「Encrypted DNS endpoints reachability (Egern)」（push 事件下 `continue-on-error` 为 false）。
+报 `https://120.53.53.53/dns-query` 两次都 `_ssl.c:993: The handshake operation timed out`。
+
+**判定为偶发不可达，不是真失效**，三条证据：
+
+1. 同一台服务器的 `tls://1.12.12.12`（853）在**同一次运行里正常** —— 域名解析出同一个 IP，
+   只是 DoH 的 443 不通。
+2. 历史两次成功 run 里该 DoH 端点**都是 HTTP 200**（`gh run view --log` 逐行核过）。
+3. 本机直连该 IP:443 的 TLS **连测 4 次全成功（0.08s）**，但脚本里同一端点
+   **第一次失败、第二次成功** ⇒ 典型冷连接/偶发丢包。
+
+**根因不是网络，是设计不一致**：
+
+| 脚本 | 有重试？ |
+|:--|:--:|
+| `clash/check_remote_urls.py`（姊妹门禁）| ✅ `for method in ("HEAD", "GET")` |
+| `egern/probe_dns_endpoints.py` | ❌ **单发，零重试** |
+
+更矛盾的是：这个 step 当初**不进 48 道**的理由写的正是「抖动会假红」——
+却在 CI 里以最严的方式判红。⇒ 已对齐：`RETRIES = 3` + 递减退避。
+
+⚠️ **只对异常重试，拿到应答不重试** —— 后者是真判据问题，不该被重试掩盖。
+真失败时输出明写「已重试 3 次」，不假装一次就通。
+**双向验证过**：把 `TIMEOUT` 压成 `0.001` 强制失败 ⇒ 报
+`FAIL timed out（已重试 3 次）` 且 exit 1；还原后 exit 0。
 
 ---
 

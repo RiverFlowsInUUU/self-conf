@@ -34,6 +34,22 @@ import urllib.request
 TIMEOUT = 12
 QNAME = "example.com"
 
+# ⚠️ 2026-10-08 第十五轮：联网探测**必须有重试**，否则 CI 绿不绿看运气。
+#
+# 背景（真实事件）：本 step 在 push 事件下 `continue-on-error` 为 false，
+# 而 2026-10-08 一次 push（commit 25079c9）它就红了 —— 报
+# `https://120.53.53.53/dns-query` 两次都 `_ssl.c:993: The handshake operation timed out`。
+# 但同一台服务器的 `tls://1.12.12.12`（853）**同一次运行里正常**，
+# 且历史两次 run 里该 DoH 端点**都是 HTTP 200** ⇒ 偶发不可达，不是真失效。
+# 本机复现：直连该 IP:443 的 TLS 连测 4 次**全成功（0.08s）**，
+# 但脚本里同一端点**第一次失败、第二次成功** ⇒ 典型冷连接/偶发丢包。
+#
+# 姊妹门禁 `check_remote_urls.py` 早就加了重试（`for method in ("HEAD","GET")`），
+# 两者设计不一致 —— 而"抖动会假红"正是本 step 当初不进闸门的理由，
+# 却在 CI 里以最严的方式判红，自相矛盾。此处对齐。
+RETRIES = 3          # 总尝试次数（首次 + 2 次重试）
+RETRY_BACKOFF = 1.5  # 秒，每次重试前等待（递减退避）
+
 
 # ---------------------------------------------------------------- DNS 报文
 def build_query(name=QNAME, qtype=1, rd=True):
@@ -185,24 +201,38 @@ def main():
     bad = 0
     for where, s in items:
         proto, host, port = hostport(s)
-        try:
-            if proto == "https":
-                st, ans = try_doh(host, port)
-                res = f"HTTP {st}"
-                detail = ans or "（无 A 记录）"
-            elif proto == "tls":
-                ans, cn = try_dot(host, port)
-                res = "OK"
-                detail = f"cert CN={cn}  {ans}"
-            else:
-                ans = try_udp(host, port)
-                res = "OK"
-                detail = f"{ans}  ⚠️ 明文 UDP:53"
-            print("%-22s %-38s %-10s %s" % (where, s, res, detail))
-        except Exception as e:
+        # ⚠️ 重试：偶发握手超时不应判成"端点失效"（见文件头 RETRIES 的说明）。
+        #    只对**异常**重试；拿到应答（哪怕内容意外）不重试 —— 那是真判据问题。
+        last_err = None
+        for attempt in range(RETRIES):
+            try:
+                if proto == "https":
+                    st, ans = try_doh(host, port)
+                    res = f"HTTP {st}"
+                    detail = ans or "（无 A 记录）"
+                elif proto == "tls":
+                    ans, cn = try_dot(host, port)
+                    res = "OK"
+                    detail = f"cert CN={cn}  {ans}"
+                else:
+                    ans = try_udp(host, port)
+                    res = "OK"
+                    detail = f"{ans}  ⚠️ 明文 UDP:53"
+                if attempt:
+                    detail += "  （第 %d 次尝试成功）" % (attempt + 1)
+                print("%-22s %-38s %-10s %s" % (where, s, res, detail))
+                last_err = None
+                break
+            except Exception as e:                              # noqa: BLE001
+                last_err = e
+                if attempt < RETRIES - 1:
+                    import time
+                    time.sleep(RETRY_BACKOFF * (RETRIES - 1 - attempt))
+        if last_err is not None:
             bad += 1
-            m = str(getattr(e, "reason", e)).replace("\n", " ")[:56]
-            print("%-22s %-38s %-10s %s" % (where, s, "FAIL", m))
+            m = str(getattr(last_err, "reason", last_err)).replace("\n", " ")[:56]
+            print("%-22s %-38s %-10s %s"
+                  % (where, s, "FAIL", "%s（已重试 %d 次）" % (m, RETRIES)))
     print()
     print(f"失效端点：{bad} / {len(items)}")
     return 1 if bad else 0
