@@ -103,7 +103,7 @@ Egern 的分流组**按类型做键**，而不是平铺的 `name` 字段。一�
 关键词**逐字抄了一遍** —— 改任何一组的关键词都要同步改它，
 用 [`skill/scripts/egern/audit_region_filters.py`](../../scripts/egern/audit_region_filters.py) 校验（漏改会被它拦下）。
 
-**服务组**（默认策略与承接的规则集）见 [`shared/rulesets.md`](../rulesets.md)。
+**服务组**（默认策略与承接的规则集）见 [`rulesets.md`](../rulesets.md)。
 
 **`lazy` 的一处专属调整**（只属于它，不同步其他版本）：`AD` 组**只有 `REJECT`**（没有 `DIRECT` 兜底）。
 ⚠️ **两版的兜底写法现已完全一致**（2026-10-05 起）：`default` 规则的 `policy` 都**直写 `Proxy`**，
@@ -342,7 +342,7 @@ forward:
 
 ### 4. 审计清单（18 项）
 
-> 📌 本节是 [`shared/hardening-checklist.md`](../ops.md) 的摘要。**逐条判据与严重度的权威版本以 `shared/hardening-checklist` 为准** —— 要改清单请改那一份，本节跟着同步。
+> 📌 本节是 [`ops.md`](../ops.md) 的摘要。**逐条判据与严重度的权威版本以 `shared/hardening-checklist` 为准** —— 要改清单请改那一份，本节跟着同步。
 
 > 全部自动化：`check_egern_dns.py` 覆盖 1–15；`audit_ruleset_noresolve.py` 覆盖 16；`audit_routing_coverage.py` 覆盖 17；`audit_dns_forward.py` 覆盖 18。
 
@@ -399,7 +399,7 @@ forward:
 ### 6. 已知代价与取舍
 
 - **`Foreign-DNS` 已删除**：迭代 f10 起它就无任何引用（forward 兜底改国内组后不再需要境外组）；`routing_v1` 曾**整组注释**保留为 A/B 备用，**`routing_v2` 起整段删除**。要恢复境外解析答案，需自行在 `upstreams` 里加回该组。风险提醒：若用它作兜底且代理未就绪，会掉进明文 `:53`。
-- **两条线 × 双形态**：可选只有 `egern/profiles/lazy.yaml`（**懒人版**，4 组 / 10 条规则）与 `egern/profiles/routing.yaml`（**分流版 · 推荐**，24 组 / 24 条），固定名四件，升版不改名。⚠️ 头注 `#! version=` 里的 `v` 是**文件版本**（三段制 X.Y.Z：Z=小修、Y=中改、X=大改，满 10 进 1，4.0.10 合法）；配置变动时变动前的旧配置归档进 `profiles/config_old/`（归档号 = 目录内此分工最新号的下一位，完整版与 `.min` 成对，现役头注同步升为下一位）；更早历史看 git（备份 tag：`pre-cleanup-20260927`）。
+- **两条线 × 双形态**：可选只有 `egern/profiles/lazy.yaml`（**懒人版**，4 组 / 10 条规则）与 `egern/profiles/routing.yaml`（**分流版 · 推荐**，24 组 / 24 条），固定名四件，升版不改名。⚠️ 头注 `#! version=` 里的 `v` 是**文件版本**（三段制 X.Y.Z：Z=小修、Y=中改、X=大改，满 10 进 1，4.0.10 合法）；三内核同号；**仓内不保留历史版本**（历史在 git 与 Releases）。
 - **图标整合进本仓库**：图标已整合进 `icons/`，模板不再跨项目引用图标地址。来源归属见上表；本仓按 MIT 许可分发（根 `LICENSE`）。
 - **不写死节点（2026-10-06 起）**：分流版 `proxies` 为空、`policy_groups` 里也不含任何字面量节点名 —— 不存在悬空引用（组间引用保留；`routing_v2.3` 起**已无空组**）。
 - **与订阅解耦**：forward 不写任何节点 / 订阅域名，换订阅无需改动 DNS 段（清单 18 验证订阅耦合 4 → 0）。
@@ -492,7 +492,7 @@ S="skill/scripts"
 > 📌 全部检查可在本地完整复现；push / PR 时 CI（`.github/workflows/ci.yml`）自动再跑一遍。
 > 这是个人模板仓库，不会有外部贡献者，"自动验 PR"没有服务对象，而本地跑一遍只要几十秒。
 > 上表那批本地命令已覆盖自动化做过的全部断言，**功能上没有任何损失**。
-> 详细说明见 [`skill/reference/egern/public-repo.md`](../gates.md)。
+> 详细说明见 [`gates.md`](../gates.md)。
 
 ### 10. 常见问题（扩展版）
 
@@ -668,8 +668,8 @@ rules:
 #### 引用文件（按需读取）
 
 本文件是**主干**：Egern 双轨 DNS 模型、18 项审计清单、模板骨架速览、验收标准。
-`reference/egern/` 七篇的「何时读」索引见 SKILL.md §4。**移植到 Surge 侧前必读
-[`reference/shared/cross-kernel-diff.md`](../rulesets.md)**。
+各篇的「何时读」见 `SKILL.md` §1 的决策表。**移植到 Surge 侧前必读
+[`rulesets.md`](../rulesets.md)**。
 
 #### Egern 的 DNS 模型（不理解这个就会改错地方）
 
@@ -755,7 +755,7 @@ rules:
 #### 加固模板
 
 完整模板（`dns:` 段逐键注释 + `rules` 骨架 + 顶层字段，**权威版本**）：
-[`reference/egern/hardening-template.md`](../profiles/clash.md)。要改模板只改那一份。骨架速览：
+[`profiles/egern.md`](./egern.md)。要改模板只改那一份。骨架速览：
 
 1. `bootstrap`：≥2 个国内公共 DNS 的 **IP 字面量**，绝不写 `system`（回退链终点 = 运营商）；
 2. `upstreams`：国内组 + 境外组端点**全部 IP 字面量**；境外组必须在 `rules` 里显式判给 Proxy，否则只能 bootstrap 明文去连；
@@ -792,7 +792,7 @@ for h in ['dns.alidns.com','doh.pub','doh.18bit.cn']:
 #### ⚠️ 已知缺陷索引
 
 **18 条，每条都是真实事故复盘**，全文（含完整机制链与修法）见
-[`reference/egern/pitfalls.md`](../pitfalls.md)——排查实际泄露、或改动判据 / 规则集之前先读它。
+[`pitfalls.md`](../pitfalls.md)——排查实际泄露、或改动判据 / 规则集之前先读它。
 
 改动判据时最高频的三条：**13**（兜底挂在"必须经代理才可达"的组上 → 审计 OK、实测 `upstream: bootstrap`）·
 **16**（强制解析藏在别人仓库的 `.list` 里——`Apple_All.list` 实测 13 条裸 IP）·

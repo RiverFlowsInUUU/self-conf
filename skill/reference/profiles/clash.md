@@ -4,7 +4,7 @@
 ## mihomo · 逐键语义（clash 侧）
 
 > **何时读**：改 mihomo 配置需要确认某个键 / 组 / 规则 / 规则的语义与边界时。
-> 本文件是 `skill/reference/clash/` 的第一篇，专讲 mihomo（原 Clash.Meta）侧
+> 本文件是 mihomo 侧的主文档，专讲 mihomo（原 Clash.Meta）侧
 > Surge / Egern 两内核**没有**的机制。
 
 > 面向想彻底弄明白「为什么这么写」的读者。
@@ -43,13 +43,13 @@ self-conf/                                    # 三内核整合仓
 │   │   ├── my_clash_lazy.js                  # → 懒人版结构
 │   │   └── README.md                         # 与静态模板的差别、用法、实测
 │   ├── ruleset-sources.md                # 规则集清单与选型（门面层）
-│   ├── （文档已并入 skill/reference/clash/）
+│   ├── （文档并入 skill/reference/profiles/clash.md）
 │   ├── CHANGELOG.md
 ├── rules/                                    # 共享规则集真源（.list）+ 生成物（.yaml）
 ├── icons/                                    # 40 个图标 PNG + 1 个 SVG，三内核共用
 └── skill/                                    # AI 知识库
     ├── SKILL.md                              # 维护手册（分歧 / 踩过的坑）
-    ├── reference/shared/ · surge/ · egern/ · clash/（本文）
+    ├── reference/profiles/{surge,egern,clash}.md · dns.md · rulesets.md · pitfalls.md · ops.md · gates.md
     ├── scripts/clash/build_rules.py          # .list → .yaml 生成器
     └── tests/clash/                          # mihomo 专属门禁 9 个
 ```
@@ -172,7 +172,7 @@ self-conf/                                    # 三内核整合仓
 ### 3 · 与 Surge / Egern 的机制差异
 
 三内核共用 `rules/` 与 `icons/`，但机制差异决定了**不能互相照搬写法**。
-完整对照见 [`../shared/cross-kernel-diff.md`](../rulesets.md)（Surge ↔ Egern），
+完整对照见 [`rulesets.md`](../rulesets.md)（Surge ↔ Egern），
 本表补 mihomo 这一列：
 
 | 语义 | Surge | Egern | **mihomo** |
@@ -257,7 +257,7 @@ if dns.get("ipv6") is not False:    errs.append("dns.ipv6 未显式关闭")
 
 > 如果你有自己的固定节点，直接写进 `proxies`，它们与订阅节点合并进各组。
 > 节点 `server` 写 IP 字面量 ⇒ 不产生「解析节点域名」这一次查询（出口 ③，见
-> [`verification.md`](../profiles/clash.md) §2.3）。
+> [`clash.md`](../profiles/clash.md) §2.3）。
 
 ### 5 · 节点来源：`proxies` · `proxy-providers`
 
@@ -637,7 +637,7 @@ rule-providers:
 
 ⚠️ 因此 §10.1 的「三级优先」描述的是**选型思想**，不是当前文件的字面形态。
 当前形态是「远程 MRS 为主 + 5 份自定义 classical + 1 条内联」。
-这条差异也写进了 [`ruleset-sources.md`](../rulesets.md) §1.3。
+这条差异也写进了 [`rulesets.md`](../rulesets.md) §1.3。
 
 #### 10.3 `interval: 86400`（一天）
 
@@ -780,7 +780,7 @@ python skill/scripts/clash/build_rules.py --check   # CI 用：过期即判负
 | 不带 `no-resolve` | 走到这条 IP 规则的域名会**先触发一次本地解析** |
 | 带上 `no-resolve` | 对**尚未解析**的主机名直接跳过 ⇒ 「解析出来发现是国内 IP 就直连」这条路**也一起没了** |
 
-⇒ 所以必须**成对交付**（姊妹仓 `surge/profile-anatomy.md` §12.4）：
+⇒ 所以必须**成对交付**（见 [`dns.md`](../dns.md)）：
 
 > **A** —— 真含 IP 的规则带 `no-resolve`
 > **B** —— `MATCH` 之前有一个**域名体量足够**的国内直连规则集
@@ -1220,11 +1220,11 @@ python skill/tests/clash/check_secrets.py        # 占位符纪律
 
 ---
 
-相关：[`../shared/cross-kernel-diff.md`](../rulesets.md) ·
-[`../shared/no-resolve-pairing.md`](../dns.md) ·
+相关：[`rulesets.md`](../rulesets.md) ·
+[`dns.md`](../dns.md) ·
 [`../../../clash/override/README.md`](../../../clash/override/README.md) ·
-[`../../../skill/reference/clash/ruleset-sources.md`](../rulesets.md) ·
-[`../../../skill/reference/clash/verification.md`](../profiles/clash.md) ·
+[`rulesets.md`](../rulesets.md) ·
+[`clash.md`](../profiles/clash.md) ·
 [`../../SKILL.md`](../../SKILL.md)
 
 ---
@@ -1242,8 +1242,8 @@ python skill/tests/clash/check_secrets.py        # 占位符纪律
 > 📌 本文教的加固结构（tun 收口、dns 段分工、广告拦截双条件、IPv6 关闭）
 > **对两份配置都适用** —— 懒人版只是在策略组与规则上更简。
 >
-> 相关：[`profile-anatomy.md`](../profiles/clash.md)（逐键语义）·
-> [`leak-localization.md`](../ops.md)（泄露面定位）·
+> 相关：[`profiles/<kern>.md`](../profiles/clash.md)（逐键语义）·
+> [`ops.md`](../ops.md)（泄露面定位）·
 > [`pitfalls.md`](../pitfalls.md)（踩过的坑）
 
 ### 1 · 结构总览与顺序语义
@@ -1614,8 +1614,8 @@ A：`python skill/scripts/clash/build_profiles.py` 重新生成两份 profile + 
 > **何时读**：准备选择、切换或新增 Surge / Egern / mihomo 配置时；评审一个改动究竟是
 > 「新内核」「新产品线」还是「同一产品的另一种交付形态」时。
 >
-> 本文只讨论**分支形态与维护边界**。具体键语义见各内核的 `profile-anatomy.md`，
-> 门禁命令与判据见 [`checker.md`](../gates.md)。仓库总览与纪律以
+> 本文只讨论**分支形态与维护边界**。具体键语义见各内核的 `profiles/<kern>.md`，
+> 门禁命令与判据见 [`gates.md`](../gates.md)。仓库总览与纪律以
 > [`SKILL.md`](../../SKILL.md) 为准。
 >
 > 当前仓库不是把三份配置揉成一份“万能配置”，而是把它们放在同一个验证框架里：
@@ -1646,11 +1646,9 @@ self-conf/
 ├── surge/profiles/
 │   ├── lazy.conf · lazy.min.conf
 │   ├── routing.conf · routing.min.conf
-│   └── config_old/
 ├── egern/profiles/
 │   ├── lazy.yaml · lazy.min.yaml
 │   ├── routing.yaml · routing.min.yaml
-│   └── config_old/
 ├── clash/
 │   ├── profiles/
 │   │   ├── lazy.yaml · lazy.min.yaml
@@ -1669,7 +1667,6 @@ self-conf/
 #### 1.2 “版本”放在哪里
 
 - 现役入口使用稳定文件名 `lazy.*` / `routing.*`，订阅地址不随版本变化；
-- Surge / Egern 的历史版本进入各自 `profiles/config_old/`，历史只增不删；
 - mihomo 当前以脚本生成现役静态 profile，演进记录主要看 Git 历史与 `CHANGELOG.md`（本目录）；
 - 不要为了保留旧行为在现役目录里再造 `routing-new`、`routing-final`、`routing-fixed`。
 
@@ -1706,7 +1703,7 @@ self-conf/
 | 规则集 | `.list` | `.mrs` / `.yaml` | format 与 behavior 必须配对，不能只改扩展名 |
 | DNS 拦截 | 各自的 DNS / 规则阶段机制 | `nameserver-policy` + `fake-ip-filter` 双条件 | 同一句“拦广告”在三个内核中的执行阶段不同 |
 
-跨内核移植前先读 [`../shared/cross-kernel-diff.md`](../rulesets.md)。
+跨内核移植前先读 [`rulesets.md`](../rulesets.md)。
 “目标一致”只允许复用验收结果，不允许复用未经翻译的键。
 
 ### 3 · 两条产品线：懒人版与分流版
@@ -1875,7 +1872,7 @@ PyYAML 只取最后一份，门禁看似全绿，真实文件却已畸形。**�
 | 图标 | `icons/` | 三内核都引用本仓同一目录 | 已有同义图标就复用；不要为每个内核复制一份 |
 | AI / Apple 系统 / Emby 清单 | `rules/*.list` | Surge / Egern 直接读 `.list` | 只改 `.list` |
 | mihomo 规则集 | `rules/*.yaml` | mihomo 以 classical provider 使用 | 由 `build_rules.py` 生成，禁止手改 |
-| 机制结论 | `skill/reference/shared/` | 三内核共同引用 | 只放真正跨内核成立的结论 |
+| 机制结论 | `skill/reference/` | 三内核共同引用 | 只放真正跨内核成立的结论 |
 
 整合前，同内容的规则集以 `.list` 与 `.yaml` 各维护一份；现在 `.list` 是真源，
 `.yaml` 只是可重建产物。这个边界比“文件看起来一样”更重要。
@@ -1901,7 +1898,7 @@ PyYAML 只取最后一份，门禁看似全绿，真实文件却已畸形。**�
 
 确认要新增后，至少完成以下清单：
 
-1. **产品文件**：在对应 `profiles/` 增加完整版与 `.min`；需要历史归档时同步定义 `config_old/` 规则；
+1. **产品文件**：在对应 `profiles/` 增加完整版与 `.min`；需要历史归档时同步定义 已删除的归档目录 规则；
 2. **生成关系**：明确谁是真源。mihomo 若有脚本形态，要扩展 `build_profiles.py` 的目标表；
 3. **最小对拍**：把新 pair 加进对应 `check_min_pair.py`，不能靠文件名“看起来成对”；
 4. **结构门禁**：让 `check_structure.py` 枚举到新文件，检查组引用、规则指向、IPv6 与 DNS 条件；
@@ -1927,7 +1924,7 @@ PyYAML 只取最后一份，门禁看似全绿，真实文件却已畸形。**�
 | 内核脚本 | `skill/scripts/<kernel>/` | 能否解析该内核，不借别的内核“猜” |
 | 内核门禁 | `skill/tests/<kernel>/` | 坏样例是否真的判负，而非只测现役绿样例 |
 | 知识库 | `skill/reference/<kernel>/` | anatomy、checker、泄露定位、坑与公开仓纪律是否齐全 |
-| 共享差异 | `reference/shared/cross-kernel-diff.md` | 同名概念的不同落点是否写清 |
+| 共享差异 | `reference/rulesets.md` | 同名概念的不同落点是否写清 |
 | 共享图标 | `icons/` | 是否复用现有文件；URL 是否指向 `self-conf` |
 | 共享规则 | `rules/` + 格式转换器 | 真源是否仍唯一；生成物是否可判陈旧 |
 | 脱敏 | 两层 `check_secrets` 或新内核专用扫描 | 新协议字段、保留地址段、证书与 token 是否覆盖 |
@@ -2015,8 +2012,8 @@ Surge / Egern 直接消费 `.list`；mihomo 消费生成的 `.yaml`。因此只�
 
 ---
 
-相关：[`profile-anatomy.md`](../profiles/clash.md) · [`checker.md`](../gates.md) ·
-[`../shared/rulesets.md`](../rulesets.md) · [`../../SKILL.md`](../../SKILL.md) ·
+相关：[`profiles/<kern>.md`](../profiles/clash.md) · [`gates.md`](../gates.md) ·
+[`rulesets.md`](../rulesets.md) · [`../../SKILL.md`](../../SKILL.md) ·
 [`../../../README.md`](../../../README.md)
 
 ---
@@ -2025,9 +2022,9 @@ Surge / Egern 直接消费 `.list`；mihomo 消费生成的 `.yaml`。因此只�
 
 > **何时读**：想彻底弄明白「为什么这么写」时。
 > 本文件原为 `clash/DetailsReadme/DetailsReadme.md`，整合进 self-conf 后并入 skill，
-> 与 `egern/profile-anatomy.md` 的做法一致（该篇原为 `egern/DetailsReadme/`，2026-09-27 并入）。
+> 与 Egern 侧的做法一致（见 [`profiles/egern.md`](./egern.md)）。
 >
-> ⚠️ **与同目录新文档的分工**：`profile-anatomy.md` / `hardening-template.md` 是
+> ⚠️ **与同目录新文档的分工**：`profiles/<kern>.md` / `hardening-template.md` 是
 > 按 SC 规格重写的**现役**文档；本文件是**原始推导与实测读数**，
 > §5「明文泄露面实测」与 §6「已知代价与取舍」为本文件独有，其余章节已被新文档覆盖。
 >
@@ -2043,7 +2040,7 @@ Surge / Egern 直接消费 `.list`；mihomo 消费生成的 `.yaml`。因此只�
 > [6 · 已知代价与取舍](#6--已知代价与取舍)
 >
 > 🔜 本文目前覆盖 `dns` / `tun` 两段（防泄露本体）。分流版设计、占位符与脱敏规则等章节随配置落地补齐；
-> 规则集清单、来源与刷新机制已由 [`ruleset-sources.md`](../rulesets.md) 承接。
+> 规则集清单、来源与刷新机制已由 [`rulesets.md`](../rulesets.md) 承接。
 
 ---
 
@@ -2418,7 +2415,7 @@ Apple 则由 `GEOSITE,apple`（1792 条）做**全量直连**（懒人版只要�
 8. **国内部分「域名集在前、IP 集在后」** —— 域名命中优先，避免先做一次 IP 判定。
 9. **兜底 `MATCH` 必须在最后** —— 它是唯一不带条件的规则，排在前面会吞掉后面全部。
 
-> ⚠️ 两条 `GEOIP` **不带 `no-resolve`**：走到它们的域名会多触发一次本地解析。本地解析走的是加密解析器，不产生明文，代价只是首个请求多一次解析耗时。取舍依据见 [`verification.md`](../profiles/clash.md)（`GEOIP` 行）。
+> ⚠️ 两条 `GEOIP` **不带 `no-resolve`**：走到它们的域名会多触发一次本地解析。本地解析走的是加密解析器，不产生明文，代价只是首个请求多一次解析耗时。取舍依据见 [`clash.md`](../profiles/clash.md)（`GEOIP` 行）。
 
 ### 4 · 素材与许可
 
@@ -2431,4 +2428,4 @@ Apple 则由 `GEOSITE,apple`（1792 条）做**全量直连**（懒人版只要�
 
 ---
 
-相关：[`verification.md`](../profiles/clash.md) · [`README.md`](../../../README.md)
+相关：[`clash.md`](../profiles/clash.md) · [`README.md`](../../../README.md)

@@ -17,9 +17,9 @@
 > 它与上面的 24 / 9 **不是同一个口径，不要相加、也不要对拍**。
 >
 > 三个内核各自的规则集清单与体量分析，见各自的专文：
-> [`../surge/ruleset-weight.md`](./rulesets.md) ·
-> [`../egern/ruleset-weight.md`](./rulesets.md) ·
-> [`../clash/ruleset-weight.md`](./rulesets.md)（mihomo）。
+> [`rulesets.md`](./rulesets.md) ·
+> [`rulesets.md`](./rulesets.md) ·
+> [`rulesets.md`](./rulesets.md)（mihomo）。
 > 本页只做**三内核对照与共用真源**这一层，不重复那份清单。
 
 ### 0 · 先分清一件最重要的事：共用的是「内容」，不是「文件」
@@ -78,7 +78,7 @@ python skill/scripts/clash/build_rules.py --check   # CI 用：过期即判负
 永远匹配不上且不报错；`classical` 写成 `domain` 则整份集退化成空集。
 
 （mihomo 侧 `format × behavior` 的三种组合与键语义，见
-[`../clash/profile-anatomy.md`](./profiles/clash.md) §9。）
+[`clash.md`](./profiles/clash.md) §9。）
 
 ### 1 · Surge / Egern 共用规则集
 
@@ -120,13 +120,13 @@ Egern 的规则集**内联在 `rules` 段的 `rule_set` 条目里**，没有独�
 ✅ **懒人版两侧现已逐位同构**：各 10 条，白名单 → 广告 ×2 → 内网 ×2 → 系统集 → AI → 国内直连 → 地理 → 兜底。
 剩余差异只剩写法与内核能力：广告策略（Surge 字面量 `REJECT` ／ Egern `AD` 组）、内置 `LAN` ↔ `Lan.list`、
 内置 `SYSTEM` ↔ 本仓快照、`FINAL` ↔ `default`。Apple 全量集与 `.cn` 后缀兜底两侧现在**都没有**。
-逐项差异见 [`cross-kernel-diff.md`](./rulesets.md) 第 4 节。
+逐项差异见 [`rulesets.md`](./rulesets.md) 第 4 节。
 
 ### 3 · 匹配顺序（Surge / Egern 基准序）
 
 自上而下，第一条命中即决定去向。分流版两侧 26 条**逐位对齐**（仅第 3 节的三处引擎差异例外）。
 ⚠️ 本节是 **Surge / Egern 的基准序**；mihomo 分流版是 **27 条**、另一套顺序，见 §5.1 与
-[`cross-kernel-diff.md`](./rulesets.md) §3。
+[`rulesets.md`](./rulesets.md) §3。
 
 **分流版（两侧共用基准序，位 ①–㉖，共 26 条）**
 
@@ -172,12 +172,12 @@ Egern 的规则集**内联在 `rules` 段的 `rule_set` 条目里**，没有独�
    而 `apple.txt` 与 AWAvenue 有 **1 条交集**（`iadsdk.apple.com`）⇒ 它**不**上提（否则会放行一条苹果广告 SDK 域）。
 2. **厂商专属规则（`OpenAI` / `Gemini` / `Anthropic` / `Claude`）排在 `AI.list` 之前** —— 否则 AI 域名先被 `AI.list` 接走，专属组形同虚设。
 3. **`GitHub.list` 排在 `direct.txt` 之前** —— 实测 `direct.txt` 收录了若干含 `github` 的域名（githubim.com / githubshare.com / hellogithub.com / kkgithub.com 等），它们会被 `GitHub.list` 的 `DOMAIN-KEYWORD,github` 命中；排到后面这几个就接不到。本条**直指 `Proxy`**（2026-10-05 起不再单设 `GitHub` 组）。（`github.com` 本身**不在** `direct.txt` 里。）
-4. **IP 类规则排最后，且必须带 `no-resolve` / `no_resolve`** —— 否则每个走到它的域名都会被强制本地解析一次，那正是泄露来源。详见 [`no-resolve-pairing.md`](./dns.md)。
+4. **IP 类规则排最后，且必须带 `no-resolve` / `no_resolve`** —— 否则每个走到它的域名都会被强制本地解析一次，那正是泄露来源。详见 [`dns.md`](./dns.md)。
 4b. ⭐ **规则级开关的取舍，六份 profile 共用一条原则**：**实测零 IP 条目的规则集不写，真含 IP 条目的必须写**。
     该开关只对规则集里的 IP 类条目起作用，纯域名集写上是空转 —— 本仓 2026-09-24 起把它从 12 条零 IP 规则上删掉。
     ⚠️ 判据是「实测零 IP」不是「纯域名」（`YouTube Music` 有 UA、`Microsoft` 还有 PROCESS-NAME，同样零 IP），
     且这些 URL 没锁 commit ⇒ 每次由 `audit_ruleset_content.py`（Surge）/ `audit_ruleset_noresolve.py`（Egern）重测。
-    **三内核落点不同**，见 [`no-resolve-pairing.md`](./dns.md)：
+    **三内核落点不同**，见 [`dns.md`](./dns.md)：
       · **Surge** —— 写在规则行末尾（`GEOIP,CN,DIRECT,no-resolve`）；
       · **Egern** —— `no_resolve` **仅对 `geoip` / `ip_cidr` / `ip_cidr6` / `asn` 四类生效**，
         写在 `rule_set` 上**不生效** ⇒ 这层防线在**规则集文件里**（条目级 `,no-resolve`）；
@@ -197,8 +197,8 @@ Egern 的规则集**内联在 `rules` 段的 `rule_set` 条目里**，没有独�
 
 > 本页 §1–§4 讲的是 Surge / Egern 的 `.list` 世界。mihomo 侧**自成一套**，以下数字全部由
 > `yaml.safe_load` 解析 `clash/profiles/*.yaml` 现算（2026-10-08 复核），**不手抄头注**。
-> 清单表、体量实测与选型决策见 [`../clash/ruleset-weight.md`](./rulesets.md)（体量与覆盖度）
-> 与 [`../clash/ruleset-sources.md`](./rulesets.md)（来源与选型）——**本页不重复那份清单**。
+> 清单表、体量实测与选型决策见 [`rulesets.md`](./rulesets.md)（体量与覆盖度）
+> 与 [`rulesets.md`](./rulesets.md)（来源与选型）——**本页不重复那份清单**。
 
 #### 5.1 规模：25 份 / 10 份（不是 24 / 9）
 
@@ -217,7 +217,7 @@ Egern 的规则集**内联在 `rules` 段的 `rule_set` 条目里**，没有独�
 2. **「20 份 MRS」≠「20 份 MetaCubeX」**。严格拆分是 **MetaCubeX 19 份 + AWAvenue 1 份 = 20 份 MRS**。
    评估上游可用性、写事故报告时 `AWAvenue-Ads` 要**单独算**。
 3. **`my_clash_lazy.js` 头注曾写「5 份 MRS + 5 份 yaml」（**已改为 6 + 4**）是错的**，实际 6 + 4（见
-   [`../clash/profile-anatomy.md`](./profiles/clash.md) §18.4）。
+   [`clash.md`](./profiles/clash.md) §18.4）。
    ⇒ 凡是可由解析算出的数字，别手抄进注释。
 
 #### 5.2 来源四分（分流版）
@@ -308,7 +308,7 @@ mihomo 分流版的实际顺序（`rules` 段解析结果）：
 ⚠️ 二者**互相漏，且漏的方向不对称**（实测差集：上游漏本仓 **94 条**伴生域，本仓只漏上游 **4 条**）。
 漏掉的 94 条多为认证 / 遥测 / 风控 / 通用网关类**伴生域**（`auth0.com` `statsig.com`
 `apis.google.com` `challenges.cloudflare.com` …）—— 后果是**同一次会话里请求走了不同出口，触发风控**。
-详见 [`../clash/ruleset-weight.md`](./rulesets.md) §7。
+详见 [`rulesets.md`](./rulesets.md) §7。
 
 #### 5.6 三条 mihomo 专属纪律
 
@@ -335,13 +335,13 @@ mihomo 分流版的实际顺序（`rules` 段解析结果）：
 
 本仓按 MIT 许可分发（根 `LICENSE`）；图标来源见上表。第三方规则集版权归其原作者。
 
-> ⚠️ **上游图标仓库的许可状态**：`RiverFlowsInUUU/Rule` · `jnlaoshu/MySelf` · `Koolson/Qure` 三者**均未声明 SPDX 许可**（GitHub 上 `license` 字段为空）且**均已归档**。因此本仓只把它们的图标「下载整合」作为素材来源（本仓自有文件按 MIT 分发），`icons-full.json` 里对上游的**外部引用**则属风险自担 —— 上游删仓/转私有即失效，见 [`boundaries.md`](./pitfalls.md) 的登记。
+> ⚠️ **上游图标仓库的许可状态**：`RiverFlowsInUUU/Rule` · `jnlaoshu/MySelf` · `Koolson/Qure` 三者**均未声明 SPDX 许可**（GitHub 上 `license` 字段为空）且**均已归档**。因此本仓只把它们的图标「下载整合」作为素材来源（本仓自有文件按 MIT 分发），`icons-full.json` 里对上游的**外部引用**则属风险自担 —— 上游删仓/转私有即失效，见 [`pitfalls.md`](./pitfalls.md) 的登记。
 
 ---
 
-相关：[`cross-kernel-diff.md`](./rulesets.md) · [`troubleshoot-faq.md`](./pitfalls.md) · [`../README.md`](../../README.md)
--weight.md) · [`../clash/ruleset-sources.md`](./rulesets.md) ·
-[`../clash/profile-anatomy.md`](./profiles/clash.md) §9 · [`../../../README.md`](../../README.md)
+相关：[`rulesets.md`](./rulesets.md) · [`pitfalls.md`](./pitfalls.md) · [`../README.md`](../../README.md)
+-weight.md) · [`rulesets.md`](./rulesets.md) ·
+[`clash.md`](./profiles/clash.md) §9 · [`../../../README.md`](../../README.md)
 
 ---
 
@@ -382,8 +382,8 @@ mihomo 分流版的实际顺序（`rules` 段解析结果）：
 | `no-resolve` | 规则行尾；当前用于 `LAN`、6 条含 IP 的应用集与 `GEOIP,CN` | `no_resolve: true` 只写在 `geoip`；写在 `rule_set` 上不生效 | 规则行尾；当前 4 个 `geoip-*` provider 引用都带 | 可移植的是“IP 规则不要为了匹配而先解析域名”的原则，不是字段落点 |
 | 默认出口 | `FINAL,Proxy,dns-failed` | `default.policy: Proxy` | `MATCH,Proxy` | 只有 Surge 有 `dns-failed` 参数 |
 
-mihomo 各键的逐键行为与边界，继续看 [`profile-anatomy.md`](./profiles/clash.md)；
-静态 profile 的 DNS / TUN 加固理由见 [`hardening-template.md`](./profiles/clash.md)。
+mihomo 各键的逐键行为与边界，继续看 [`profiles/<kern>.md`](./profiles/clash.md)；
+静态 profile 的 DNS / TUN 加固理由见 [`clash.md`](./profiles/clash.md)。
 
 ### 2 · 分组：22 个共同语义，三种实现
 
@@ -468,7 +468,7 @@ Surge 与 Egern 的 26 条规则逐位同义；mihomo 有 27 条。当前分流�
 3. mihomo 把 Google / Telegram 的 IP 兜底拆成独立 `ipcidr` provider，因此比另外两侧多出规则位。
 
 完整规则集来源可与 [`rulesets.md`](./rulesets.md) 交叉看；但该页仍以 Surge/Egern 为主，
-mihomo 的实际值应以本页和 [`profile-anatomy.md`](./profiles/clash.md) 为准。
+mihomo 的实际值应以本页和 [`profiles/<kern>.md`](./profiles/clash.md) 为准。
 
 ### 4 · 移植边界：什么能照搬，什么照搬就是错
 
@@ -506,7 +506,7 @@ mihomo 的实际值应以本页和 [`profile-anatomy.md`](./profiles/clash.md) �
 > 最重要的判断法：先问“这个改动发生在**解析阶段、规则阶段、节点展开阶段还是客户端运行层**”，
 > 再找目标内核的对应机制。只按相似键名替换，通常就是错的。
 
-`no-resolve` 的三侧落点另见 [`no-resolve-pairing.md`](./dns.md)。
+`no-resolve` 的三侧落点另见 [`dns.md`](./dns.md)。
 
 ### 5 · 懒人版：同为 11 条规则，不代表可以复制文件
 
@@ -529,9 +529,9 @@ mihomo 的实际值应以本页和 [`profile-anatomy.md`](./profiles/clash.md) �
 ### 6 · 版本保留策略
 
 - 三侧 `profiles/` 顶层都保留固定名四件：`routing` / `lazy`，各有带注释版与 `.min` 版；订阅地址不随版本改名。
-- Surge / Egern 的现役文件以 `#! version=` 标当前版本，并把历史成对放进 `profiles/config_old/`。
+- Surge / Egern 的现役文件以 `#! version=` 标当前版本（仓内不保留历史版本）。
 - mihomo 静态 profile 由 `skill/scripts/clash/build_profiles.py` 生成，**现已带 `#! version=` 头注**（2026-10-07 补），
-  并按版本存进 `clash/profiles/config_old/`；另有两个覆写脚本。
+  版本由生成器写入头注；另有两个覆写脚本。
   **不要把 Surge/Egern 的头注版本与归档约定机械搬到 mihomo。**
 - `.min` 的含义始终是“同一配置去注释”，不是精简功能；改完必须对拍。
 
@@ -616,8 +616,8 @@ python skill/scripts/clash/build_rules.py --check
 
 ---
 
-相关：[`rulesets.md`](./rulesets.md) · [`no-resolve-pairing.md`](./dns.md) ·
-[`profile-anatomy.md`](./profiles/clash.md) · [`hardening-template.md`](./profiles/clash.md) ·
+相关：[`rulesets.md`](./rulesets.md) · [`dns.md`](./dns.md) ·
+[`profiles/<kern>.md`](./profiles/clash.md) · [`clash.md`](./profiles/clash.md) ·
 [`SKILL.md`](../SKILL.md)
 
 ---
@@ -744,7 +744,7 @@ _OTHER_TYPES = {"URL-REGEX", "USER-AGENT", "PROCESS-NAME", "PROTOCOL",
 ⚠️ **`_OTHER_TYPES` 不参与任何判负。** `URL-REGEX` / `USER-AGENT` 这类
 在 Surge 里是**不可预匹配**的（需要在 HTTP 层求值），也不会触发 DNS 解析。
 但它们**不能带 `pre-matching`** —— 这是另一个话题，见
-[`hardening-template.md`](./profiles/clash.md) §4.4。
+[`clash.md`](./profiles/clash.md) §4.4。
 
 ### 5 · 超重时的处置
 
@@ -862,8 +862,8 @@ key = re.sub(r"[^A-Za-z0-9._-]", "_", url)[-120:]
 >
 > 本文只讨论**体量与覆盖度**：一份集有多大、接住了多少、漏了什么、代价是什么。
 > `rule-providers` 的三种 `format × behavior` 组合与键语义见
-> [`profile-anatomy.md`](./profiles/clash.md) §9；门禁命令与退出码见
-> [`checker.md`](./gates.md)；上游供应链评估见 [`public-repo.md`](./gates.md) §9。
+> [`profiles/<kern>.md`](./profiles/clash.md) §9；门禁命令与退出码见
+> [`gates.md`](./gates.md)；上游供应链评估见 [`gates.md`](./gates.md) §9。
 >
 > **本文的中心结论**：规则集的"重量"不是条数，是**覆盖面与落点的正确性**。
 > 本仓真实发生过的一次事故不是"集太大"，而是**一份 188 条的集漏了 94 条伴生域** ——
@@ -905,7 +905,7 @@ key = re.sub(r"[^A-Za-z0-9._-]", "_", url)[-120:]
 #### 1.1 一个反复出现的头注错误
 
 `lazy.yaml` 的头注曾写「5 份 MRS + 5 份 yaml」，实际是 **6 份 mrs + 4 份 yaml**
-（见 [`profile-anatomy.md`](./profiles/clash.md) §18.4）。
+（见 [`profiles/<kern>.md`](./profiles/clash.md) §18.4）。
 
 **教训**：手写的规模描述一定会漂移。凡是可以由解析结果算出来的数字，
 就让脚本写进头注，不要在注释里手抄。本文所有份数与条数均以
@@ -976,7 +976,7 @@ key = re.sub(r"[^A-Za-z0-9._-]", "_", url)[-120:]
 > ⚠️ **除本仓自托管的 3 份外，条目数一律不写死精确数字。**
 > 这些集都没锁 commit（`cdn.jsdelivr.net/gh/...@meta`、`raw.githubusercontent.com/.../main`），
 > 上游滚动更新，写死的数字很快过期 —— 这与 Surge 侧
-> [`../surge/ruleset-weight.md`](./rulesets.md) §2.2 的口径一致。
+> [`rulesets.md`](./rulesets.md) §2.2 的口径一致。
 >
 > **唯一例外**是 §7 的覆盖度对比，那里的数字是**一次实测的结论**，
 > 必须带日期与快照路径记录，因为它是论证的一部分，不是规模描述。
@@ -1016,7 +1016,7 @@ key = re.sub(r"[^A-Za-z0-9._-]", "_", url)[-120:]
 这是**已知差异**，不是笔误 —— 分流版前面还有 `cn`（域名集）与 `apple-cn` 先接住国内域名，
 `geoip-cn` 主要兜 IP 直连场景；懒人版把 `cn` 排在它前面后，
 `geoip-cn` 若不带 `no-resolve` 会对每个国内域名触发一次解析。
-相关讨论见 [`leak-localization.md`](./ops.md)。
+相关讨论见 [`ops.md`](./ops.md)。
 
 **⇒ 判据：删规则集时，要同时检查它后面那条规则的 `no-resolve` 是否还成立。**
 砍掉一条规则会改变前序集合的构成，进而改变后续 IP 规则的行为。
@@ -1088,7 +1088,7 @@ key = re.sub(r"[^A-Za-z0-9._-]", "_", url)[-120:]
 `domain` 集里混进一条 `DOMAIN-SUFFIX,xxx` 这样的完整规则行，
 该行会被当成一个**域名字面量**（含逗号），永远匹配不上 ⇒ 该条静默失效。
 反过来 `classical` 写成了 `domain`，整份集退化成空集 —— 且**不报错**。
-（后果细节见 [`profile-anatomy.md`](./profiles/clash.md) §9.4。）
+（后果细节见 [`profiles/<kern>.md`](./profiles/clash.md) §9.4。）
 
 #### 5.3 一张选型表
 
@@ -1103,9 +1103,9 @@ key = re.sub(r"[^A-Za-z0-9._-]", "_", url)[-120:]
 ### 6 · 覆盖度是怎么量出来的
 
 这是本文最需要说清的方法论。Surge 侧
-[`../surge/ruleset-weight.md`](./rulesets.md) 的核心判据是
+[`rulesets.md`](./rulesets.md) 的核心判据是
 「**数域名条目，不是看名字**」；Egern 侧
-[`../egern/ruleset-weight.md`](./rulesets.md) 是
+[`rulesets.md`](./rulesets.md) 是
 「**按覆盖率判，绝不能按体积判**」。mihomo 侧沿用的是后者的思路，
 但**量的对象不同**：不是"大表 vs 小表"，而是"**上游通用集 vs 本仓整合集**"。
 
@@ -1443,7 +1443,7 @@ python skill/scripts/clash/build_rules.py --check   # CI 用：过期即判负�
 `@meta` 与 `main` 都是**移动分支**，不可钉 commit（MRS 是二进制且走
 jsDelivr 分支地址，没有 commit hash 可钉）。
 上游一旦推了错误内容，本仓用户最多 24 小时内全部收到。
-这是 [`public-repo.md`](./gates.md) §9 供应链评估要覆盖的场景。
+这是 [`gates.md`](./gates.md) §9 供应链评估要覆盖的场景。
 
 **风险三： Refresh 失败无告警。**
 
@@ -1452,7 +1452,7 @@ jsDelivr 分支地址，没有 commit hash 可钉）。
 
 #### 10.3 为什么不再拉长
 
-Surge 侧 [`../surge/ruleset-weight.md`](./rulesets.md) §5.3
+Surge 侧 [`rulesets.md`](./rulesets.md) §5.3
 提到「给远程集加 `update-interval` 拉长」可以减负，本仓**没有这么做**：
 
 - mihomo 的 `interval` 只控制**刷新频率**，不影响内存与匹配开销（§11），
@@ -1531,13 +1531,13 @@ MetaCubeX 那一份每 24 小时自动刷新，能接住"两次人工整合之�
 272 条里 1 条。它是**不可预匹配**的类型（需在 HTTP 层求值），
 但**不会触发 DNS 解析**，不参与 `no-resolve` 判据。
 1 条不构成性能问题，Surge 侧
-[`../surge/ruleset-weight.md`](./rulesets.md) §4 有同类说明。
+[`rulesets.md`](./rulesets.md) §4 有同类说明。
 
 **Q：我只改了 `rules/AI.list`，需要改三个内核吗？**
 
 改真源即可，然后跑 `build_rules.py`。Surge / Egern 直接消费 `.list`，
 mihomo 消费生成的 `.yaml`。**不要手工改两份** —— 见
-[`branch.md`](./profiles/clash.md) §13。
+[`profiles/<kern>.md`](./profiles/clash.md) §13。
 
 **Q：`--check` 通过了，是不是说明规则集是最新的？**
 
@@ -1553,7 +1553,7 @@ Surge 侧取一周是因为那里有具体理由，**本仓没有**，所以保�
 
 **Q：`lazy.yaml` 头注说 5 份 MRS + 5 份 yaml，实际是 6 + 4，这是 bug 吗？**
 
-是头注手写数字的漂移，已记录（[`profile-anatomy.md`](./profiles/clash.md) §18.4）。
+是头注手写数字的漂移，已记录（[`profiles/<kern>.md`](./profiles/clash.md) §18.4）。
 规则集本身没错，错的是注释。**⇒ 凡可解析算出的数字，别手抄进注释。**
 
 **Q：本仓 25 份会不会比 Egern 那份 111k 条的表还重？**
@@ -1598,9 +1598,9 @@ Surge 侧取一周是因为那里有具体理由，**本仓没有**，所以保�
 
 ---
 
-相关：[`profile-anatomy.md`](./profiles/clash.md) §9 ·
-[`checker.md`](./gates.md) · [`leak-localization.md`](./ops.md) ·
-[`public-repo.md`](./gates.md) §9 · [`branch.md`](./profiles/clash.md) ·
-[`../surge/ruleset-weight.md`](./rulesets.md) ·
-[`../egern/ruleset-weight.md`](./rulesets.md) ·
+相关：[`profiles/<kern>.md`](./profiles/clash.md) §9 ·
+[`gates.md`](./gates.md) · [`ops.md`](./ops.md) ·
+[`gates.md`](./gates.md) §9 · [`profiles/<kern>.md`](./profiles/clash.md) ·
+[`rulesets.md`](./rulesets.md) ·
+[`rulesets.md`](./rulesets.md) ·
 [`../../SKILL.md`](../SKILL.md) · [`../../../README.md`](../../README.md)

@@ -50,8 +50,8 @@ sudo tcpdump -i en0 -n 'udp port 53'
 | 明文查询来自别的设备 | ② 旁路设备 | 第 3 项：`hijack-dns` 缺失或覆盖不全；家里有没有 HomePod / 电视 / 游戏机 |
 | 明文查询的域名是你要访问的站点 | ③ 规则触发 | 第 12 项 + `audit_ruleset_content.py`：远程规则集里缺 `no-resolve` 的 IP 条目最容易漏（它不在你 profile 里，本地静态审计看不见） |
 
-修法对照与"什么不该修"（可接受的一次性明文通路）见 [`../skill/reference/surge/leak-localization.md`](./ops.md)。
-Egern 侧网络层流程（IP 归属 `ipinfo.io`、`whoami.akamai.net` 问真实递归方、换 bootstrap IP 复测、查配置描述文件、路由器侧把 WAN DNS 改国内公共解析器）见 [`../skill/reference/egern/leak-localization.md`](./ops.md)。
+修法对照与"什么不该修"（可接受的一次性明文通路）见 [`ops.md`](./ops.md)。
+Egern 侧网络层流程（IP 归属 `ipinfo.io`、`whoami.akamai.net` 问真实递归方、换 bootstrap IP 复测、查配置描述文件、路由器侧把 WAN DNS 改国内公共解析器）见 [`ops.md`](./ops.md)。
 
 Egern 日志速读：
 
@@ -90,14 +90,14 @@ Egern 日志速读：
 | `Smart` 三档没生效 | mihomo：`Smart.proxies` 未接上 `Low Mult./Auto/High Mult.`（子组继承了却没连，比不声明更隐蔽） | **mihomo** |
 
 
-更长的清单在原两侧坑档：[`../skill/reference/surge/pitfalls.md`](./pitfalls.md) ·
-[`../skill/reference/egern/pitfalls.md`](./pitfalls.md)（速查表在各自文件顶部）。
+更长的清单在原两侧坑档：[`pitfalls.md`](./pitfalls.md) ·
+[`pitfalls.md`](./pitfalls.md)（速查表在各自文件顶部）。
 
 #### 7.5 母题：审计绿不等于配置可用
 
 本项目反复出现"脚本全绿、实测仍有问题"。每次的结论都一样：存在审计器看不见的维度，把它补成一个可复跑的脚本，而不是重跑同一个脚本、或只解释为什么脚本是对的。
 
-两个里程碑（详细复盘见 [`no-resolve-pairing.md`](./dns.md)）：
+两个里程碑（详细复盘见 [`dns.md`](./dns.md)）：
 
 1. f7 事故：给 `geoip: CN` 补 `no_resolve` 后，两个 DNS 审计双双全绿，国内域名却整片落 `default → Proxy`。补上第三个维度：分流覆盖审计（`audit_routing_coverage.py`）。
 2. 兜底判据失效：`group_ready` 只要求"端点全 IP + 至少一条被判路由"，没要求那一条是 `DIRECT`，于是 f5 假安心。收紧为 `group_reach`，后又因段 A 删除而双向化（见 [操作手册](./ops.md)）。判据的载体选错时，报红的不是配置而是判据本身 —— 这是同一条母题的反向应用。
@@ -126,8 +126,8 @@ Egern 日志速读：
 
 ✅ **mihomo 侧此缺口已补**：已有分流覆盖审计脚本（闸门 #9）。（此处曾写「没有」，与事实相反；Surge / Egern 亦有）
 `audit_routing_coverage.py`）。即「规则是否真的接住了该接的域名」在 mihomo 侧
-**只能人工验证** —— 见 [`boundaries.md`](./pitfalls.md) 的如实记录。
-这与 [`no-resolve-pairing.md`](./dns.md) 的母题一致：
+**只能人工验证** —— 见 [`pitfalls.md`](./pitfalls.md) 的如实记录。
+这与 [`dns.md`](./dns.md) 的母题一致：
 审计绿不等于配置可用。
 
 #### 相关页面
@@ -151,7 +151,7 @@ Egern 日志速读：
 |:---|:-----|
 | Python | 3.8+；Surge 侧脚本仅标准库；Egern 侧需 PyYAML |
 | 网络 | 只有内容 / 覆盖 / 刷新类 `audit_*` 需要联网，其余全离线 |
-| 磁盘 | 规则集缓存数 MB 级、随上游漂移（实测读数见 [`../surge/checker.md`](./gates.md) 「磁盘」行；`direct.txt` 一份十一万条，条数权威在 [`rulesets.md`](./rulesets.md)），在系统临时目录（`surge-ruleset-cache` / `egern-ruleset-cache`）；`--cache-dir` 可换，`--force` 忽略缓存重下 |
+| 磁盘 | 规则集缓存数 MB 级、随上游漂移（实测读数见 [`gates.md`](./gates.md) 「磁盘」行；`direct.txt` 一份十一万条，条数权威在 [`rulesets.md`](./rulesets.md)），在系统临时目录（`surge-ruleset-cache` / `egern-ruleset-cache`）；`--cache-dir` 可换，`--force` 忽略缓存重下 |
 | Windows | 输出必须 UTF-8（脚本内部已钉；中文控制台默认 GBK 会把 emoji 崩成退出码 1，与"期望判负"撞码，造成假绿）。Git Bash 的 `pwd` 是 `/c/Users/...`，Windows 版 Python 打不开，`.sh` 里用 `cygpath -w` 转换；拼路径一律用 `/` |
 
 #### 8.2 一条命令：全量闸门
@@ -230,7 +230,7 @@ python skill/tests/make_min.py            # 计划模式：四份 .min 应全部
 
 #### 8.6 判据自身的纪律
 
-- 判据演进史与逐条出处：[`../skill/reference/surge/checker.md`](./gates.md)（Surge）· 两侧 [`surge/pitfalls.md`](./pitfalls.md) / [`egern/pitfalls.md`](./pitfalls.md)；
+- 判据与命令：[`gates.md`](./gates.md)；
 - 为让脚本变绿而改判据，可以，但必须留痕 —— 写清为什么退让、退让后还能抓住什么；
 - 每条新判据要配能证伪它的坏 fixture（期望判负），否则它可能恒返回 0；
 - 判据脚本（`skill/tests/` 四件）改动前按"两要素"自证：哪个反例会漏判、改后能抓住什么。
@@ -278,7 +278,7 @@ python skill/tests/make_min.py            # 计划模式：四份 .min 应全部
 |:----:|:-----|
 | 🧩 **`lazy` 两处占位至少填一处** | 它也有隐藏订阅槽位 `Airport`，另带 2 条占位节点（`Node-A` → `Proxy`、`Node-B` → `AI`）；两者都不填则所有走代理的流量不通（**分流版无此问题**：只填订阅即可） |
 | ✈️ **分流版填 1 处订阅槽位** | 单一隐藏组 `Airport`（`routing_v3` 起把 A/B 合并为单入口） |
-| 📜 **历史版本看 git** | 订阅地址用固定名，升版只改文件内容与头注 `#! version=`，不改名；当前版永远只有顶层那四件。配置变动时，变动前的旧配置归档进 `profiles/config_old/`：归档版本号 = 该目录内此分工最新号的下一位（2026-09-29 起三段制 X.Y.Z：Z=小修、Y=中改、X=大改，每位满 10 进 1，4.0.10 合法；历史两段号不回改），完整版与 `.min` 成对，现役头注同步升为下一位；更早历史看 git（备份 tag：`pre-cleanup-20260927`） |
+| 📜 **历史版本看 git** | 订阅地址用固定名，升版只改内容与头注 `#! version=`，不改名；当前版永远只有顶层那四件。**仓内不保留历史版本** —— 历史在 git 与 Releases |
 | 🔒 **`proxy_nameservers` 一设就跳过 `forward`** | 这是硬覆盖。设了它之后，写在 `forward` 里的节点域名规则就是**死代码**（Egern [`坑 18`](./pitfalls.md)） |
 | 🧷 **不要用 YAML dump 重写 profile** | 含数千字符的超长单行（如 CA 证书 base64），dump 会丢注释、改格式。按行读入 + 断言「全文恰好命中 1 行」 |
 
@@ -304,11 +304,11 @@ python skill/tests/make_min.py            # 计划模式：四份 .min 应全部
 两内核**分组已完全对齐（24/24 同名同序）**，分流版规则 24 条逐位对应，懒人版 2026-09-24 起也
 逐位同构（各 10 条、同一顺序）；但**同构指位数与语义，不指字节** —— Surge 用内置 `SYSTEM`、
 Egern 用本仓快照 `apple_system.list`，且若干内核级约束不可套用（`pre-matching`、`proxy_nameservers`、
-内置 `LAN`/`SYSTEM`）。动手前读 [`cross-kernel-diff.md`](./rulesets.md)。
+内置 `LAN`/`SYSTEM`）。动手前读 [`rulesets.md`](./rulesets.md)。
 
 ---
 
-相关：[`rulesets.md`](./rulesets.md) · [`cross-kernel-diff.md`](./rulesets.md)
+相关：[`rulesets.md`](./rulesets.md) · [`rulesets.md`](./rulesets.md)
 
 ### FAQ 与术语表
 
@@ -408,7 +408,7 @@ Surge iOS 不支持本地文件配置 —— 把 profile 托管到可访问地�
 > **何时读**：排查实际泄露、或**改动判据 / 规则集之前**。
 >
 > 每一条都来自实测。摘要在前，详述在后。
-> 判据演进史另见 [`checker.md`](./gates.md)。
+> 判据见 [`gates.md`](./gates.md)。
 
 ### 速查表
 
@@ -844,11 +844,11 @@ Surge 的 filter 不支持引用变量（filter 是字面正则），所以这�
 | 7 | Windows 中文环境 print 非 GBK 字符 | `UnicodeEncodeError` → 退出码 1 → 被读成「判负」 | 每脚本 import 时 `reconfigure` + CI 编码门 + E4 |
 | 8 | 路径探测基于 `__file__` | 本地全绿，GitHub Actions 上报「缺文件」 | 四个 clash 门禁的 `_default_root`（CWD 优先）|
 | 9 | 复制文件丢 mtime | V7「一天一版」误判成当天升了 21 个版本 | `cp -p` + `SKIP_V7`（输出「未验证，不是通过」）|
-| 10 | 两版 `AD` 组口径不同被套错 | 分流版 `REJECT`/`DIRECT`，懒人版单成员 `REJECT` | ⚠️ **仅靠注释与文档，无机器判据（挂账）** |
+| 10 | 两版 `AD` 组口径不同被套错 | 分流版 `REJECT`/`DIRECT`，懒人版单成员 `REJECT` | ⚠️ **仅靠注释与文档，无机器判据（无机器判据）** |
 | 11 | 跨仓引用 → 本仓不自洽 | 2511 处 URL 仍指向外部仓库（图标 2311 + 规则集 200）| `check_selfcontained.py`（闸门 **#42 自洽性**，在 CI 里跑）|
 | 12 | 靠「高熵」判凭据 | 漏掉含 `@` 的密码（实测 `MyRealP@ssw0rd123` 漏过）| `check_secrets.py` 的**占位白名单制** |
 | 13 | `198.18.0.1` 被判成真实 IP | 那是 mihomo fake-ip 段（RFC 6815），Surge/Egern 侧不认识 | `DOC_NETS` / `ALLOWED_IPS` 窄白名单（**两处**）|
-| 14 | 只测「好配置通过」 | 恒返回 0 的脚本也能让现役配置全绿 | `checker.md` §9 的 15 个注入样例（⚠️ 无自动化回归）|
+| 14 | 只测「好配置通过」 | 恒返回 0 的脚本也能让现役配置全绿 | `gates.md` §9 的 15 个注入样例（⚠️ 无自动化回归）|
 | 15 | CRLF 判负 | Clash 侧 3 个文件是 CRLF，按 `\n` 写的正则失配 | `.gitattributes`（`* text=auto eol=lf`）|
 
 ---
@@ -941,11 +941,11 @@ on:
 
 - **`skill/tests/clash/check_remote_urls.py`** —— 收集（两条路径）+ 探测（HEAD→GET 退化）+ 排除规则全在这里。
 - **`.github/workflows/ci.yml`** 的 `Remote ruleset reachability (mihomo)` step（含每周 cron）。
-- 判负样例：`checker.md` §9.2 第 15 条 —— 把某条 URL 改回 `mihomo-white-guard.yaml`（**即当年真实死链**），期望 `NG` + `死链 N 个` + exit 1。
-- 文档：`profile-anatomy.md` §9.5 的警告块。
+- 判负样例：`gates.md` §9.2 第 15 条 —— 把某条 URL 改回 `mihomo-white-guard.yaml`（**即当年真实死链**），期望 `NG` + `死链 N 个` + exit 1。
+- 文档：`profiles/<kern>.md` §9.5 的警告块。
 
 ✅ **已核（2026-10-07 零信任自查）**：`ruleset-sources.md` 里**已无** `mihomo-white-guard.yaml`
-（现存提及只在 `egern/profiles/config_old/` 的历史归档里，属沿革）。
+（现存提及只在 git 历史里，属沿革）。
 
 ⚠️ **但这段警告的机理仍然成立**：改规则集 URL 时，Markdown 文档表**确实没有机器兜底** ——
 `check_remote_urls.py` 扫的是配置里的 URL，不扫 `.md`；`check_selfcontained.py` 同样不扫 `.md`。
@@ -989,7 +989,7 @@ open(fp, "a", encoding="utf-8").write(new_content)   # ← 追加，不是覆盖
 > 🔴 **PyYAML 的"重复键取最后一份"是这次静默通过的直接原因。**
 > 本仓所有 clash 门禁都是 PyYAML 系，它们**共享同一个盲区**。
 
-三个后果（当时记录在 `profile-anatomy.md` §18.3）：
+三个后果（当时记录在 `profiles/<kern>.md` §18.3）：
 
 1. **重复顶层键** —— mihomo 用 `gopkg.in/yaml.v3` 解析，**v3 默认开启唯一键检查**，
    有**拒绝加载整份配置**的风险（未经实测）。这正是「本地全绿 ≠ 线上能跑」的同类：
@@ -1036,8 +1036,8 @@ if len(parsed.get("proxy-groups") or []) != ng or len(parsed.get("rules") or [])
 
 - **`skill/scripts/clash/build_profiles.py`** —— 覆盖写 + 自检两段（约 217–236 行）。
 - **`skill/tests/verify_all.py`** 的 `('clash 静态 profile 新鲜度', [PY, 'skill/scripts/clash/build_profiles.py', '--check'], {})` —— 闸门 #46（clash 静态 profile 新鲜度）。
-- 判负样例：`checker.md` §9.2 第 14 条（往真源追加一行 → `--check` 报「已过期」）。
-  ⚠️ `build_profiles.py --check` 的判负样例在 `checker.md` §9.2 里**尚未单列**（表里第 14 条是 `build_rules.py`），待补。
+- 判负样例：`gates.md` §9.2 第 14 条（往真源追加一行 → `--check` 报「已过期」）。
+  ⚠️ `build_profiles.py --check` 的判负样例在 `gates.md` §9.2 里**尚未单列**（表里第 14 条是 `build_rules.py`），待补。
 
 ---
 
@@ -1117,12 +1117,12 @@ def diff(a, b, path=""):
 #### 判据固化在哪
 
 - **`skill/tests/clash/check_script_sync.py`** 的 `diff` 函数本体（含记录本坑的 docstring）。
-- 判负样例：`checker.md` §9.2 第 13 条 —— 从 `my_clash_lazy.js` 删掉一条规则
+- 判负样例：`gates.md` §9.2 第 13 条 —— 从 `my_clash_lazy.js` 删掉一条规则
   ⇒ exit 1，且（修好后）输出含 `rules[…] 长度不同` 之类的定位标记。
 
 ✅ **已核并修（2026-10-07 零信任自查）**：
 
-1. `checker.md` §6.2 的滞后**已同步**：该挂账标记为「✅ 已修（commit `7d7250c`）」，
+1. `gates.md` §6.2 已同步：该处标记为「已修」，
    并附实测证据（注入一条规则 ⇒ 输出 `rules 长度不同: 脚本 12 vs 静态 11`，不再是 `NameError`）。
 2. `diff` 现定义于 `check_script_sync.py` 第 94 行 —— 判负时能给出精确诊断。
    ⚠️ 仍**未做到的**：docstring 提到的「末尾自检」确实没有，判负样例仍需人工跑。
@@ -1200,7 +1200,7 @@ else:
 
 - **`skill/tests/clash/check_structure.py`** 的 ③（含 a/b/c/d 四条），对**四份 profile**
   （`lazy` / `lazy.min` / `routing` / `routing.min`）逐份生效。
-- 判负样例：`checker.md` §9.2 第 **5 / 6 / 7 / 9** 条：
+- 判负样例：`gates.md` §9.2 第 **5 / 6 / 7 / 9** 条：
 
 | # | 注入 | 期望定位标记 |
 |:-:|:-----|:-------------|
@@ -1209,8 +1209,8 @@ else:
 | 7 | 把 `rcode://` 几行挪到 `private,cn` 之后 | `广告 policy 排在 cn 之后` |
 | 9 | 只加 `rcode://`，`fake-ip-filter` 里列**另一个**集 | `广告集两处不一致` ← **证明判据 c 是「相等」不是「非空」** |
 
-- 文档：`profile-anatomy.md` §14（含 §14.4 两版本写法差异：`rule-set:private,cn` vs `geosite:private,cn`）。
-- FAQ 入口：`profile-anatomy.md` 「Q：广告拦截加了清单，但没生效」→ 查三件事。
+- 文档：`profiles/<kern>.md` §14（含 §14.4 两版本写法差异：`rule-set:private,cn` vs `geosite:private,cn`）。
+- FAQ 入口：`profiles/<kern>.md` 「Q：广告拦截加了清单，但没生效」→ 查三件事。
 
 ---
 
@@ -1240,7 +1240,7 @@ mihomo 的 IPv6 有**两个独立的开关**，管的是两件不同的事：
 ⇒ 两处都关，双栈站点一律回落 IPv4，封堵面与 Surge / Egern 两侧等效
 （Surge 是 `ipv6` + `ipv6-vif`，Egern 只要 `ipv6`）。
 
-> ⚠️ 这条在 `leak-localization.md` 里被单列为**面 ③′** —— mihomo 侧**特有**的一条泄露面，
+> ⚠️ 这条在 `ops.md` 里被单列为**面 ③′** —— mihomo 侧**特有**的一条泄露面，
 > 它**不走 `:53`**，所以"我只堵了明文 DNS"的排查思路会漏掉它。
 
 #### 修法
@@ -1267,9 +1267,9 @@ if dns.get("ipv6") is not False:    errs.append("dns.ipv6 未显式关闭")
 #### 判据固化在哪
 
 - **`skill/tests/clash/check_structure.py`** 的 ④。
-- 判负样例：`checker.md` §9.2 第 **8** 条（`false` → `true`，顶层与 `dns.ipv6` 各试一次）
+- 判负样例：`gates.md` §9.2 第 **8** 条（`false` → `true`，顶层与 `dns.ipv6` 各试一次）
   与第 **10** 条（**把 `ipv6` 键整个删掉 ⇒ 仍判负**，证明用的是 `is not False`）。
-- 文档：`profile-anatomy.md` §4.2；`leak-localization.md` §6（面 ③′）。
+- 文档：`profiles/<kern>.md` §4.2；`ops.md` §6（面 ③′）。
 
 ---
 
@@ -1298,7 +1298,7 @@ if dns.get("ipv6") is not False:    errs.append("dns.ipv6 未显式关闭")
 **漂移的根源是一个纯手工步骤**：改脚本 → （人记得）→ 重生成静态 → （人记得）→ 重生成 `.min`。
 静态文件不会报错，脚本也不会报错 —— **两边都能正常跑，只能靠对拍发现。**
 
-> 📌 `profile-anatomy.md` §18.1 把这条写成纪律：**一处改动要写（最多）四处** ——
+> 📌 `profiles/<kern>.md` §18.1 把这条写成纪律：**一处改动要写（最多）四处** ——
 > 静态 `.yaml` + `.min.yaml` + 覆写 `.js` + （若动规则集内容）`rules/*.list`。
 
 #### 修法
@@ -1341,7 +1341,7 @@ python skill/scripts/clash/build_profiles.py --check    # CI 用：过期即判�
 | 静态是否过期（脚本有更新未重生成）| `skill/scripts/clash/build_profiles.py --check` | ✅ 43 道之一 |
 | `rules/*.yaml` 是否过期（真源 `.list` 有更新）| `skill/scripts/clash/build_rules.py --check` | ✅ 闸门 #39 |
 
-- 判负样例：`checker.md` §9.2 第 11 / 12 / 14 条。
+- 判负样例：`gates.md` §9.2 第 11 / 12 / 14 条。
 
 ⚠️ **判别力现状**：这四道门的判负样例都是**人工跑出来的**，不是常驻 CI 的保证（见坑 14）。
 
@@ -1436,7 +1436,7 @@ env.setdefault('PYTHONIOENCODING', 'utf-8')     # ✅ 父进程传下来的 cp93
 - **`.github/workflows/ci.yml`** 的 `Encoding gate (cp936)` step。
 - **`skill/tests/check_portability.py`** 的 E4（含它自己的自检样例：只护 `stderr`、只写注释、
   只定义不调用 —— 三个都期望判负）。
-- 判负样例纪律：`checker.md` §9.1 —— **判负断言是两条，不是一条**：退出码 == 1 **且**
+- 判负样例纪律：`gates.md` §9.1 —— **判负断言是两条，不是一条**：退出码 == 1 **且**
   输出里出现那个注入的定位标记。后者正是为了把「判负」与「崩了」分开。
 
 ---
@@ -1515,13 +1515,13 @@ def _default_root:
 #### 判据固化在哪
 
 - **四个 clash 门禁各自的 `_default_root`**：`check_structure.py` · `check_min_pair.py` ·
-  `check_script_sync.py` · `check_remote_urls.py`（同一段逻辑，四处拷贝 —— 见下方挂账）。
+  `check_script_sync.py` · `check_remote_urls.py`（同一段逻辑，四处拷贝 —— 见 `gates.md` §16.4）。
 - **CI**：`Gates (Surge + Egern + mihomo)` step 从仓库根跑 `verify_all.py` ⇒ 每 push 都在验证这条。
-- 文档：`checker.md` §1 环境要求块；`profile-anatomy.md` §18.5；`branch.md` 的移植清单
+- 文档：`gates.md` §1 环境要求块；`profiles/<kern>.md`；`profiles/<kern>.md` 的移植清单
   （「路径探测优先以仓库根 CWD 为锚点，再向上寻找内核特征目录；不要只按 `__file__` 固定上推层数」）。
 - commit：`d2b3caa fix: clash 门禁路径探测改为 CWD 优先（CI 暴露）`。
 
-⚠️ **挂账**：这四份 `_default_root` 是**同一判据的四份拷贝**，靠"复制粘贴"保持一致
+⚠️ **已知缺口**：这四份 `_default_root` 是**同一判据的四份拷贝**，靠"复制粘贴"保持一致
 （正是 `surge/pitfalls.md` 坑 11 的形态）。修法是提进 `_clash_common.py`，**目前未做**。
 
 ---
@@ -1545,7 +1545,7 @@ V7 routing 一天一版  ❌ 2026-10-07 有 21 个版本（v1.0→v1.1→…→v
 | 对象 | 日期来源 |
 |:-----|:---------|
 | **现役版** | 版本号首现日 `number_birth`（git 提交历史）|
-| **归档版**（`config_old/`）| 快照 blob 诞生日 `version_date`（git 历史 / **文件 mtime**）|
+| **归档版**（已删除的归档目录）| 快照 blob 诞生日 `version_date`（git 历史 / **文件 mtime**）|
 
 本仓的 git 历史从整合完成起算 —— 于是归档文件的
 git 日期查不到，判据退化到用 **mtime**。
@@ -1571,7 +1571,7 @@ cp 之后的归档文件： v1.0 (10-07) · v1.1 (10-07) · v1.2 (10-07) … v2.
 
 两件事一起做（commit `3006cf8`）：
 
-1. **`cp -p` 重拷 `config_old/`** —— 保留 mtime，让日期分组至少还能用文件系统时间重建。
+1. **`cp -p` 重拷 已删除的归档目录** —— 保留 mtime，让日期分组至少还能用文件系统时间重建。
    （这是**减缓**，不是根治：本仓的 git 历史本就从整合完成起算。）
 2. **`SKIP_V7=1` 开关** —— 承认「本就不继承 git 历史」这个局限，但
    **输出必须写明"未验证"，不能冒充通过**：
@@ -1590,7 +1590,7 @@ if _os.environ.get("SKIP_V7") == "1":
 
 配套：CI 里仍 `fetch-depth: 0` 保留完整历史 —— 不是给 V7 用，是给**其它归档判据**（V3–V6）留底。
 
-📌 **豁免的三条纪律**（`checker.md` §10.3）：
+📌 **豁免的三条纪律**（`gates.md` §10.3）：
 
 1. **豁免必须点名**，不冒充通过 —— 输出里要能读出「未验证」。
 2. **豁免要写理由**，理由要能被证伪（"日期分组不成立"是可验证的事实，不是"太麻烦"）。
@@ -1600,7 +1600,7 @@ if _os.environ.get("SKIP_V7") == "1":
 
 - **`skill/tests/check_min_pair.py`**（跨内核版）的 `_cadence` 与 `CADENCE_FROM`（2026-10-04）。
 - **`skill/tests/verify_all.py`** 的 `_skip_v7 = {'SKIP_V7': '1'}` 传给 `('min-pair 一致', …)`。
-- 文档：`checker.md` §10.1；`boundaries.md`（「一天一版」只从 2026-10-04 起算，历史不回改不追溯）。
+- 文档：`gates.md` §10.1；`gates.md`（「一天一版」只从 2026-10-04 起算，历史不回改不追溯）。
 - commit：`3006cf8`。
 
 ⚠️ 注意区分：**clash 侧的 `skill/tests/check_min_pair.py` 不含 V7**（它没有
@@ -1674,7 +1674,7 @@ if _os.environ.get("SKIP_V7") == "1":
 
 #### 修法
 
-现状：靠**注释 + 文档**（`my_clash_lazy.js:90-91` 的注释、`profile-anatomy.md` §8.2 的表格）。
+现状：靠**注释 + 文档**（`my_clash_lazy.js:90-91` 的注释、`profiles/<kern>.md` §8.2 的表格）。
 这是**本仓目前唯一一条"有意差异"没有机器判据的**。
 
 📌 若要补判据，正确的写法是**按版本分表断言**（不是"AD 必须有几个成员"这种一刀切）：
@@ -1695,9 +1695,9 @@ AD_CALIBER = {
 
 #### 判据固化在哪
 
-- ⚠️ **无机器判据（挂账）。** 目前只有：
+- ⚠️ **无机器判据（无机器判据）。** 目前只有：
   - `clash/override/my_clash_lazy.js:90-91` 的注释（含姊妹仓 commit `893b406` 出处）；
-  - `skill/reference/clash/profile-anatomy.md` §8.2 的「为什么这么写」表格与 §14.3；
+  - `skill/reference/profiles/clash.md` §8.2 的「为什么这么写」表格与 §14.3；
   - `check_script_sync.py` **间接**守住「同一版内脚本↔静态不漂移」（`EXPECTED_DIFF` 不含 `AD`，
     所以 `AD` 的成员表是**逐位比对**的 —— 脚本改了静态没改会立刻红）。
 
@@ -1740,14 +1740,14 @@ AD_CALIBER = {
 ```python
 FORBIDDEN_REPOS = ("Self-Configuration", "RiverFlowsInUUU/Clash")
 COMMENT_PREFIX = ("#", "//", ";")          # 纯注释行跳过
-SKIP_DIRS = {".git", "__pycache__", "icons", "config_old"}
+SKIP_DIRS = {".git", "__pycache__", "icons"}
 EXTS = (".yaml", ".conf", ".js", ".list", ".txt", ".json", ".yml")
 ```
 
 | 设计点 | 理由 |
 |:-------|:-----|
 | **跳过纯注释行** | 注释里提及来源是**记录**，不是运行时引用 —— 不跳会把说明文字误判成依赖 |
-| **`SKIP_DIRS` 含 `icons` / `config_old`** | `icons/` 是**资源本身**（不是引用）；`config_old/` 是历史归档，改它没有意义 |
+| **`SKIP_DIRS` 含 `icons` / 已删除的归档目录** | `icons/` 是**资源本身**（不是引用）；已删除的归档目录 是历史归档，改它没有意义 |
 | **上游第三方放行** | MetaCubeX / blackmatrix7 / Jinx / TG-Twilight 是**登记过的第三方**，本就不属于"本仓应自持"的部分 |
 | 按**仓库名**识别 | 简单、可审计。⚠️ 代价：**新增外部仓库 / 镜像域名 / 新文件后缀时必须同步扩判据** |
 
@@ -1757,11 +1757,11 @@ EXTS = (".yaml", ".conf", ".js", ".list", ".txt", ".json", ".yml")
 #### 判据固化在哪
 
 - **`skill/tests/check_selfcontained.py`**（手动跑：`python skill/tests/check_selfcontained.py .`）。
-- 文档：`public-repo.md` §4（含 2511 处的分解表）；`branch.md` 的移植清单（「自洽」一行）。
-- 判负样例：`checker.md` §9.2 —— 任意**非注释行**出现
+- 文档：`gates.md` §4（含 2511 处的分解表）；`profiles/<kern>.md` 的移植清单（「自洽」一行）。
+- 判负样例：`gates.md` §9.2 —— 任意**非注释行**出现
   `https://raw.githubusercontent.com/RiverFlowsInUUU/Clash/...` ⇒ `外部依赖 N 处` + exit 1。
 
-⚠️ **挂账**：它**不进 16（现 17）道**，理由是"整合期的一次性检查，通过后不再变化"。
+⚠️ **已知缺口**：它**不进 16（现 17）道**，理由是"整合期的一次性检查，通过后不再变化"。
 这个理由**可被证伪** —— 一旦有人新增了一个指向外部仓库的图标或规则集，它就不会再是"已通过"状态。
 **建议**：至少把它挂到每周 cron 那个 job 上（与 `check_remote_urls.py` 同批），成本几乎为零。
 
@@ -1834,8 +1834,8 @@ for m in TOKEN_RE.finditer(txt):
 
 - **`skill/tests/clash/check_secrets.py`** 的 `TOKEN_RE` + `is_placeholder` + `PLACEHOLDER_VALUES`
   （含记录 `MyRealP@ssw0rd123` 实测的注释）。
-- 判负样例：`checker.md` §9.2 —— 任意 `.yaml` 里写 `password: MyRealP…` ⇒ `非占位凭据:`。
-- 文档：`public-repo.md` §5.1「两道 secrets 扫描不要混为一个」。
+- 判负样例：`gates.md` §9.2 —— 任意 `.yaml` 里写 `password: MyRealP…` ⇒ `非占位凭据:`。
+- 文档：`gates.md` §5.1「两道 secrets 扫描不要混为一个」。
 
 ✅ **已核并修（2026-10-07 零信任自查）**：
 
@@ -1885,13 +1885,13 @@ dns:
 > 问题不在判据，在于**整合两个内核时，一方的合法值在另一方眼里是异常值**。
 > 这类冲突**只能靠整合者识别出来**，任何单侧判据都发现不了。
 
-📌 同一段地址还有**第二个语义**（`leak-localization.md` §1）：
+📌 同一段地址还有**第二个语义**（`ops.md` §1）：
 做泄露测试时检测到 `198.18.x.x` **不是泄露** —— 它恰恰说明查询
 **被 mihomo 接住了**、只是没做真实解析。**别把它当成新发现的泄露面去"修"。**
 
 #### 修法
 
-**加窄白名单，不是关闭 IPv4 扫描**（`branch.md` 明确写了这条原则）：
+**加窄白名单，不是关闭 IPv4 扫描**（`profiles/<kern>.md` 明确写了这条原则）：
 
 ```python
 DOC_NETS = ("192.0.2.", "198.51.100.", "203.0.113.", "198.18.")
@@ -1914,8 +1914,8 @@ if ip.startswith("198.18."):
 
 - **`skill/tests/check_secrets.py`（跨内核）的 `DOC_NETS`** —— 含 `198.18.`。
 - **`skill/tests/clash/check_secrets.py`（Clash 版）的 `ALLOWED_IPS` + `ip.startswith("198.18.")`**。
-- 文档：`profile-anatomy.md` §5.2 与 FAQ「Q：`198.18.0.1` 为什么不是真实 IP？」；
-  `leak-localization.md` §1（不是泄露）；`branch.md` 移植清单（"另外要检查新内核的保留地址常识"）。
+- 文档：`profiles/<kern>.md` §5.2 与 FAQ「Q：`198.18.0.1` 为什么不是真实 IP？」；
+  `ops.md` §1（不是泄露）；`profiles/<kern>.md` 移植清单（"另外要检查新内核的保留地址常识"）。
 
 ⚠️ **同一判据两份拷贝 —— 改必须两处一起改。**
 两个 `check_secrets.py`（跨内核版 / Clash 版）**各自维护了一份 IP 白名单**，
@@ -1973,7 +1973,7 @@ python skill/tests/clash/check_script_sync.py "$SB"   # 期望 0
 
 > ⚠️ **基线必须先绿。** 基线红时注入坏样例，判负可能来自原有缺陷 ⇒ 判别力结论无效。
 
-`checker.md` §9.2 登记的注入样例（**15 个，逐个已实测**）：
+`gates.md` §9.2 登记的注入样例（**15 个，逐个已实测**）：
 
 | # | 门 | 注入 | 定位标记 |
 |:-:|:--|:-----|:---------|
@@ -2013,7 +2013,7 @@ python skill/tests/clash/check_script_sync.py "$SB"   # 期望 0
 
 #### 判据固化在哪
 
-- **`skill/reference/clash/checker.md` §9**（整节：为什么 / 每个门的注入手法 / 现状表）。
+- **`skill/reference/gates.md` §9**（整节：为什么 / 每个门的注入手法 / 现状表）。
 - **跨内核参考实现**：`skill/tests/check_region_filters.py` —— 它给每个判负用例
   断言「退出码 + 输出标记」两条，是 mihomo 侧要照抄的样板。
 - `surge/pitfalls.md` 坑 16 —— 同源纪律（「给这份拷贝配一个比对器，并给比对器配一个判负样本」）。
@@ -2092,10 +2092,10 @@ python skill/tests/clash/check_script_sync.py "$SB"   # 期望 0
 
 #### 相关
 
-[`checker.md`](./gates.md)（判据与命令 · 判据演进史）·
-[`profile-anatomy.md`](./profiles/clash.md)（配置结构 · §18 维护者须知）·
-[`leak-localization.md`](./ops.md)（泄露定位 · 面 ③′ IPv6）·
-[`public-repo.md`](./gates.md)（公开仓纪律 · 2511 处事故）·
-[`branch.md`](./profiles/clash.md)（移植新内核的清单）·
-[`../shared/cross-kernel-diff.md`](./rulesets.md)（同名概念的三内核落点）·
+[`gates.md`](./gates.md)（判据与命令）·
+[`profiles/<kern>.md`](./profiles/clash.md)（配置结构 · §18 维护者须知）·
+[`ops.md`](./ops.md)（泄露定位 · 面 ③′ IPv6）·
+[`gates.md`](./gates.md)（公开仓纪律 · 2511 处事故）·
+[`profiles/<kern>.md`](./profiles/clash.md)（移植新内核的清单）·
+[`rulesets.md`](./rulesets.md)（同名概念的三内核落点）·
 [`../../SKILL.md`](../SKILL.md)（§7 踩过的坑 · §8 红线）

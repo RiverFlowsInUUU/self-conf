@@ -277,9 +277,9 @@ provider 的 `behavior`，不是 `geoip-` 名字前缀。）
 ### 8 · mihomo 的六个专属特点
 
 > 以下六条是 mihomo 侧**独有或与另两内核结构不同**的机制。
-> 逐键行为与边界继续看 [`../clash/profile-anatomy.md`](./profiles/clash.md) §13；
-> 加固理由见 [`../clash/hardening-template.md`](./profiles/clash.md)；
-> 泄露面定位流程见 [`../clash/leak-localization.md`](./ops.md)。
+> 逐键行为与边界继续看 [`clash.md`](./profiles/clash.md) §13；
+> 加固理由见 [`clash.md`](./profiles/clash.md)；
+> 泄露面定位流程见 [`ops.md`](./ops.md)。
 > 以下数字全部由 `yaml.safe_load` 解析 `clash/profiles/*.yaml` 现算（2026-10-08 复核）。
 
 #### 8.1 四个解析器键「各管一段路」，别混用
@@ -375,7 +375,7 @@ Egern 只要 `ipv6`。
 
 ⭐ **这条面在 Surge / Egern 侧没有对应物**，是 mihomo 特有的第六个泄露面（③′）。
 它**不走 :53**，所以抓包只抓 53 抓不到它。定位与收口见
-[`../clash/leak-localization.md`](./ops.md) §6。
+[`ops.md`](./ops.md) §6。
 
 #### 8.5 零 dat 依赖：用 `.mrs`，不用 `geosite.dat` / `geoip.dat`
 
@@ -457,12 +457,12 @@ exit 0 · 0 high。本仓纪律要求每条判据**真的会判负** —— 只�
 
 ---
 
-相关：[`hardening-checklist.md`](./ops.md) · [`no-resolve-pairing.md`](./dns.md) ·
-[`../clash/profile-anatomy.md`](./profiles/clash.md) §13 ·
-[`../clash/hardening-template.md`](./profiles/clash.md) ·
-[`../clash/leak-localization.md`](./ops.md) ·
-[`../clash/ruleset-weight.md`](./rulesets.md) ·
-[`cross-kernel-diff.md`](./rulesets.md) · [`ops.md`](./ops.md)
+相关：[`ops.md`](./ops.md) · [`dns.md`](./dns.md) ·
+[`clash.md`](./profiles/clash.md) §13 ·
+[`clash.md`](./profiles/clash.md) ·
+[`ops.md`](./ops.md) ·
+[`rulesets.md`](./rulesets.md) ·
+[`rulesets.md`](./rulesets.md) · [`ops.md`](./ops.md)
 
 ---
 
@@ -797,7 +797,7 @@ case "RULE-SET":
 
 #### 3. 为什么必须带：它收的是泄露面④
 
-[`leak-localization.md` §4](./ops.md) 把 mihomo 的泄露路径拆成五个面；
+[`ops.md` §4](./ops.md) 把 mihomo 的泄露路径拆成五个面；
 其中面④就是**规则判定触发的解析**：
 
 ```

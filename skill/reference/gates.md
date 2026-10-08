@@ -157,7 +157,7 @@ python skill/tests/verify_all.py
 
 ## Surge · 判据与命令（surge 侧）
 
-> **何时读**：跑审计脚本前（环境要求 / 命令）、或**要改判据时**（判据演进史）。
+> **何时读**：跑审计脚本前（环境要求 / 命令）、或**要改判据时**。
 >
 > 逐条事故复盘见 [`pitfalls.md`](./pitfalls.md)。
 
@@ -544,52 +544,6 @@ DNS_KEYS = [
 ⚠️ ③-b 的两条是**独立的约束**，不是「DIRECT 在 REJECT 之前」一条。
 见 [`pitfalls.md`](./pitfalls.md) 坑 9。
 
-### 8 · 判据演进史
-
-| 版本 | 改动 | 原因 |
-|:----:|:-----|:-----|
-| v1 | `check_3` 按 `hijack-dns` **条数**判负 | 初版 |
-| v2 | `check_3` 改为「未覆盖的**已知**知名解析器数」 | 判据**不可能被满足**，见坑 6 |
-| v1 | `check_6` 只认 `.cn` / `.com.cn` | 初版 |
-| v2 | `check_6` 加 `DOMESTIC_TEST_SUFFIXES` 显式清单 | `miui.com` 被误判为境外，见坑 7 |
-| v3 | `check_6` 境外端点从 MEDIUM 降为 **LOW 提示** | 它是性能探针不是泄露通道，见坑 14 |
-| v1 | `check_8` 策略取 `parts[1]` | 初版 |
-| v2 | 引入 `policy_index` | `GEOIP` 把 `CN` 当策略 → 12 个假 HIGH，见坑 4 |
-| v3 | `policy_index` 处理 `RULE-SET` | 索引 1 是规则集标识 → 又 12 个假 HIGH，见坑 5 |
-| v4 | `policy_index` 移入 `_surge_common.py` | 两处拷贝，见坑 11 |
-| v1 | `check_11` 把本地类主机名也计入"未覆盖" | 初版 |
-| v2 | 排除 `*.lan` / `*.local` 等；有 `RULE-SET` 时降级为 LOW | 误报，见坑 8 的同型问题 |
-| v1 | 架构检查扫全文找 IPv4 | 初版 |
-| v2 | 加 `strip_c`，只扫有效行 | 注释里的 `10.0.0.0/8` 被误报，见坑 8 |
-| v1 | 架构检查断言「DIRECT 不在 REJECT 之前」 | 初版 |
-| v1 | ② 只比对 `lazy.conf` ↔ `lazy.min.conf` | 单配置时代 |
-| v2 | ② 扩为**两组 + 跨组**（共 3 条）：新增 `routing` 对与 `lazy↔routing` 对 | 引入分流版后，"防泄露标准不因分流粒度而变"需要被断言 |
-| v1 | 分流覆盖的境外期望只有一套（`AI` / `PROXY`） | 单配置时代 |
-| v2 | 按 profile **自动切换**期望表，分流版精确到应用组名 | 分流版需验证"按应用分流真的接住了"，且**不得**放宽成"只要不是 DIRECT" |
-| v1 | — | 未来 |
-| **新** | `audit_region_filters.py`（地区组正则一致性） | 负向断言里的关键词拷贝漏同步 = 静默退化，见坑 16 |
-| v2 | 拆成 ③-b (i)(ii) 两条独立约束 | 不变量本身写错了，见坑 9 |
-| v1 | ③-b 对「精简配置」也生效 | 初版 |
-| v2 | 对精简配置豁免 + 打印说明行 | 曾要求极简版改名成完整版，见坑 10 |
-| v3 | 取消豁免 —— 配置已收敛为单一版本 | 见 git 历史 |
-| — | 无豁免机制 | 初版：豁免只能写死在审计器里 |
-| — | 引入 `# audit-waive:` | 判据可以退让，但退让必须留痕，见坑 15 |
-| v1 | `audit_ruleset_content` 遍历原始行 | 初版 |
-| v2 | 先 `strip_comment` | 注释行被当成引用，见坑 12 |
-| v1 | 只判"退出码非 0 即失败" | 初版 |
-| v2 | 加前置检查，环境故障用退出码 2 | 解释器坏了被算成"判负通过"，见坑 13 |
-
-#### 一条贯穿的规律
-
-> 每一轮修订，都不是「发现漏了某个检查」，
-> 而是**原来那条判据的方向写错了**（假 HIGH / 不可能满足 / 覆盖了不该覆盖的）。
-
-⇒ **假 HIGH 比漏报危害更大**：漏报只是少发现一个问题；
-假 HIGH 会让使用者去改一条**本来正确的**规则，然后把配置改坏。
-
-⇒ 因此本项目对每一条判据都要求：**能说清"怎么做才算过"**，
-且**不能说清的就是判据没写好**。
-
 ### 9 · 全绿 ≠ 可用
 
 审计脚本覆盖的是**静态可判定**的部分。以下必须实测：
@@ -609,7 +563,7 @@ DNS_KEYS = [
 
 ## Egern · 判据与命令（egern 侧）
 
-> 本文是 [`SKILL.md`](../SKILL.md) 的引用文件。 **何时读**：跑审计脚本前（命令与环境要求），或要改判据时（演进史）。
+> **何时读**：跑审计脚本前（命令与环境要求），或要改判据时。
 
 ### 1 · 环境要求
 
@@ -693,7 +647,7 @@ python skill/tests/check_selfcontained.py         # 整合仓自洽性
 
 ### 3 · 退出码约定
 
-全仓统一（出处：`reference/shared/troubleshoot-faq.md` §8.2）：
+全仓统一（出处：`reference/pitfalls.md` §8.2）：
 
 | 码 | 含义 | 处理 |
 |:--:|:-----|:-----|
@@ -815,7 +769,7 @@ if dns.get("ipv6") is not False:
 - 写成 `if c.get("ipv6")` ⇒ `ipv6` 键缺失时也"通过"（`None` 是 falsy）——**漏报**；
 - 用 `is not False` ⇒ **缺失也判负**，符合"显式声明"的要求。
 
-⚠️ 为什么要显式写：见 [`leak-localization.md`](./ops.md) §6 ——
+⚠️ 为什么要显式写：见 [`ops.md`](./ops.md) §6 ——
 `dns.ipv6: true` 会返回 AAAA，而本机真实 IPv6 未被 TUN 完整接管 ⇒ **双栈站点绕过 TUN**。
 `ipv6: false` 虽等于 mihomo 默认值也必须写（与姊妹仓对齐面的同一条纪律：
 显式声明键不适用"默认值就不写"）。
@@ -882,7 +836,7 @@ d = diff(a, b)
 `check_min_pair.py` 就是用来兜住这件事的：它比 YAML 对象，注释不进比对，
 所以手工同步只要保证**配置本体一致**即可。
 
-> 📌 **这是已知的自动化缺口**，与 §9.3 的挂账同源：mihomo 侧的 `.min` 靠人工 + 对拍，
+> 📌 **这是已知的自动化缺口**（见 §16.4）：mihomo 侧的 `.min` 靠人工 + 对拍，
 > 不靠生成器。要补的话是给 `make_min.py` 的 `FAMILIES` 加一族 clash。
 
 ⚠️ 与 surge 侧的另一个差异值得记：Surge 的 `routing.min.conf` 由脚本生成，
@@ -953,7 +907,7 @@ SKIP_DNS_KEYS = {"listen"}
 ⚠️ 别把 `EXPECTED_DIFF` 当成"可以往里加东西的豁免清单"。它只有一条，
 理由是**机制不可能对齐**。任何"写起来麻烦"的差异都应该改脚本，不是加白名单。
 
-#### 6.2 ✅ 已修（原挂账：漂移分支会 `NameError`）
+#### 6.2 漂移分支的诊断（原 `NameError` 已修）
 
 ```python
 if out.get("rules") != (st.get("rules") or []):
@@ -980,7 +934,7 @@ if out.get("rules") != (st.get("rules") or []):
 > 不再是 `NameError` traceback。
 >
 > ⚠️ 文档滞后提示（2026-10-07 零信任自查）：本节标题与「修法（未做）」曾长期未同步，
-> 让维护者误以为此坑仍在。改代码后请同步回头改这里的挂账记录。
+> 让维护者误以为此坑仍在。改代码后请同步回头改这里的记录。
 >
 > **如需进一步定位**（哪一条规则不同而不是只报长度）：手工 diff 脚本输出与静态 profile 的
 > `rules` / `dns` 两段（见 §6.3）。
@@ -1098,7 +1052,7 @@ else:                 open(dp, "w", …).write(want)   # 重新生成
 ```
 ```
 
-⇒ 这是 [`leak-localization.md`](./ops.md) §4（规则判定触发的解析）的直接依据：
+⇒ 这是 [`ops.md`](./ops.md) §4（规则判定触发的解析）的直接依据：
 **零 IP 条目的规则集不需要 `no-resolve`**，写了反而有害（见下节）。
 
 #### 8.2 失败怎么修
@@ -1185,7 +1139,7 @@ python skill/tests/clash/check_script_sync.py "$SB"   # 期望 0
 | 13 | 从 `override/my_clash_lazy.js` 的规则数组里删掉一条 `RULE-SET,Jinx-CN,DIRECT` | exit 1 + 报出 rules 差异 | **exit 1，但输出是 `NameError` traceback**，无差异明细 |
 
 > ✅ 已实测：基线 `my_clash.js` / `my_clash_lazy.js` 双双 `OK`（exit 0）；
-> 删掉一条规则后 exit 1 —— **闸门会红，不会假绿**，但诊断信息缺失（挂账 §6.2）。
+> 删掉一条规则后 exit 1 —— **闸门会红，不会假绿**，但诊断信息缺失（§6.2）。
 
 ⚠️ 因此这道门的判别力是**"半条"**：能判负（1 对），给不出定位（2 不成立）。
 **修好 `diff` 之后，第 2 条才成立。** 在那之前不要声称这道门"判别力完整"。
@@ -1236,7 +1190,7 @@ python skill/tests/clash/check_script_sync.py "$SB"   # 期望 0
 > 且它对每个判负用例断言**退出码 + 输出标记**两条。mihomo 侧**还没有对应的自动化回归** ——
 > 上表前五行的"已实测"是**本次文档编写时人工跑出来的**，不是常驻 CI 的保证。
 >
-> **这是已知挂账**：mihomo 侧门禁的判别力目前靠"人记得跑"，不是靠机器守住。
+> **已知缺口**：mihomo 侧门禁的判别力靠"人记得跑"，不是靠机器守住（见 §16.4）。
 > 一旦出现「门禁逻辑改坏、判据不再判负、现役配置仍全绿」，本仓**没有闸门会发现**。
 
 ### 10 · 已知豁免项（豁免 ≠ 通过）
@@ -1379,8 +1333,8 @@ CI 偶发 3（共享 runner IP 被限流）→ 重跑即可。
 
 | 维度 | 为什么脚本做不到 | 怎么做 |
 |:-----|:-----------------|:-------|
-| 冷启动有无明文 `:53` | 需要抓包 | 本地 DNS sink + mihomo 内核实测（CHANGELOG 记过一次） |
-| IPv6 是否真的不通 | 需要真实双栈环境 | 见 [`leak-localization.md`](./ops.md) §6 |
+| 冷启动有无明文 `:53` | 需要抓包 | 本地 DNS sink + mihomo 内核实测 |
+| IPv6 是否真的不通 | 需要真实双栈环境 | 见 [`ops.md`](./ops.md) §6 |
 | 拦截效果 | 需要真实访问 | 打开几个广告密集的站点看 |
 | 误杀 | 需要真实访问 | `github.com` / `jsdelivr.net` / `icloud.com` 是否能开 |
 | 节点可用性 | 需要真实网络 | 面板上逐个测 |
@@ -1410,7 +1364,7 @@ mihomo 版（`skill/tests/clash/check_secrets.py`）覆盖 `.js`、且跳过 `ru
 **Q：`ipv6: false` 是默认值，为什么写了还要求写、不写还判负？**
 
 两个原因：① `dns.ipv6` 不写就返回 AAAA，而真实 IPv6 未被 TUN 完整接管 ⇒ 绕过（见
-`leak-localization.md` §6）；② 与 Surge/Egern 的对齐面键**一律显式声明**，
+`ops.md` §6）；② 与 Surge/Egern 的对齐面键**一律显式声明**，
 让"对拍看文件即知"，不用查各内核默认值。判据用 `is not False` ⇒ **缺失也算不过**。
 
 **Q：`.min.yaml` 怎么同步？能手工改吗？**
@@ -1487,23 +1441,17 @@ python skill/tests/clash/check_remote_urls.py
 4. **动 `rules/*.list` 做实验前先备份真源**，做完立刻还原并 `git diff rules/` 确认为空。
 5. **改 `build_gates` 就要改 `ci.yml`**（同源铁律）。引用清单用 `--index` 现抓，别手抄。
 
-#### 16.4 已知挂账（接手时先看这里）
+#### 16.4 已知缺口（接手时先看这里）
 
-> ⚠️ **2026-10-08 第十五轮：本表已逐条核实并消掉两条。**
-> 原表写的是「四条」，但其中**两条早已修好、表格却未同步** ——
-> 这正是本仓最忌讳的「文档在为不存在的事实背书」（维护者会以为坑还在而重复劳动）。
-> 表格是**挂账清单**，不是历史；修好就该消账（历史在 git）。
+**只列仍然存在的** —— 修好就删行，不保留历史（那会让读者以为坑还在）。
+历史在 git。
 
-| # | 挂账 | 状态 | 触发修补的条件 |
-|:-:|:-----|:-----|:---------------|
-| ~~1~~ | ~~`check_script_sync.py` 的 `diff` 未定义~~ | ✅ **已消**（commit `7d7250c`）| — 已补定义（本文件 L94）+ `--self-test` 自检已进闸门；实测真实漂移时给 `rules[6] 不同: …` 精确诊断，**不再** `NameError` |
-| 3 | mihomo 侧门禁**没有常驻的判负 fixture 回归**（判别力靠人记得跑）| ⚠️ 仍在 | 出现「判据改坏、不再判负、现役仍全绿」时。（注：地区组那一块已有 fixture，见闸门「地区组判别力·mihomo」；此条指**其余** clash 门禁）|
-| 4 | **clash 侧没有 `.min` 生成器**（`make_min.py` 只含 surge / egern 两族）⇒ `.min.yaml` 靠手工同步 + 对拍兜底 | ⚠️ 仍在 | 出现第一次「手工同步漏改、对拍才发现」时；修法是给 `make_min.py` 的 `FAMILIES` 加一族 clash |
-| 5 | `_default_root` 在 clash 侧有**6 份拷贝**（`check_structure` / `check_min_pair` / `check_script_sync` / `check_remote_urls` / `check_header_numbers` / `audit_ruleset_content`）| ⚠️ 仍在 | 六份逻辑出现分歧时。未名扫描能抓住「拷贝时漏了名字」，但抓不住「逻辑各自漂移」 |
-
-> 📌 第 5 条是本轮新增的挂账 —— 顺带把它记下来的原因：
-> 本轮修的那个 `NL` bug 正是「拷贝时带进了一个本文件没有的名字」。
-> 未定义名扫描能抓住那一次，**但抓不住这个结构性问题本身**。
+| # | 缺口 | 触发修补的条件 |
+|:-:|:-----|:---------------|
+| 1 | mihomo 侧**其余**门禁没有常驻的判负 fixture 回归（判别力靠人记得跑）| 出现「判据改坏、不再判负、现役仍全绿」时。注：地区组那块已有 fixture（闸门「地区组判别力·mihomo」）|
+| 2 | **clash 侧没有 `.min` 生成器**（`make_min.py` 只有 surge / egern 两族）⇒ `.min.yaml` 靠手工同步 + 对拍兜底 | 出现第一次「手工同步漏改、对拍才发现」时；修法是给 `make_min.py` 加一族 clash |
+| 3 | `_default_root()` 在 clash 侧有 **6 份拷贝**（`check_structure` / `check_min_pair` / `check_script_sync` / `check_remote_urls` / `check_header_numbers` / `audit_ruleset_content`）| 六份逻辑出现分歧时。未定义名扫描能抓住「拷贝时漏了名字」，抓不住「逻辑各自漂移」 |
+| 4 | **「一天一版」无机器判据** —— 改革删掉归档后，V7 一并删除。现在它靠 §6.1 的纪律，**没有闸门守** | 出现真的「同一天升了两个号」且造成困扰时 |
 
 #### 16.5 退出码速查
 
@@ -1530,9 +1478,9 @@ self-conf/
 ├── icons/                       # 图标 PNG + icons.json / icons-full.json —— 两内核共用
 ├── skill/                       # ★ AI 驱动的唯一知识库（无人类文档）
 │   ├── SKILL.md                 # 单一入口：底线与纪律 → §0 判内核 → 分支 A(Surge) / 分支 B(Egern)
-│   ├── reference/shared/        # 跨内核主题七篇：cross-kernel-diff · rulesets · hardening-checklist ·
+│   ├── reference/               # 8 篇：profiles/*.md · dns · rulesets · pitfalls · ops · gates ·
 │   │                            #   no-resolve-pairing · dns-basics · ops · troubleshoot-faq
-│   ├── reference/{surge,egern}/ # 单侧主题：profile-anatomy（逐键权威）· hardening-template · pitfalls ·
+│   ├── reference/profiles/ # 单侧主题：profile-anatomy（逐键权威）· hardening-template · pitfalls ·
 │   │                            #   leak-localization · checker · ruleset-weight · public-repo（本文）
 │   ├── scripts/{surge,egern}/   # 审计脚本（Surge 5+1 共享模块 / Egern 10+1 共享模块）
 │   └── tests/                   # check_secrets · check_portability · check_min_pair · check_links · make_min
@@ -1542,12 +1490,9 @@ self-conf/
     │   ├── lazy.min.conf        # 懒人版（纯配置）—— 导入用
     │   ├── routing.conf         # 分流版（带注释）—— 改这份
     │   ├── routing.min.conf     # 分流版（纯配置）—— 导入用
-    │   └── config_old/          # 历史归档（配置变动时按规则入档，只增不删）
     └── apple_system.list        # （在 egern/ 侧）本仓自托管的 Apple 系统域名规则集
 ```
 
-> 原根级 `docs/`、两侧 `DetailsReadme/`、`CHANGELOG.md`、`skill/README.md` 已于 2026-09-27
-> 全部并入 `skill/`（git 历史与备份 tag `pre-cleanup-20260927` 可查）。
 
 #### 1.1 各层的职责边界
 
@@ -1570,7 +1515,7 @@ README 是**产品介绍**：读者要知道「这东西是什么、怎么用」
 - 🚫 **门面只写「得到什么」—— 标题里不出现「原理」二字。**
   功能清单写两列：「防的是什么 · 得到什么」。内核实现键（`fake-ip` / `dns-hijack`…）不进首页。
 - 🚫 **首页不列规则集。**「`OpenAI.list` → `ChatGPT`」对读者没有意义；
-  「AI 应用走 `AI` 组，面板上可改道」才有意义。规则集清单在 `reference/shared/rulesets.md`。
+  「AI 应用走 `AI` 组，面板上可改道」才有意义。规则集清单在 `reference/rulesets.md`。
 - 🚫 **三端（Surge / Egern / Clash）各写各的，不许互抄 DNS 防泄露的表述** ——
   机制不同，照抄等于把不存在的机制写进别人的仓。
 - 📐 **清单类内容用列表不用表格**（GitHub 表格宽度不可控）；emoji 只放条目最前面，句中零个。
@@ -1578,7 +1523,7 @@ README 是**产品介绍**：读者要知道「这东西是什么、怎么用」
   但**长 URL 不进单元格**：单元格只放短文本链接、完整 URL 走链接目标。放裸 URL 会把表格撑宽、
   窄屏横向滚动，正是本条要避的情况。
 - 📐 **相对链接必须能解析**；改标题后必须重算锚点并同步所有引用处
-  （中文/emoji 标题的 GitHub 锚点规则见 git 历史里的 `skill/reference/surge/public-repo.md` §2.3）。
+  （中文/emoji 标题的 GitHub 锚点规则见 git 历史里的 `skill/reference/gates.md` §2.3）。
 
 **自查**：README 里出现「为什么…」「不算」「误标」「判据」「原写」，八成是改动记录漏出来了。
 
@@ -1709,25 +1654,21 @@ icons/                                      # 图标 PNG + icons.json / icons-fu
 rules/                                      # 本仓自托管的规则集（当前 1 份：Egern 用的 apple_system.list）
 skill/                                      # ★ AI 驱动的唯一知识库
   SKILL.md                                  # 单一入口：底线与纪律 → §0 判内核 → 分支 A/B
-  reference/shared/                         # 跨内核主题七篇（cross-kernel-diff · rulesets · ops · troubleshoot-faq 等）
-  reference/{surge,egern}/                  # 单侧主题（profile-anatomy 逐键权威 · hardening-template · pitfalls · checker 等）
-  scripts/{surge,egern}/ · tests/           # 审计脚本 + 五项共享检查
+  reference/                                # 8 篇：profiles/{surge,egern,clash}.md · dns.md · rulesets.md
+                                            #        pitfalls.md · ops.md · gates.md
+  scripts/<kern>/ · tests/                  # 审计脚本 + 门禁（唯一入口 tests/verify_all.py）
 egern/profiles/lazy.yaml / lazy.min.yaml    # 懒人版 · 可选（4 组 / 10 条规则；隐藏订阅槽位 Airport）
 egern/profiles/routing.yaml / .min.yaml     # 分流版 · 推荐（脱敏模板：2 条占位节点 + 1 个机场槽位，凭据与订阅均为占位符）
-egern/profiles/config_old/                  # 历史归档（配置变动时按规则入档，只增不删）
 .github/workflows/ci.yml                    # CI：六步检查（push / PR 自动）
 ```
 
-> 原根级 `docs/`、两侧 `DetailsReadme/`、`CHANGELOG.md`、`skill/README.md` 已于 2026-09-27
-> 全部并入 `skill/`（git 历史与备份 tag `pre-cleanup-20260927` 可查）。
 
 > **可选版本只有两个** —— `routing`（分流版 · 推荐）与 `lazy`（懒人版），文件名不带版本号；
-> 当前是第哪一版写在头注 `#! version=` 里；配置变动时变动前的旧配置归档进 `profiles/config_old/`
-> （归档号 = 目录内最新号的下一位；2026-09-29 起三段制 X.Y.Z，满 10 进 1，完整版与 `.min` 成对），更早历史看 git。
+> 当前是第哪一版写在头注 `#! version=` 里，三内核同号。**仓内不保留历史版本**（历史在 git 与 Releases）。
 
 **要更新模板时**：**直接在仓库里改 `profiles/*.yaml` 即可。** 这份模板早已完成脱敏
 （2 条占位节点 + 1 个占位订阅，全都连不出去，无真实证书），改它不需要"从自用配置重新生成"。
-改完按 [`SKILL.md`](../SKILL.md) §3 的标准动线走（归档 → 改完整版 → `make_min.py` → 闸门 → 推送）。
+改完按 [`SKILL.md`](../SKILL.md) 的标准动线走（改完整版 → `make_min.py` → 闸门 → 推送）。
 
 > 📦 **历史做法（已不再使用）**：早期由维护者本地的 `outputs/` 脚本链生成 ——
 > `_build_public_template.py`（带断言的行级替换 + 38 个敏感串零残留自检）、
@@ -1756,7 +1697,7 @@ README 是**产品介绍** —— 读者要知道「这东西是什么、怎么�
 判据与原理 → `skill/reference/`（对应主题文件）。改动历史看 git log。
 
 > 改 README 的 **markdown 版式**前先问 GitHub 本人（`POST /markdown` 接口，推送前就能看出某写法
-> 会不会被 sanitizer 剥掉）：见 [`../surge/public-repo.md`](./gates.md) §5.1。
+> 会不会被 sanitizer 剥掉）：见 [`gates.md`](./gates.md) §5.1。
 
 **自查**：README 里出现「为什么…」「不算」「误标」「判据」「原写」「上面是…顺序」，
 八成就是改动记录漏出来了。
@@ -1770,7 +1711,7 @@ README 是**产品介绍** —— 读者要知道「这东西是什么、怎么�
 
 规则集属**实现侧**：用了哪些 `.list`、从哪个仓库拉、顺序怎么排。使用者关心的是**分流结果**。
 
-| | 首页（`README.md`） | `reference/shared/rulesets.md` |
+| | 首页（`README.md`） | `reference/rulesets.md` |
 |:--|:--|:--|
 | 顺序表 | 「匹配什么 → 去向」（白名单 / 广告 / 按应用 / 国内…） | 逐条列出规则集名与参数 |
 | 规则集清单 | ❌ 一个都不出现 | ✅ 文件名 · 去向 · 来源 URL |
@@ -1799,7 +1740,7 @@ README 是**产品介绍** —— 读者要知道「这东西是什么、怎么�
 > 前者伤害隐私，后者让本仓在被依赖的外部仓库删除、改名或限流后失效。
 >
 > 安全事件的正式报告通道以 [`SECURITY.md`](../../SECURITY.md) 为准；
-> 自动化命令与退出码见 [`checker.md`](./gates.md)。
+> 自动化命令与退出码见 [`gates.md`](./gates.md)。
 
 ### 1 · 公开模板的威胁模型
 
@@ -1857,7 +1798,6 @@ README 是**产品介绍** —— 读者要知道「这东西是什么、怎么�
 真实秘密不能以任何形式留在：
 
 - 注释掉的节点；
-- `config_old/` 历史副本；
 - 测试坏样例与 fixture；
 - Markdown 命令示例；
 - 生成器常量或本地路径；
@@ -1940,7 +1880,7 @@ README 是**产品介绍** —— 读者要知道「这东西是什么、怎么�
 
 - 扫描 `.yaml` / `.yml` / `.conf` / `.js` / `.list` / `.txt` / `.json` 中的 HTTP(S) URL；
 - 跳过纯注释行，避免把“来源说明”误当运行时依赖；
-- 跳过 `.git`、`__pycache__`、`icons` 与 `config_old`；
+- 跳过 `.git`、`__pycache__`、`icons`；
 - 非注释 URL 一旦出现 `Self-Configuration` 或 `RiverFlowsInUUU/Clash` 即判负；
 - MetaCubeX、blackmatrix7、Jinx、TG-Twilight 等登记过的第三方来源允许存在。
 
@@ -2183,7 +2123,7 @@ uuid: REPLACE_WITH_YOUR_UUID
 
 - [ ] `git diff --cached` 中没有真实节点、凭据、token、证书、私有路径与内网标识；
 - [ ] 所有可替换值使用 `REPLACE_WITH_YOUR_*`；
-- [ ] 完整版、`.min`、覆写脚本和 `config_old` 都检查过，不只看当前入口；
+- [ ] 完整版、`.min` 与覆写脚本都检查过，不只看当前入口；
 - [ ] 第一方图标 / 规则 URL 指向 `self-conf`；
 - [ ] 第三方上游已登记用途、许可风险、刷新周期和回滚；
 - [ ] 新增文件后缀和运行期拼接 URL 已进入扫描面。
@@ -2254,6 +2194,6 @@ python skill/tests/clash/check_remote_urls.py --timeout 20
 
 ---
 
-相关：[`checker.md`](./gates.md) · [`branch.md`](./profiles/clash.md) ·
-[`../shared/rulesets.md`](./rulesets.md) · [`../../SKILL.md`](../SKILL.md) ·
+相关：[`gates.md`](./gates.md) · [`profiles/<kern>.md`](./profiles/clash.md) ·
+[`rulesets.md`](./rulesets.md) · [`../../SKILL.md`](../SKILL.md) ·
 [`../../../SECURITY.md`](../../SECURITY.md)

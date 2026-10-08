@@ -32,13 +32,12 @@
 > mihomo 改**覆写脚本**、再由脚本生成静态 profile（§5.2）。别把两侧的习惯带过去 ——
 > 手工改 `clash/profiles/*.yaml` 会被下一次重生成整份覆盖（§5.3）。
 >
-> ℹ️ 版本头注与归档**三内核通用**：mihomo 静态 profile 自 2026-10-07 起也带 `#! version=` 头注，
-> 并按版本存进 `clash/profiles/config_old/`（§5.10）。Surge / Egern / mihomo 三侧口径一致。
+> ℹ️ 版本头注**三内核通用**：mihomo 静态 profile 也带 `#! version=` 头注，三内核同号（§5.10）。
 
 ### Surge 操作
 
 对象：`../surge/profiles/` 下 `lazy` / `routing` 两版（各含带注释完整版与 `.min` 版）。
-加固清单逐项与验收标准见 [`shared/hardening-checklist.md`](./ops.md)（清单本体在那份文件，本章讲怎么用它）；逐键权威是 [`surge/reference/profile-anatomy.md`](./profiles/surge.md)。
+加固清单逐项与验收标准见 [`ops.md`](./ops.md)（清单本体在那份文件，本章讲怎么用它）；逐键权威是 [`surge.md`](./profiles/surge.md)。
 
 #### 3.1 文件结构速览
 
@@ -157,11 +156,11 @@ Hong Kong = smart, include-all-proxies=true, include-other-group="Airport", poli
 
 #### 3.6 你必须替换 / 可以删除的
 
-必须替换（逐键语义见 [`surge/reference/profile-anatomy.md`](./profiles/surge.md)）：
+必须替换（逐键语义见 [`surge.md`](./profiles/surge.md)）：
 
 - `lazy` 的 `[Proxy]` 占位节点（`routing` 此段已空，无需替换）；
 - `routing` 的 `Airport` 组 `policy-path` 占位订阅地址；
-- 两份 `[SSID Setting]` 段里的 `SSID:MyHome` —— `MyHome` 是照官方示例留的占位网络名，不替换就匹配不到任何 Wi-Fi，「回家自动暂停」静默不生效。该段只有 Surge 侧有，Egern 无对等件（见 [`cross-kernel-diff.md`](./rulesets.md) §1「网络级暂停」）。
+- 两份 `[SSID Setting]` 段里的 `SSID:MyHome` —— `MyHome` 是照官方示例留的占位网络名，不替换就匹配不到任何 Wi-Fi，「回家自动暂停」静默不生效。该段只有 Surge 侧有，Egern 无对等件（见 [`rulesets.md`](./rulesets.md) §1「网络级暂停」）。
 
 可以删（按收益排序，删完必须重跑分流覆盖审计）：
 
@@ -192,7 +191,7 @@ Hong Kong = smart, include-all-proxies=true, include-other-group="Airport", poli
 ### Egern 操作
 
 对象：`egern/profiles/` 下 `routing.yaml`（推荐，完整分流）与 `lazy.yaml`（懒人配置），各含带注释完整版与 `.min.yaml` 形态，共四件，历史版本看 git。
-加固清单在 [`hardening-checklist.md`](./ops.md)；逐键权威是 [`egern/reference/profile-anatomy.md`](./profiles/egern.md)。
+加固清单在 [`ops.md`](./ops.md)；逐键权威是 [`egern.md`](./profiles/egern.md)。
 
 #### 4.1 顶层字段：值等于默认的不写
 
@@ -288,10 +287,10 @@ python skill/scripts/egern/check_egern_dns.py egern/profiles/lazy.yaml egern/pro
 ### mihomo 操作
 
 对象：`clash/` 下的**两种交付形态**（静态 profile 四件 + 覆写脚本两份）。
-加固清单在 [`hardening-checklist.md`](./ops.md) 的 mihomo 侧；
-逐键权威（语义、边界、取舍）是 [`clash/reference/profile-anatomy.md`](./profiles/clash.md)
+加固清单在 [`ops.md`](./ops.md) 的 mihomo 侧；
+逐键权威（语义、边界、取舍）是 [`clash.md`](./profiles/clash.md)
 —— **那一篇是权威，本章只讲动线与坑，不重复逐键语义**；
-门禁命令与判据细节在 [`clash/reference/checker.md`](./gates.md)。
+门禁命令与判据细节在 [`gates.md`](./gates.md)。
 
 > 📌 **三侧里只有这一侧"配置真源不是 profile 本身"**：改配置改的是 `override/*.js`，
 > 静态 `profiles/*.yaml` 由脚本生成。这是最容易带错的一侧，先读 §5.2 再动手。
@@ -408,7 +407,7 @@ mihomo 其余 **20 份 `.mrs` 远程集 + 5 份 YAML** 不在此链上，由 `ru
 | **远程集 URL 是否还活着** | `skill/tests/clash/check_remote_urls.py` | **是**（慢，按需） |
 | 全部（含 Surge / Egern） | `python skill/tests/verify_all.py` | 部分 |
 
-一键命令（详见 [`clash/reference/checker.md`](./gates.md) §2）：
+一键命令（详见 [`gates.md`](./gates.md) §2）：
 
 ```bash
 python skill/scripts/clash/check_clash_dns.py clash/profiles/lazy.yaml clash/profiles/routing.yaml
@@ -493,7 +492,7 @@ python skill/tests/clash/check_remote_urls.py          # 慢，联网，按需
 最后在目标链路（尤其蜂窝）跑一次 leak test，并先写下"哪台设备、哪条链路、谁的 DNS" ——
 混链路会让整轮结论作废（[故障排查 · FAQ](./pitfalls.md) §7.0）。
 判据逐项见 `skill/scripts/clash/check_clash_dns.py` 头注与
-[`clash/reference/checker.md`](./gates.md) §4–§8。
+[`gates.md`](./gates.md) §4–§8。
 
 #### 5.9 两个 `check_secrets.py`，别只跑一个
 
@@ -509,19 +508,19 @@ python skill/tests/clash/check_remote_urls.py          # 慢，联网，按需
 > RFC 6815 保留段），但 Surge / Egern 侧的 secrets 扫描不认识它 —— 整合时已加入 `DOC_NETS` 白名单。
 > 这类分歧必须在整合层处理，不能指望某一侧的脚本天然认识另一侧的合法值。
 
-#### 5.10 版本与归档：这一侧不适用
+#### 5.10 版本号与生成物
 
-Surge / Egern 的 `#! version=` 头注、`config_old/` 归档、"一天一版"（§6.1）**只管那两侧**。
-mihomo 静态 profile 由脚本生成、当前文件**没有 `#! version=`**，也不进 `config_old/`。
-**不要把那套版本号与归档约定机械搬到 mihomo** —— 生成物天然由 git 历史记录中间态，
-再叠一层人工版本号只会多一个会对不上的数字（历史教训见 §6.7）。
+mihomo 静态 profile **由脚本生成**（`build_profiles.py`），也带 `#! version=` 头注，
+与 Surge / Egern **同号**（三内核统一，见 §6.1）。
+⚠️ 改版本号要改**脚本**（`clash/override/*.js` 不直接写版本头 —— 由生成器保留并写入），
+直接改 profile 会在重新生成时被覆盖。
 
 #### 相关页面
 
 | 下一步 | 去处 |
 |:-------|:-----|
-| mihomo 逐键权威（语义 / 边界 / 取舍） | [`clash/reference/profile-anatomy.md`](./profiles/clash.md) |
-| 门禁命令与逐条判据 | [`clash/reference/checker.md`](./gates.md) |
+| mihomo 逐键权威（语义 / 边界 / 取舍） | [`clash.md`](./profiles/clash.md) |
+| 门禁命令与逐条判据 | [`gates.md`](./gates.md) |
 | mihomo 加固清单（14 项判据 + 验收标准） | [加固清单 · mihomo 侧](./ops.md#mihomo-侧) |
 | `no-resolve` 的三侧成对交付 | [分流与 no-resolve 必须成对交付](./dns.md) |
 | 对侧内核的操作章 | 本篇「Surge 操作」章 ·「Egern 操作」章 |
@@ -533,17 +532,20 @@ mihomo 静态 profile 由脚本生成、当前文件**没有 `#! version=`**，�
 
 面向"改这份配置的人"：改哪里、怎么升版、怎么同步、怎么记录。
 仓库级红线（节点不提交真实值等）见根 [`SECURITY.md`](../../SECURITY.md)，本章不重复其条文，只讲操作动线。
-⚠️ 本章的版本 / 归档 / Release 各节（§6.1、§6.9）**只适用 Surge / Egern 两侧**，mihomo 侧见 §5.10。
+⚠️ 本章版本号与 Release 各节（§6.1、§6.9）三内核通用；mihomo 侧的生成物特性见 §5.10。
 
 #### 6.1 固定名规矩：先记住这个，再碰任何文件
 
-- 顶层永远只有四个固定名 × 两内核（`.conf` / `.yaml` 各一对）：`routing` / `lazy` 的完整版与 `.min` 版。它们是永久订阅地址的落点，不随版本改名；
-- "当前是哪一版"只写在文件头注 `#! version=…` 里；
-- ⭐ **一天一版（2026-10-04 起）**：同一个自然日内，**每条产品线只在当天第一次配置变动时归档 + 升号**；当天后续的改动 —— 包括修前一次改动带出来的连带问题 —— **沿用同一版本号**，不动归档、不升号 ⇒ 一天之内版本号最多走一格。中间态看 git 历史；归档层只承诺"当天开始前的那一版"。断言见 `check_min_pair.py` 的 V7（前置条件：完整 git 历史，见 §6.8）。
-- ⭐ **注释 / 文案改动不升号（2026-10-05 起）**：只改注释 / 文案 / 排版（配置键零变动，`.min` 逐字节不变）时**不升号、不入归档**，改动直接落进当天那张 Release 的同一版本号条目。与"一天一版"合起来的完整规则：当天已升过号 ⇒ 沿用同号；当天未升号且只有注释 ⇒ 不升号（号与 Release 归组停在上一版）；当天未升号且含配置键变动 ⇒ 正常升号 + 归档。
-  ⚠️ 于是「版本号诞生日」与「内容诞生日」可以分离（号停在旧日、内容进了新日）—— 刻意如此：版本号是**功能**的刻度。Release 归组以**版本号首现日**为准（`release_publish.number_birth`），因此注释改动不会把旧版本号拖进新一天那张 Release。
-- **当天第一次配置变动时**，变动前的旧配置归档进 `profiles/config_old/`：归档版本号 = 该目录内此分工最新号的下一位（2026-09-29 起三段制 X.Y.Z：Z=小修、Y=中改、X=大改，每位满 10 进 1，4.0.10 合法；历史两段号不回改），完整版与 `.min` 成对，现役头注同步升为下一位；更早历史看 git（备份 tag：`pre-cleanup-20260927`）；
-- 因此：任何文档、脚本、README 里出现的"带版本号的订阅 URL"都是错的。
+- 顶层永远只有四个固定名 × 三内核（`.conf` / `.yaml` 各一对）：`routing` / `lazy` 的完整版与 `.min` 版。它们是永久订阅地址的落点，**不随版本改名**。
+- "当前是哪一版"只写在文件头注 `#! version=…`。
+- **升号规则**：配置键有变动 ⇒ 升号（改三内核 × 两产品线共 6 处头注）；
+  只改注释 / 文案 / 排版 ⇒ **不升号**（配置行为没变，号是**功能**的刻度）。
+- **一天一版**：同一个自然日内同一产品线只升一次号；当天后续改动沿用同号。
+  ⚠️ 此条**靠纪律**，仓内无归档可判，也没有专门的节奏判据（改革前有 V7 断言，
+  那依赖已删除的归档快照；**现在没有机器守它**）。
+- 因此：任何文档、脚本、README 里出现的"带版本号的订阅 URL"都是错的
+  （Release 资产 URL 例外，那是钉版快照）。
+- **仓内不保留历史版本** —— 要看历史用 `git log`，要下载历史版本去 Releases。
 
 #### 6.2 改配置的标准动线
 
@@ -552,11 +554,12 @@ mihomo 静态 profile 由脚本生成、当前文件**没有 `#! version=`**，�
 ② 生成 .min：      python skill/tests/make_min.py --family routing|lazy|all        # 默认只出差异计划
                    python skill/tests/make_min.py --family all --apply              # 确认后写盘
 ③ 核豁免行：       .min 由生成器重算正文、按锚点继承注释 —— 仍要肉眼确认 `# audit-waive:` 那几行在 min 版里读得到
-④ 升版（要对外发布时）：直接改四份 profile 头注里的 `#! version=`（`.min` 由生成器重算继承）
+④ 升版（仅当配置键有变动）：改 6 份 profile 头注的 `#! version=`（`.min` 由生成器重算继承）
    —— ⚠️ **一天一版**：当天该产品线已升过号就跳过本步、沿用同号（见 §6.1）
 ⑤ 收尾：`python skill/tests/check_secrets.py && python skill/tests/check_portability.py && python skill/tests/check_min_pair.py && python skill/tests/check_links.py .`（push 后 CI 会再跑一遍同组检查）
    ↑ 也可一键：`python skill/tests/verify_all.py` —— 与 ci.yml 同源的 43 道闸门并行跑、出汇总表（含 DNS 审计与 releases 方案，比本行列的更全）
-⑥ 发布 Release（push 之后）：`python skill/scripts/release_publish.py --apply`（时间线模型与规矩见 §6.9；发版前先补 `DAY_THEMES` 当日主题 + `PUBLIC_NOTES` 对应条目）
+⑥ 发布 Release（push 之后）：`python skill/scripts/release_publish.py --apply`
+   —— 说明**从 commit subject 自动汇总**，无需手写条目表。详见 §6.9
 ```
 
 > **注意**　`.min` 不手工编辑。手工同步迟早漂 —— `check_min_pair.py` 会拿完整版对拍 `.min`，漂了就红。
@@ -604,7 +607,7 @@ python skill/tests/check_portability.py
 #### 6.7 想加第三份配置
 
 先问：这是新分工，还是老配置的另一种写法？后者一律否掉（那是版本分叉）。
-确认是新分工后，走 [`surge/reference/profile-anatomy.md`](./profiles/surge.md) 维护者一节 —— 一句话判据：能过全部检查的才算一份新配置（固定名、`.min` 对拍、DNS 段一致）。
+确认是新分工后，走 [`surge.md`](./profiles/surge.md) 维护者一节 —— 一句话判据：能过全部检查的才算一份新配置（固定名、`.min` 对拍、DNS 段一致）。
 
 #### 6.8 判据脚本的纪律
 
@@ -614,13 +617,13 @@ python skill/tests/check_portability.py
 
 | 判据 | 前置条件 | 缺了会怎样 |
 |:-----|:---------|:-----------|
-| `check_releases` R3/R4 | **完整 git 历史**（`git log --find-object` 反查每个归档快照的诞生提交） | 浅克隆下历史被截断 → 早期快照查不到诞生提交 → 落不进任何日期分组，报出「tag 不在本地日期分组 plan 里」+「正文缺少 vX.Y 条目」的**成片假红** |
-| `check_releases` 全脚本 | 网络 + `GITHUB_TOKEN`（缺省回退 `gh auth token`） | 远端不可达 → 走 SKIP（退出码 3），非判负；`verify_all` 会以 ⚠️ 明示「未验证 ≠ 绿」 |
-| `check_min_pair` V7（一天一版） | **完整 git 历史**（版本诞生日期 = **现役版**取版本号首现日 `number_birth`；**归档版**取快照 blob 诞生日 `version_date`；均由 `release_publish.build_days` 现算） | 浅克隆 / 历史缺失 → 日期分组退化成「未知日期」，那些分组按**未验证**跳过并在该条说明里点名（不冒充通过）。该说明在**通过时也会打印**，正是为了不把它藏起来 |
+| `check_releases` | 网络 + `GITHUB_TOKEN`（缺省回退 `gh auth token`） | 远端不可达 → 走 SKIP（退出码 3），非判负；`verify_all` 会以 ⚠️ 明示「未验证 ≠ 绿」。⚠️ 在 CI 里 SKIP 视为失败 |
+| `release_publish` | **tag**（从「上一个 tag..HEAD」汇总说明） | 无 tag ⇒ 退化为「全部历史」；浅克隆仍可用 |
 
-⚠️ **浅克隆的实证（2026-10-04，一次外部审查踩的坑）**：审查者用 `gh repo clone -- --depth 50` 取了本仓（实际 **248** 个提交），跑 `check_releases` 得 `81 passed, 28 failed`；改用完整克隆后得 `113 passed, 0 failed`。⚠️ **这是姊妹仓 Self-Configuration 的数字**（2026-10-04 那次审查针对的是它）。**本仓 self-conf 的实际数字是 `79 passed / 0 failed`**（2026-10-08 首个 Release 发布后实测）——引用时别把两仓数字混用。四条「tag 不在 plan 里」与 23 条「正文缺条目」全部消失 —— 它们只反映历史缺失，不反映任何真实缺陷。
+⚠️ **要点**：跑判据前先确认前置条件（完整克隆 / 网络 / token），否则会把「历史缺失」读成「配置有缺陷」。
 
-> 📖 **新增/修改闸门前，先读 [`gate-discipline.md`](./gates.md)**：
+
+> 📖 **新增/修改闸门前，先读 [`gates.md`](./gates.md)**：
 > 三条注错铁律 + 怎么跑判别力矩阵 + 已验证清单。
 
 #### 6.8.1 无 CI 兜底的工具（用了才知道，别指望 CI 替你验）
@@ -630,7 +633,7 @@ python skill/tests/check_portability.py
 
 | 脚本 | 为什么进不了 CI | 怎么跑 |
 |:-----|:----------------|:-------|
-| `skill/scripts/repo_state.py` | **一屏现状**（版本号 / 归档进度 / 最新 Release / CI 结论一次输出）—— 是 AI **动线①的开工动作**，不是判据 ⇒ 不进闸门，但**每个任务开工都该先跑它**（此前全仓 0 处引用，未登记 ⇒ 长期孤儿，2026-10-08 补登记） |
+| `skill/scripts/repo_state.py` | **一屏现状**（版本号 / 最新 Release / CI 结论一次输出）—— 是 AI **动线①的开工动作**，不是判据 ⇒ 不进闸门，但**每个任务开工都该先跑它**（此前全仓 0 处引用，未登记 ⇒ 长期孤儿，2026-10-08 补登记） |
 | `skill/tests/clash/check_real_kernel.py` | 需要**真实 mihomo 内核二进制 + 真实网络**。GitHub Actions 沙箱里两者都没有，塞进去只会得到一条**永远失败或永远跳过**的判据 —— 那比不跑更有害（会污染计数，正是 V3 那条修掉的老毛病） | 在有内核的机器上手动跑；它验的是「真机上到底通不通」，与静态判据互补 |
 
 ⚠️ 这条是**有意的设计，不是疏漏**。但「无兜底」这件事本身必须被看见 ——
@@ -686,122 +689,38 @@ python skill/tests/check_portability.py
 
 #### 6.9 Release 发布规矩
 
-版本信息现在有三层落点：**现役**（固定名四件，版本号只在头注）→ **归档**（`config_old/`，文件名带头注同号）→ **发布**（GitHub Release）。发布层是归档层之上的对外窗口，不替代归档，也不改变 §6.1 的任何条文。
-
-⭐ **三层节拍一致：一天一个。** 现役头注、`config_old` 归档、Release tag 都以自然日为节拍 —— 同一天里的多次改动共用一个版本号、落进同一张 Release。当天已发布之后又改，同一张 Release 会被 reconcile 更新成当天最终内容（版本号不变）；这是「一天一版」（§6.1）刻意换来的代价，断言在 `check_min_pair.py` 的 V7。
-
-**粒度（时间线模型，2026-09-29 定稿）**：一个更新日 = 一个 Release，懒人版与分流版**同日更新合并进同一张**。为什么不用"一个分工版本 = 一个 Release"：Releases 列表按创建时间排序且 `created_at` 不可回写，分工版补发会让列表变成"先懒人版一块、再分流版一块"，时间线永远不正 —— 只有按日合并，列表顺序才与真实演进一致。同日多个版本在正文里逐版本列要点（内容不丢），资产只挂当日各产品线**最终版本**；回滚粒度 = 天，更细粒度走 git 历史与 `config_old/`。
-
-**归组口径（2026-10-05 起）**：**现役版按「版本号首现日」**（`release_publish.number_birth`，即 `#! version=<fam>_v<ver>` 首次加进该 profile 的那天）；**归档版按「快照 blob 诞生日」**（`version_date`，快照是冻住的内容，与升号无关）。
-为什么现役版不再用"文件内容姞生日"：与「注释不升号」（§6.1）配套 —— 若只改注释而号不动，文件 blob 的日期会跟着挑到现在，把旧版本号拉进当天那张 Release。号首现日不受无号改动影响。
-⚠️ 用 `-G "^#! version=<号>$"`（`^$` 锚定整行）而**不是** `-S`（子串匹配），并取 `--reverse` 首条。早期版本（v1 / v2 / v3.0–v3.4）无 `#! version=` 头注 ⇒ 查不到，退回 blob 口径。
-⚠️ -G 是**防御性**选择：当前两个产品线的现役号互不为前缀（互为前缀的如 `_v1`/`_v1.0` 只存在于**归档**，而归档走 `version_date`、不经这里），所以今天 -G 与 -S 结果相同；换 -G 是不对**未来**埋雷。
-⚠️ 这个换 -G 的动作**无闸门可守**（2026-10-05 实测：把 -G 改回 -S，`check_releases` 仍 140 passed）—— 只能靠代码里的注释与 `-G` 本身。
-
-`DATE_OVERRIDES` 表登记"版本号与内容不同日"的例外（首例：routing v3.5 —— c593895（09-26）一个提交同时给懒人版（v1.3）与分流版（当时头注 v3.4）加 `[SSID Setting]`，49392da（09-27）补归档升版只改头注 ⇒ Wi-Fi 自动暂停必须随内容归 9-26，两条产品线同框；劈到两张会让 9-27 那张看起来"只有分流版有此功能"）。
-
-**tag**：`vYYYY-MM-DD`（该日版本的诞生日期），指向 main。tag 是发布层身份，**允许带日期** —— §6.1"带版本号的订阅 URL 是错的"指的是指向 `raw/main` 漂移内容的地址；Release 资产 URL 是钉版快照，允许且鼓励用于钉版。
-
-**资产**：当日各产品线最终版本的两内核文件（完整版 + `.min`），固定名**带内核前缀**（`surge-lazy.conf` / `surge-lazy.min.conf` / `egern-lazy.yaml` / `egern-routing.min.yaml` 这样 —— Assets 面板自解释，不依赖「.conf=Surge / .yaml=Egern」的圈内约定），单张最多 8 件 —— **一律不带版本号**，这是铁律；版本号仅存在于正文条目。固定名全集单一真源 = `release_publish.ASSET_NAMES`，check_releases 的 R2 白名单从它派生。单边内核日如实注明（如某日懒人版仅 Surge 内核有内容），不硬凑。
-
-**标题与说明模板**（`release_publish.py` 自动生成，字段固定防漂移；2026-09-29 用户二次定稿）：
-
-标题 = 分类 emoji + 日期 + 当日主题（主题取自 `DAY_THEMES` 表）。正文层级（**H1 更新日志
-标题永远置顶**，`## 共同变更` 这类节标题不得成为页面最大的字）：
-
-```markdown
-🛡️ 2026-09-29 · 监听端口收敛与 IPv6 对齐关闭     ← Release 标题（tag 芯片在旁显示 v2026-09-29）
-
-
-> 本次两版同步，变更一致。
-
-### 共同变更
-
-#### 1. 关闭局域网代理共享端口
-- Surge：`allow-wifi-access = false`、`allow-hotspot-access = false`
-- 影响：局域网共享出口由专用网关承担；本机不再开放监听端口，暴露面收窄。
-
-#### 2. 关闭 IPv6
-- Surge：`ipv6 = false`、`ipv6-vif = disable`
-- Egern：`ipv6: false`
-- 影响：不再返回 AAAA 记录，双栈站点自动回落 IPv4；两版行为对齐。
-
-### 适用版本
-
-- 懒人版 v2.0
-- 分流版 v4.0
-
-[Surge · 懒人版] [Egern · 懒人版] [Surge · 分流版] [Egern · 分流版]
-← shields.io 徽章，颜色编码内核、文字编码产品线；单边内核日该产品线只出一枚
-```
-
-条目两种形态：**结构化条目**（`('标题', ['Surge：键值…', 'Egern：…', '影响：…'])`，进 `### N. 标题`）
-与**散文条目**（一句完整要点，维持列表项；历史条目即此形态，不硬编标题）。两产品线条目
-归一化键完全一致才进「共同变更」，否则各写各的，不许为凑共用改写措辞。同日多版本时：
-H1 与「适用版本」写版本区间（`懒人版 v1.2 → v1.3`），共同变更散文条目加粗
-`**懒人版 v1.3 · 分流版 v3.5**：`前缀消歧，分侧条目加粗 `**vX.Y(.Z)**` 前缀；单边内核日在
-引言括注（如「（懒人版当日仅 Surge 内核有内容变化）」）。
-**没有元信息小字行**（资产策略、Assets 指引等说明性句子不进正文）。
-
-更新内容 = `PUBLIC_NOTES` 表的要点列表（每版本 1~4 条，**逐版本如实总结**，依据是
-config_old 相邻快照的逐行 diff —— 「维护性更新」「早期演进」这类万能句是模板句复用，禁止）。
-**文风 = 面向用户的正式产品语言**（参考 Apple 更新说明）：完整句子、专业、克制、通俗；
-不用文言腔（口径修正 / 收编 / 压到最小 / 上线），不搬内部过程语言。
-⭐ **「不搬内部过程语言」的可执行判据（2026-10-05 立，来自「读起来容易困惑」被写进正文）**——
-  写每一条前先问：**这句话对「只用配置、不看仓库」的用户有意义吗？**
-  · ❌ **维护者视角**：讲「两个列表为什么对不上」「改起来容易困惑」「逐位对齐」「本只有一个成员、
-    面板上无从选择」「此前排列不同」—— 这些是**我们内部的一致性问题**，用户看不到、也不关心；
-  · ✅ **用户视角**：只写**用户能感知的结果** —— 分组少了几个、顺序变成什么、
-    某个流量改走哪里、有没有行为变化。
-  · 判据一句话：**把主语从「我们的列表/文档/注释」换成「分组/规则/流量」**。
-    反例「规则集的应用段顺序改为与分组顺序逐位对齐（此前两者排列不同，读起来容易困惑）」
-    → 正例「规则与分组的排列顺序已整理一致，面板上的分组先后与规则判定的先后一一对应」。
-  · ⚠️ 同理禁止出现在正文里的词：「冗余」「无从选择」「逐位」「对不上」「容易困惑」
-    「本只有一个成员」—— 它们是**设计取舍的内部理由**，属 `reference/` 文档，不属 Release 正文。
-**两条硬要求（2026-10-01 定，来自两次实际改稿返工）**：
-① **关键实体必须点名** —— 涉及哪个分组 / 文件 / 功能，就直接写它的名字（如「原 MAX 分组并入
-   Smart 分组」），**不得**用「低倍率精选分组」这类模糊概括：那是把最该说的信息省掉了。
-② **忌赘述** —— 同一句里不重复同一名词；**一件事只写一条**，不要为凑条数把同一件事拆成两条
-   （拆开必然重复用词），也不要加「两者的」这类同义回指。
-③ ⭐ **同日多次变动必须「归类整合」，不得机械堆叠**（2026-10-05 定，来自当日 8 条堆叠的返工）——
-   一天一版意味着**当天所有改动共用一个版本号**，条目很容易被一次次改动**追加**成流水账
-   （同一天里「移除韩国分组」「移除 GitHub 分组」「移除 Final 分组」被写成三条，
-   实际是**同一件事**：分组精简）。要求：
-   · **先归类、再落笔** —— 先把当天全部改动按**性质**归并（如「分组增减」「顺序与命名」
-     「默认取向」「规则顺序」「注释」），每类**只写一条**，条内按类展开；
-   · **同类合并要显式点数** —— 如「移除 A、B 与 C 三个分组」并给出**总量变化**
-     （「分组数量由 24 个减少至 21 个」），读者一眼看到规模；
-   · **变更过程中的中间态不进正文** —— 当天改了三轮同一处（如某个分组先建后删），
-     只写**最终状态**相对**当天开始前**的差异；中间态属 git 历史，不属更新日志；
-   · **判定「同类」用语义、不用文字** —— 「移除韩国分组」与「移除 Final 分组」字面不同、
-     性质相同（都是删组且都不改变分流）⇒ 同类；「改顺序」与「改名」字面都像"调整"
-     但一个是排序、一个是标识 ⇒ 可同类（都是「面板呈现」）也可分列，取决于当日总量，
-     判据是**读者关心的粒度**，不是机械字面。
-**内核维度写全称 `Surge` / `Egern`** —— 允许并列合并成「Surge / Egern 内核」（共享一个
-「内核」后缀）；与产品线词汇（懒人版/分流版）严格区分，任何一句里两个维度不得混写。
-⚠️ 同一句里**不得**把「内核」写两遍，也**不得**加「两者的」这类同义回指：
-反例「Surge 内核与 Egern 内核同步支持该策略，两者的取值一致。」／
-正例「Surge / Egern 内核同步支持该策略，取值一致。」。
-下载按钮用 shields.io 在线徽章（`badge_url`），不落仓库静态文件。
-
-**说明是面向公众的产品更新日志，不是内部 commit 记录**：变更摘要一律取自
-`release_publish.py` 的 `PUBLIC_NOTES` 表（公众向措辞），**禁止**把内部 commit subject
-直接贴上去（「用户拍板」「实测反馈」「入档」这类过程语言只属于本仓库内部，出现在
-Release 页就是内部讨论外泄）；「更新内容」写"这版给使用者带来了什么"，不写"我们怎么决定的"。
-**发新版本前必须先在 `PUBLIC_NOTES` 补对应条目、`DAY_THEMES` 补当日主题** —— 这是动线⑥的一部分。
-（已修正的教训：①旧实现把"归档文件入 repo 的提交主题"当摘要，那永远是退役提交，
-写的实际是**下一个版本**的内容 —— 版号整体错位一格；②摘要直接搬运 commit subject；
-③缺侧说明曾把"缺席的内核"写成"仅提供 XX 侧文件"，方向颠倒。）
+模型**极简**：**当前版本 → 一张 Release**，tag = `vYYYY-MM-DD`（发布日）。
+不再从 git 历史重建历史 Release（那需要归档快照 + 手写历史表 + 日期口径文档，
+改革前正是这三样东西各自长出了门禁）。
 
 **命令**：
 
 ```bash
-python skill/scripts/release_publish.py                      # 计划模式：列日期分组清单 + 说明样例，不发
-python skill/scripts/release_publish.py --apply              # 补齐缺失 Release（按日期升序创建）+ 幂等回写
-python skill/tests/check_releases.py                         # 断言：tag 形状 / 资产命名 / 标题与正文模板一致 / 版本全覆盖 / Latest
+python skill/scripts/repo_state.py                    # 看清现状（版本 / Release / CI）
+python skill/scripts/release_publish.py               # 计划模式：预览说明，一个字不发
+python skill/scripts/release_publish.py --apply       # 真发（需 GITHUB_TOKEN）
+python skill/tests/check_releases.py                  # 断言 R1–R5
 ```
 
-**判据**在 `skill/tests/check_releases.py`（CI 同跑）：R1 tag = `vYYYY-MM-DD` 且唯一；R2 资产文件名 ∈ 固定名集合且无版本号样式；R3 标题与正文模板一致（与 `release_publish` 同源，取真 plan）；R4 覆盖 —— `config_old` 全部归档版本 + 现役版本，每个 (产品线, 版本) 都按诞生日期出现在对应日期 Release 的正文里（`**vX.Y**` 条目），**删归档版本或删 Release 都会红**；R5 仓库级 **Latest** = 含现行版本的那张（最新日期）。`release_publish.py` 仅在 Latest 未指向现行日时补钉（逐个 PATCH 会让指针抖动，与 CI 竞态）。
+**说明从 commit 自动汇总** —— 取「上一个 tag..HEAD」的 subject，过滤
+`chore/ci/style/test/refactor` 与 merge，剥掉 `fix:` 这类前缀。因此：
+- **不可能与代码漂移**（它就是 commit 本身）；
+- 想让某条变更出现在 Release 里 ⇒ **把它写进 commit subject**（写清楚、写完整句子）。
+- ⚠️ 刻意**只取 subject 不取正文**：本仓 commit 正文是给人看的详细记录（含 markdown
+  片段与回溯说明），抽成要点会变成一堆半句。subject 才是被约定为「一句话概括」的字段。
+
+**资产**：三内核 × 两产品线 × 完整版/`.min` = 最多 12 件，固定名**带内核前缀**
+（`surge-lazy.conf` / `egern-routing.min.yaml` / `clash-lazy.yaml` …，Assets 面板自解释），
+**一律不带版本号**。固定名全集单一真源 = `release_publish.ASSET_NAMES`
+（`check_releases` 的 R2 白名单从它派生，不手抄第二份）。
+
+**幂等**：同一天重复 `--apply` 不会重复建 —— 回写标题/正文并对账资产
+（缺的补传、同名不同内容的删传、清单外的删除）。
+
+**判据**（`check_releases.py`，CI 同跑）：
+R1 tag 形状 `vYYYY-MM-DD` 且唯一 · R2 资产名 ∈ 固定名集合且无版本号样式 ·
+R3 最新那张的资产 = 当前应发的 12 件（不多不少）· R4 正文含当前三内核版本号 ·
+R5 仓库级 Latest 指向最新那张。
 
 #### 相关页面
 
@@ -948,7 +867,7 @@ python skill/tests/check_releases.py                         # 断言：tag 形�
 
 > 用法：从上到下逐条对照你的 profile。**14 项判据与 `check_clash_dns.py` 一一对应**（编号即脚本里的判据号）；
 > 另有 `check_structure.py` 8 项结构判据与之互补（见文末的分工表）。
-> 逐键语义与边界的权威是 [`clash/reference/profile-anatomy.md`](./profiles/clash.md)，
+> 逐键语义与边界的权威是 [`clash.md`](./profiles/clash.md)，
 > 本章只列清单与判据，不重复逐键解释。
 
 **自动化**：
@@ -1071,16 +990,14 @@ python skill/tests/clash/check_structure.py
 
 ### 2 · 什么时候升号
 
-| 改动类型 | 升号 | 归档 | 进 Release |
-|:--|:--:|:--:|:--:|
-| 配置键变动（功能变化） | ✅ | ✅ | ✅ |
-| 只改注释 / 文案 / 排版（配置键零变动，`.min` 逐字节不变） | ❌ | ❌ | ✅（并入当天那张 Release 的同一版本号条目）
+| 改动类型 | 升号 | 进 Release |
+|:--|:--:|:--:|
+| 配置键变动（功能变化） | ✅ | ✅ |
+| 只改注释 / 文案 / 排版（配置键零变动，`.min` 逐字节不变） | ❌ | ✅（并入当天那张） |
 
-规矩（2026-10-07 定）：
-
-- **一天一版**：一天内改几次都只升一次号，当天后续改动沿用同号，不再归档、不再升号。
-- 于是「版本号诞生日」与「内容诞生日」可以分离 —— 版本号是**功能**的刻度。
-- Release 归组以**版本号首现日**为准，所以注释改动不会把旧版本号拖进新一天那张 Release。
+- **一天一版**：一天内改几次都只升一次号，当天后续改动沿用同号。
+- 版本号是**功能**的刻度 —— 注释改动不升号。
+- 仓内不归档历史版本（历史在 git 与 Releases）。
 
 ### 3 · Release 怎么发
 
@@ -1315,7 +1232,7 @@ grep 'proxy-test-url\|internet-test-url' <profile>
 | ① 引导解析 | `encrypted-dns-server` 端点改 IP 字面量；`dns-server` 去掉 `system` 与主机名 | 换成 IP 会失去"按域名走 CDN 就近解析"与 ECS 合规 |
 | ② 旁路设备 | 配 `hijack-dns`；想全量写 `*` | `hijack-dns` **拦不住 DoH**（走 443） |
 | ③ 规则触发 | 所有 IP 类规则加 `no-resolve`（本地 + 远程规则集） | ⚠️ **必须同时确认 `FINAL` 前有域名体量足够的国内直连集**，见下 |
-| 测速端点 | 换国内 204 | 见 [`hardening-template.md`](./profiles/clash.md) §1.4 |
+| 测速端点 | 换国内 204 | 见 [`clash.md`](./profiles/clash.md) §1.4 |
 
 #### ⚠️ 出口 ③ 的修法有个陷阱
 
@@ -1418,7 +1335,7 @@ nslookup -type=A whoami.akamai.net 192.168.2.168    # 若返回 198.18.x 说明�
 > **何时读**：用户报「leak test 显示 China Telecom / 电信 / 联通 / 移动」，
 > 或者**只是感觉**有泄露但说不清哪里漏。
 >
-> 本文是 mihomo（clash/）侧。Surge / Egern 侧见各自的 `leak-localization.md` ——
+> 本文是 mihomo（clash/）侧。Surge / Egern 侧见各自的 `ops.md` ——
 > 三侧的**归并方式一致**（按「谁触发了一次明文查询」分类），但**通道清单不同**：
 > mihomo 侧多一条 IPv6 面，且引导链的键名与语义完全不同。
 
@@ -2122,4 +2039,4 @@ mihomo 的 fake-ip 模式先返回假 IP、等连接建立时再按域名分流�
 DNS 段在四份 profile（`.yaml` / `.min.yaml` × `lazy` / `routing`）里必须完全一致。
 只改完整版 ⇒ 立刻判负。同步 `.min` 时**没有生成器可用**
 （`make_min.py` 只管 surge / egern 两族）—— 用 `yaml.safe_load` + `yaml.safe_dump`
-重出一份纯配置再比对最省事，别逐行手改。见 [`checker.md`](./gates.md) §5.1。
+重出一份纯配置再比对最省事，别逐行手改。见 [`gates.md`](./gates.md) §5.1。

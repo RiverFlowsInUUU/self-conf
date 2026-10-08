@@ -36,10 +36,9 @@ self-conf/                                   # Surge · Egern · mihomo 三内�
 │   ├── profiles/                            # 固定名四件（当前版恒为 lazy / routing，升版不改名）
 │   │   ├── lazy.conf · lazy.min.conf        # 懒人版（带注释 / 纯配置，注释剥掉那份）
 │   │   ├── routing.conf · routing.min.conf  # 分流版（带注释 / 纯配置，注释剥掉那份）
-│   │   └── config_old/                      # 历史版本归档（成对快照，永不删除）
 │   ├── （原 docs/ 与 DetailsReadme/ 已并入 skill/，2026-09-27，git 历史可查）
 ├── egern/                                   # 姊妹内核一侧（同构：profiles / skill/reference/egern）
-├── clash/                                   # mihomo 一侧（profiles / override / profiles/config_old）
+├── clash/                                   # mihomo 一侧（profiles / override）
 ├── icons/                                   # 策略组图标 PNG + SVG —— 仓库根，三内核共用、不跨项目引用
 ├── LICENSE · SECURITY.md · README.md        # 许可证 · 安全披露 · 门面（订阅入口 + 指路）
 └── skill/                                   # AI 知识库（本仓唯一文档区）
@@ -331,7 +330,7 @@ always-real-ip = *.lan, *.local, *.localdomain, *.home.arpa,
 非文档段 IPv4、非 `REPLACE_WITH_*` 凭据、不在允许清单的节点主机名、以及若干
 禁止出现的敏感子串，任一命中即失败。
 
-> 🔐 `skill/reference/shared/troubleshoot-faq.md` 里明确写着：**不要把真实节点提交回来**。
+> 🔐 `skill/reference/pitfalls.md` 里明确写着：**不要把真实节点提交回来**。
 > 改完本地用可以，`git push` 前跑一次 `check_secrets.py`。
 
 ### 6 · `smart` / `select` 组的差别
@@ -572,7 +571,7 @@ Surge 这边指向**字面量 `REJECT`** 而不是 `AD` 组，理由见 §13.3�
 
 ### 12 · `no-resolve` 的双刃
 
-这是全项目最需要注意的一处，也是 [`docs/no-resolve-pairing.md`](../dns.md)
+这是全项目最需要注意的一处，也是 [`dns.md`](../dns.md)
 整篇复盘的由来。
 
 #### 12.1 刀刃一：不带 `no-resolve` → 触发解析
@@ -802,7 +801,7 @@ Surge 的组名 / 节点名引用**不区分大小写地可解析**，但 `check
 > 📌 2026-10-04 起**本节整节成为历史**：分流版那条也由 `Apple_All_No_Resolve.list`（1,616 条）
 >     换成零 IP 的 `apple.txt`（纯域名）—— 没有 IP 条目，就不存在"该用哪个变体"的问题。
 >     顺带：`developer.apple.com` / `gateway.icloud.com` 这类只被全量集覆盖的域**按设计改走代理**
->     （探针期望已同步移出，见 `checker.md`）。下面的坑留在文档里当判据示例。
+>     （探针期望已同步移出，见 `gates.md`）。下面的坑留在文档里当判据示例。
 
 这是 Egern 项目实测踩出来的坑，直接搬过来：
 
@@ -861,7 +860,7 @@ IP 类规则需要有已解析的地址。放在所有域名规则之后，使�
 > 把另外 5 个地区组的关键词**抄了一遍**（61 个 token），而 Surge 的 `filter`
 > 只吃字面正则、不支持变量 ⇒ 结构上消灭不掉这份拷贝。
 > **兜底做法是给拷贝配一个比对器，并给比对器配一个判负样本** ——
-> 见 [`skill/reference/surge/pitfalls.md` 坑 16](../pitfalls.md)。
+> 见 [`skill/reference/pitfalls.md` 坑 16](../pitfalls.md)。
 
 #### 15.2 需要多个而非一个的原因
 
@@ -1454,7 +1453,7 @@ FINAL,Proxy,dns-failed
 RULE-SET,<url>,<策略>,"update-interval=604800"[,no-resolve]
 ```
 
-一周刷新。`no-resolve` **不是**这条的固定尾巴 —— 取舍是「实测零 IP 条目的规则集不写、真含 IP 条目的必须写」，纯域名集写上是空转（Surge 四份 profile 共用这一条，见 [`../shared/rulesets.md`](../rulesets.md) 原则 4b）。
+一周刷新。`no-resolve` **不是**这条的固定尾巴 —— 取舍是「实测零 IP 条目的规则集不写、真含 IP 条目的必须写」，纯域名集写上是空转（Surge 四份 profile 共用这一条，见 [`rulesets.md`](../rulesets.md) 原则 4b）。
 
 ⚠️ **别把这条判据说成"不写就不刷新"** —— Surge 手册写明该键缺省即 `86400`（24 小时），
 只有**负值**才关闭自动更新 ⇒ 漏写只是让周期不可见，不会让规则集停在首次下载的版本。
@@ -1548,7 +1547,7 @@ Egern（见分支 B）、Shadowrocket（`dns-server` 语义不同）。
 
 本文件是**主干**：三条出口模型、12 项审计清单、加固模板、坑索引、验收判据。
 `reference/surge/` 七篇的「何时读」索引见 SKILL.md §4。**移植到 Egern 侧前必读
-[`reference/shared/cross-kernel-diff.md`](../rulesets.md)**。
+[`rulesets.md`](../rulesets.md)**。
 
 #### Surge 的 DNS 模型（不理解这个就会改错地方）
 
@@ -1594,7 +1593,7 @@ Egern（见分支 B）、Shadowrocket（`dns-server` 语义不同）。
 | 11 | `always-real-ip` 主机名是否被前置域名规则接住 | MEDIUM / LOW |
 | 12 | 所有 IP 类规则是否带 `no-resolve`；FINAL 是否带 `dns-failed` | MEDIUM / LOW |
 
-另有三个**不在清单里但必须查**的审计脚本（+ 规则集刷新参数 `audit_ruleset_refresh.py`，见 `reference/surge/checker.md`）：
+另有三个**不在清单里但必须查**的审计脚本（+ 规则集刷新参数 `audit_ruleset_refresh.py`，见 `reference/profiles/surge.md`）：
 
 | 脚本 | 查什么 | 联网 |
 |---|---|---|
@@ -1616,7 +1615,7 @@ Egern（见分支 B）、Shadowrocket（`dns-server` 语义不同）。
 
 #### 加固模板
 
-完整模板见 [`reference/surge/hardening-template.md`](../profiles/clash.md)。最小可用骨架：
+完整模板见 [`reference/profiles/surge.md`](../profiles/clash.md)。最小可用骨架：
 
 ```
 [General]
@@ -1665,7 +1664,7 @@ FINAL,Proxy,dns-failed
 
 #### 坑索引
 
-完整复盘见 [`reference/surge/pitfalls.md`](../pitfalls.md)。**高频坑速查**：
+完整复盘见 [`pitfalls.md`](../pitfalls.md)。**高频坑速查**：
 
 | 症状 | 根因 | 修法 |
 |---|---|---|
