@@ -100,6 +100,10 @@ def main():
     for d in ("references", "gates", "run"):
         if not os.path.isdir(os.path.join(SKILL_DIR, d)):
             bad.append("缺 %s/ —— 渐进披露的载体缺失" % d)
+    # 探针题库：让「另一个 AI」实测文档是否够用（本仓质量把关的固定手段）
+    if not os.path.isfile(os.path.join(SKILL_DIR, "gates", "probes", "README.md")):
+        bad.append("缺 gates/probes/README.md —— 「全新 AI 实测」的题库不在"
+                   "（自查会漏，实测是本仓已验证有效的把关手段）")
 
     print("Agent Skill 规范合规（%s）" % os.path.basename(SKILL_DIR))
     print("-" * 78)
