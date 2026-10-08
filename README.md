@@ -54,16 +54,18 @@
 
 ## 🌐 隐私至上 · 无 DNS 泄露
 
-五条底线，三内核各自落地 —— 换客户端，防护不打折。
+| | <div align="center"><img src="https://raw.githubusercontent.com/RiverFlowsInUUU/self-conf/main/icons/Surge-Icon.png" height="22" alt=""> Surge</div> | <div align="center"><img src="https://raw.githubusercontent.com/RiverFlowsInUUU/self-conf/main/icons/Egern-Icon.png" height="22" alt=""> Egern</div> | <div align="center"><img src="https://raw.githubusercontent.com/RiverFlowsInUUU/self-conf/main/icons/mihomo-Icon.png" height="22" alt=""> mihomo</div> |
+|:--|:--|:--|:--|
+| 🚫 旁路设备 | 列举收口 | 全量收口 | 交客户端 TUN |
+| 🔐 加密通道 | DoH · 端点裸 IP | DoH / DoT · 端点全 IP | DoH · 端点全 IP |
+| 🛡️ 明文回退 | 全裸 IP · 无 `system` | 只指加密组 | 引导与代理分道 |
+| 🧭 规则克制 | 按需 `no-resolve` | 按需 `no_resolve` | 按需 `no-resolve` |
+| ✂️ 远端解析 | 交节点解析 | 交节点解析 | `fake-ip` · 落地解析 |
+| 🔎 IPv6 | 关闭 | 关闭 | 两处关闭 |
+| 🛑 广告拦截 | 匹配前拦 | 转拒绝 | 解析层拦 |
+| 📦 数据库依赖 | 内置 | 共享清单 | 零 dat 依赖 |
 
-- 🔐 **解析器全加密** —— 主解析走 DoH / DoT，端点只写 IP 字面量，不靠明文引导
-- 🚫 **明文入口收口** —— 连绕过内核的设备，查询也被接管回来；不回落系统解析
-- ✂️ **代理域名不给真答案** —— 交节点解析，本地不留答案
-- 🔎 **IPv6 显式关闭** —— 不产生 AAAA 泄露面
-- 🛑 **广告拦截前移** —— 在解析阶段就拦掉，不是连上再断
-
-三内核机制不同、写法不同（Surge 列举收口 · Egern 全量收口 · mihomo 交客户端 TUN），
-但**底线一致**。逐键对照与推导见 [`dns.md`](self-conf-skills/references/dns.md)。
+三内核机制不同、写法不同，但**底线一致**。逐键对照与推导见 [`dns.md`](self-conf-skills/references/dns.md)。
 
 每一条都有判据守着 —— 全套闸门 + CI，不是文档里的一句话。
 
