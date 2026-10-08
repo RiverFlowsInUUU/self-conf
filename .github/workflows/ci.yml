@@ -41,7 +41,7 @@ jobs:
         #    「Release 断言」实际是**匿名**打公共 API。
         #    ⇒ "CI 侧 exit 3 判失败"那层保险只在匿名调用本身失败时才触发（现在读得到，不触发）。
         #    现显式传入仓库自带的 GITHUB_TOKEN，让 Release 断言在 CI 里真正带凭据运行。
-        run: python tools/gates/verify_all.py
+        run: python self-conf-skills/gates/verify_all.py
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 
@@ -54,23 +54,23 @@ jobs:
         #    它也已进 verify_all（同源），此处**再跑一遍**是为了在 CI 日志里
         #    有一行**独立的、一眼可见的**结果，不必翻汇总表。
         #    刻意不用 pyflakes：外部依赖 + 29 条噪声里只 1 条真 bug，信噪比太低。
-        run: python tools/gates/check_undefined_names.py
+        run: python self-conf-skills/gates/check_undefined_names.py
 
       - name: Encoding gate (cp936)
         # 中文 Windows 下 print 非 GBK 字符会 UnicodeEncodeError 并以退出码 1 结束，
         # 而 1 恰是判负码 ⇒ 崩溃会被读成「判负」，整轮看着对其实判据没跑。
-        run: python tools/gates/verify_all.py
+        run: python self-conf-skills/gates/verify_all.py
         env:
           PYTHONIOENCODING: cp936
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 
       - name: Remote ruleset reachability (mihomo)
         # 慢；push 时严格，PR 时网络抖动不阻塞
-        run: python tools/gates/clash/check_remote_urls.py --timeout 20
+        run: python self-conf-skills/gates/clash/check_remote_urls.py --timeout 20
         continue-on-error: ${{ github.event_name == 'pull_request' }}
 
       - name: Encrypted DNS endpoints reachability (Egern)
         # 需联网实测每个加密 DNS 端点 ⇒ 不进闸门（抖动会假红），放在这里兜底。
         # 判负语义：脚本末尾会报「失效端点：N / 总数」。
-        run: python tools/run/egern/probe_dns_endpoints.py egern/profiles/routing.yaml
+        run: python self-conf-skills/run/egern/probe_dns_endpoints.py egern/profiles/routing.yaml
         continue-on-error: ${{ github.event_name == 'pull_request' }}

@@ -73,7 +73,7 @@ dns:
   # 兜底组，承接所有域名的解析。
   # 端点必须是 IP 字面量：一旦写成 https://dns.alidns.com/dns-query，软件就必须先
   # 解析这个主机名，而那次解析只能用 bootstrap（明文）—— 这就是「用途①」被激活，
-  # 也正是 tools/reference/dns.md 的案例 2。
+  # 也正是 self-conf-skills/references/dns.md 的案例 2。
   # 为什么保留 DoT：它是 853 端口，与 DoH 的 443 是两条独立通路，某些网络会拦其一。
   # 两个 DoT 端点的证书已实测带 IP SAN（223.5.5.5 / 1.12.12.12 均在 SAN 内），
   # 所以「IP 字面量 + 证书校验」成立，不需要 skip_tls_verify。
@@ -330,7 +330,7 @@ policy_groups:
     - https://sub.example.com/api/v1/client/subscribe?token=REPLACE_WITH_YOUR_TOKEN
     # 订阅刷新间隔（与 Surge 侧 `update-interval=86400` 对齐）。
     # ⚠️ Egern 官方未文档化该键的缺省值 ⇒ 显式写死，避免「刷新行为交给未知」
-    #    （仓规见 tools/reference/pitfalls.md「规则集刷新统一一周」）。
+    #    （仓规见 self-conf-skills/references/pitfalls.md「规则集刷新统一一周」）。
     interval: 86400
     hidden: true
     icon: https://raw.githubusercontent.com/RiverFlowsInUUU/self-conf/main/icons/Airport.png
@@ -366,7 +366,7 @@ policy_groups:
 # ⚠️ 这 5 个地区组（+ 末尾的 Other Regions）的关键词是**两份拷贝**：
 #    每个地区组写自己的 filter，而 Other Regions 的负向断言把它们的全部关键词又抄了一遍。
 #    **改任何一个地区组的关键词，都要同步改 Other Regions。**
-#    校验：`python tools/run/egern/audit_region_filters.py egern/profiles/routing.yaml`
+#    校验：`python self-conf-skills/run/egern/audit_region_filters.py egern/profiles/routing.yaml`
 # ================================================================
 - smart:
     name: Hong Kong
@@ -423,7 +423,7 @@ policy_groups:
     # 漏改的后果：该关键词不再被负向断言排除 ⇒ 属于那个地区的节点会**同时**出现在
     # 它自己的地区组和 Other Regions 里，两个组的内容不再互斥。
     #
-    # 自动校验：`python tools/run/egern/audit_region_filters.py egern/profiles/routing.yaml`
+    # 自动校验：`python self-conf-skills/run/egern/audit_region_filters.py egern/profiles/routing.yaml`
     #   它会把 5 个地区组的关键词集合与下面这段负向断言逐个比对，报出缺失项。
     #   ⚠️ 这段无法靠 YAML 变量消除（Egern 不支持 filter 引用），只能靠脚本守。
     # ================================================================
@@ -450,7 +450,7 @@ rules:
 # Egern 虽然有 `disabled: true`，但那条仍然算数组里的一个元素 ⇒ 会比 Surge 多占一位、
 # 把位 ⑲ 错开。Surge 的 `RULE-SET` 根本没有 disabled 字段（只认 no-resolve /
 # extended-matching / update-interval / pre-matching），想不生效只能注释。
-# 两边统一用注释写法，`tools/reference/rulesets.md` 的「匹配顺序（Surge / Egern 基准序）」才成立。
+# 两边统一用注释写法，`self-conf-skills/references/rulesets.md` 的「匹配顺序（Surge / Egern 基准序）」才成立。
 #   # - rule_set:
 #   #     name: Proxy
 #   #     match: https://raw.githubusercontent.com/blackmatrix7/ios_rule_script/master/rule/Surge/Proxy/Proxy.list
@@ -469,7 +469,7 @@ rules:
 
 # 注：本模板 dns.upstreams / proxy_nameservers / bootstrap 均为 IP 字面量，解析器直接以 IP 访问，
 # 因此 rules 中不需要（也没有）钉 DNS 端点域名 / IP 的规则 —— 防 DNS 泄露不依赖它
-# （详见 tools/reference/profiles/egern.md 的「配置框架逐段详解」一节）。
+# （详见 self-conf-skills/references/profiles/egern.md 的「配置框架逐段详解」一节）。
 # ---- 规则段（与 Surge `routing.conf` 同一基准序）----
 - rule_set:
     name: Jinx-CN
@@ -611,7 +611,7 @@ rules:
     update_interval: 604800
 # ★ 国内域名直连的**主力**规则集：Loyalsoldier `direct.txt` —— 纯域名集、零 IP 条目。
 #   ⚠️ 条数**不写死** —— 该清单每周随上游更新，写进注释的精确数必然过期；要现值就现抓：
-#   `python tools/run/egern/profile_ruleset.py <下面这条 rule_set 的 match 地址>`。
+#   `python self-conf-skills/run/egern/profile_ruleset.py <下面这条 rule_set 的 match 地址>`。
 #   —— 纯域名规则集只做域名串匹配、**不触发任何解析**，因此与 no_resolve 无关；
 #      「已是 IP 的连接」由下方 geoip:CN（带 no_resolve）兜住。
 - rule_set:

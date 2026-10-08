@@ -1,7 +1,7 @@
 # emby.yaml
 # ⚠️ 本文件由 build_rules.py **自动生成**，请勿手工编辑。
 #    真源是同目录的 `emby.list`（共享于三内核），改内容请改真源后重跑：
-#      python tools/run/clash/build_rules.py
+#      python self-conf-skills/run/clash/build_rules.py
 #
 # Emby 自用枚举域名 → Emby 组
 #
