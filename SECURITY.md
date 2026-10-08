@@ -1,7 +1,7 @@
 # 🔐 安全策略
 
 本仓是公开的三内核配置模板仓：`surge/`、`egern/` 与 `clash/`（mihomo，另含
-`clash/override/` 覆写脚本）并列维护，共用 `icons/` 的 40 个图标 PNG + 1 个 SVG与 `rules/` 资产。
+`clash/override/` 覆写脚本）并列维护，共用 `icons/` 的图标（PNG + SVG，**数量现抓**：`ls icons | wc -l`）与 `rules/` 资产。
 `rules/*.list` 是共享规则的唯一真源；派生格式不得反向成为维护入口。
 
 安全纪律对 **Surge / Egern / mihomo** 同等生效：模板只能携带假节点、假凭据与假订阅

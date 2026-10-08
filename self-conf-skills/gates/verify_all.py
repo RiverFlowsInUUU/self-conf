@@ -545,6 +545,9 @@ def build_gates():
     add('AI 入口完整性', [PY, 'self-conf-skills/gates/check_ai_entry.py'])
     # Agent Skill 规范合规（agentskills.io 开放标准，30+ 工具可加载）
     add('Skill 规范合规', [PY, 'self-conf-skills/gates/check_skill_spec.py'])
+    # 写死数字的新鲜度：文档里的「N 个图标」「N 道判据」必须与真源一致
+    # （实测漂过三次；靠人记不管用，必须机器守）
+    add('文档数字新鲜度', [PY, 'self-conf-skills/gates/check_doc_numbers.py'])
     add('secrets 扫描', [PY, 'self-conf-skills/gates/check_secrets.py'])
     add('未定义名扫描', [PY, 'self-conf-skills/gates/check_undefined_names.py'])
     add('portability', [PY, 'self-conf-skills/gates/check_portability.py'])

@@ -1,6 +1,6 @@
 ---
 name: self-conf-skills
-description: 维护 Surge / Egern / mihomo（Clash Meta）三内核代理配置模板仓库。改 profile 配置键、调分流规则与策略组、加换删规则集、防 DNS 泄露、排查拦截失效或分流异常、发版、跑门禁、改判据时使用。包含 8 篇技术参考（逐键语义 / DNS 原理 / 规则集选型 / 事故复盘 / 运维发版 / 门禁纪律）、33 道判据脚本与生成工具。只要用户提到 self-conf、Surge 配置、Egern 配置、mihomo 或 Clash 配置、分流版、懒人版、规则集、DNS 泄露、审计脚本、闸门，或让你修改本仓的配置，就应使用本技能。
+description: 维护 Surge / Egern / mihomo（Clash Meta）三内核代理配置模板仓库。改 profile 配置键、调分流规则与策略组、加换删规则集、防 DNS 泄露、排查拦截失效或分流异常、发版、跑门禁、改判据时使用。包含 8 篇技术参考（逐键语义 / DNS 原理 / 规则集选型 / 事故复盘 / 运维发版 / 门禁纪律）、整套判据脚本与生成工具。只要用户提到 self-conf、Surge 配置、Egern 配置、mihomo 或 Clash 配置、分流版、懒人版、规则集、DNS 泄露、审计脚本、闸门，或让你修改本仓的配置，就应使用本技能。
 license: MIT
 ---
 
@@ -43,7 +43,8 @@ grep -n "include-all" references/profiles/clash.md
 self-conf-skills/
   SKILL.md        本文件（技能入口，按需加载）
   references/     8 篇知识：profiles/* · dns · rulesets · pitfalls · ops · gates
-  gates/          33 道判据 + verify_all.py（唯一入口）· <kern>/ 各内核专属
+  gates/          全部判据 + verify_all.py（唯一入口）· <kern>/ 各内核专属
+                  （道数**现抓**：`verify_all.py --index | head -1`）
   run/            按需工具：生成 / 审计 / 探测 / 发布 · <kern>/
   lib/            共用模块（paths.py · _*_common.py）
 ```
