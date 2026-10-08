@@ -602,14 +602,24 @@ def run(path, strict=False, quiet=False):
 
 def main():
     ap = argparse.ArgumentParser(description="Surge profile 防 DNS 泄露审计器")
-    ap.add_argument("profile", help="Surge .conf 文件路径")
+    # ⚠️ 多文件（2026-10-08）：原为单文件 ⇒ 调用方被迫「一个文件开一道闸门」
+    #    （Surge DNS lazy / Surge DNS routing 就是这么来的）。改成 nargs="+"
+    #    后一道即可覆盖全部同类文件，且退出码按**最坏**取 —— 与逐道跑等价。
+    ap.add_argument("profiles", nargs="+", help="Surge .conf 文件路径（可多个）")
     ap.add_argument("--strict", action="store_true", help="medium 也视为失败")
     ap.add_argument("--quiet", action="store_true", help="只打印计数")
     a = ap.parse_args()
-    if not os.path.isfile(a.profile):
-        print(f"❌ 找不到文件：{a.profile}", file=sys.stderr)
-        return 2
-    return run(a.profile, a.strict, a.quiet)
+    for p in a.profiles:
+        if not os.path.isfile(p):
+            print(f"❌ 找不到文件：{p}", file=sys.stderr)
+            return 2
+    worst = 0
+    for p in a.profiles:
+        if len(a.profiles) > 1:
+            print(f"\n{'=' * 78}\n◆ {p}\n{'=' * 78}")
+        rc = run(p, a.strict, a.quiet)
+        worst = max(worst, rc)          # 2 > 1 > 0：任一环境故障也优先报出
+    return worst
 
 
 if __name__ == "__main__":

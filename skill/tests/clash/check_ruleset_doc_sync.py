@@ -42,7 +42,10 @@ HERE = os.path.dirname(os.path.abspath(__file__))
 ROOT = sys.argv[1] if len(sys.argv) > 1 else os.path.dirname(
     os.path.dirname(os.path.dirname(HERE)))
 
-DOC = os.path.join(ROOT, "skill", "reference", "rulesets.md")
+# ⚠️ 2026-10-08：文档重组后「全部规则集」表移到了 profiles/clash.md
+#    （原 clash/ruleset-sources.md 并入）。旧路径 rulesets.md 下已无此表
+#    ⇒ 本判据会 **0 行匹配、永远报「一致」**（假闸门，实测发现）。
+DOC = os.path.join(ROOT, "skill", "reference", "profiles", "clash.md")
 ROUTING = os.path.join(ROOT, "clash", "profiles", "routing.yaml")
 LAZY = os.path.join(ROOT, "clash", "profiles", "lazy.yaml")
 
@@ -130,6 +133,16 @@ def main():
     if not cfg:
         print("  NG 配置里没解析出任何远程 provider —— 环境不达标，不是通过")
         return 1
+    # ⚠️ 2026-10-08 加**防假绿**闸：本判据靠「文档表里的行」驱动，若标题/表格式
+    #    变了导致解析出 0 行，它会**静默地什么都不判却报「一致」**。
+    #    实测踩过：文档重组后「全部规则集」表从 rulesets.md 挪到了 profiles/clash.md，
+    #    而 DOC 常量还指向旧路径 ⇒ 0 行匹配、永远绿（闸门变摆设）。
+    #    ⇒ 解析结果为空一律判**环境不达标**（2），绝不报绿。
+    if not doc:
+        print("  NG 文档表解析出 0 行来源 —— 表头/路径变了？本判据会空转，不冒充通过")
+        print("     期望在 %s 的「全部规则集」表里找到「仓库链接 + 路径」成对的行"
+              % os.path.relpath(DOC, ROOT))
+        return 2
 
     bad = []
 
@@ -143,13 +156,31 @@ def main():
     cfg_set = set(cfg.values())
     cfg_paths = {path: (name, repo) for name, (repo, path) in cfg.items()}
 
-    # ① 文档提到的来源，配置里必须有活着的 provider（否则是旧名残留 / 死链记载）
+    # ⚠️ 2026-10-08 修**假绿**：原判据用 `cfg_set`（两份 profile 的并集）判断
+    #    「文档提到的来源在配置里存在」。**一份文件可以掩护另一份** ——
+    #    实测：把 routing 里的 TG-Twilight 改成 EVIL-OWNER，但 lazy 里那处没动
+    #    ⇒ 并集里仍有正确的 (`TG-Twilight`, path) ⇒ 判据报「一致」。
+    #    而「两份 profile 都引用同一规则集」在本仓是常态 ⇒ 这个盲区覆盖面很大。
+    #    现在改为**逐文件**判：每个 profile 里出现过的 (repo, path) 都要在文档表里
+    #    有对应，且文档写的来源必须在该文件里真实存在。
+    per_file = {}
+    for p in (ROUTING, LAZY):
+        tag = os.path.basename(p)
+        per_file[tag] = set(providers_from_config(p).values())
+
+    # ① 文档提到的来源，**每个引用它的 profile** 都必须有活着的 provider
     for (repo, path) in sorted(doc):
         if path.startswith("rules/"):
             continue          # 本地自托管清单，配置里是另一形态
         if (repo, path) in cfg_set:
+            # 逐文件复核：只要某个文件引用了该 path，它的 repo 就必须一致
+            for tag, vals in per_file.items():
+                samepath = [r for (r, pa) in vals if pa == path]
+                if samepath and (repo, path) not in vals:
+                    bad.append("%s 里路径 %s 来自 %s，文档表写 %s —— 来源已变"
+                               % (tag, path, " / ".join(sorted(set(samepath))), repo))
             continue
-        # 同一 path 但换了仓库 ⇒ 很可能就是改名/换源
+        # 同一 path 但换了仓库（全部文件都换了）⇒ 改名/换源
         if path in cfg_paths:
             n2, r2 = cfg_paths[path]
             bad.append("文档表写 %s · %s，但配置里该路径来自 %s（provider %s）—— 来源已变"

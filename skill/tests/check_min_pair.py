@@ -2,7 +2,7 @@
 # -*- coding: utf-8 -*-
 """.min 与完整版对拍 —— 去掉注释与空行后必须逐字相同；另判版本头注与跨内核同号。
 
-判据清单（固定 8 条，不随文件数增长）
+判据清单（固定 9 条，不随文件数增长）
 ────────────────────────────────────
 每内核 2 条：
   V1 顶层只有固定名四件（routing/lazy × 完整/min）
@@ -11,7 +11,14 @@
   X1 三内核 routing 版本号一致
   X2 三内核 lazy 版本号一致
 
-对拍本体：每份 `.min` 去掉注释/空行后必须与完整版逐字相同。
+对拍本体：每份 `.min` 去掉注释/空行后必须与完整版逐字相同；
+**外加**一条「空白落位」判据（合并自原 `.min 漂移` 闸门 —— 见下）。
+
+> ⚠️ 2026-10-08 合并：原 `make_min.py --check` 单独开了一道闸门（`.min 漂移`），
+> 它判「`.min` 是否等于生成器输出」。实测两者**只在空白落位上分岔**
+> （手工改内容 ⇒ 两者都红；只动空白 ⇒ 仅它红），而空白漂移不影响配置语义、
+> 下次 `--apply` 自动修好 ⇒ 不值得单开一道门，但值得保留检测
+> （它是「有人手工编辑 `.min`」的早期信号）。现已并入本脚本。
 `.min` 的定位是**同一份配置去掉注释**，不是"裁剪配置"。两版一旦漂移，
 照完整版改、实际导入的是 `.min` ⇒ 改了个寂寞，且肉眼看不出来。
 
@@ -52,6 +59,34 @@ def normalize(text):
             continue
         out.append(ln.rstrip())
     return out
+
+
+def blank_drift(full_text, min_text):
+    """返回 (.min 相对完整版的空白落位差异描述列表)。
+
+    只看**非空非注释行的缩进**与**空行数** —— 内容相同但空白不同，
+    说明 `.min` 不是生成器的输出（有人手工编辑过）。
+    ⚠️ 这不是配置错误（那些空白不影响语义），是**卫生信号**：
+    手工编辑 `.min` 往往会连着改内容，而内容漂移由上面的对拍抓。
+    """
+    def sig(text):
+        out = []
+        for ln in text.replace("\r\n", "\n").split("\n"):
+            if not ln.strip() or WHOLE.match(ln):
+                out.append(None)          # 空行/注释行：只记位置
+            else:
+                out.append(len(ln) - len(ln.lstrip()))
+        return out
+    a, b = sig(full_text), sig(min_text)
+    # 比较「非空行的缩进序列」
+    ca = [x for x in a if x is not None]
+    cb = [x for x in b if x is not None]
+    if ca == cb:
+        return []
+    for i, (x, y) in enumerate(zip(ca, cb)):
+        if x != y:
+            return ["第 %d 个内容行缩进不同（完整版 %s vs .min %s）" % (i + 1, x, y)]
+    return ["内容行数不同（完整版 %d vs .min %d）" % (len(ca), len(cb))]
 
 
 def first_diff(a, b):
@@ -104,8 +139,17 @@ def main():
                 return 2
             pairs += 1
             i = first_diff(a, b)
-            if i is None:
+            raw_full = open(os.path.join(d, ann), encoding="utf-8", newline="").read()
+            raw_min = open(os.path.join(d, name), encoding="utf-8", newline="").read()
+            blank = blank_drift(raw_full, raw_min) if i is None else []
+            if i is None and not blank:
                 print("✅ %s/%s ↔ %s（去注释后 %d 行逐字相同）" % (kern, ann, name, len(a)))
+                continue
+            if i is None:
+                # 内容一致但空白落位不同 ⇒ 卫生告警（不判负，见 blank_drift docstring）
+                print("⚠️  %s/%s ↔ %s：内容一致，但空白落位与完整版不同 —— %s"
+                      % (kern, ann, name, "; ".join(blank)))
+                print("     ⇒ .min 可能被手工编辑过。跑 `make_min.py --apply` 重新生成即可。")
                 continue
             bad += 1
             print("❌ %s/%s ↔ %s 去注释后仍有差异（%d 行 vs %d 行）"

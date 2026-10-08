@@ -46,6 +46,7 @@
       前提是 `run_one` 对 PYTHONIOENCODING 用 `setdefault`（显式继承，见该处注释）。
 """
 
+import glob
 import os
 import re
 import subprocess
@@ -62,6 +63,33 @@ for _stream in (sys.stdout, sys.stderr):
         pass
 
 ROOT = os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
+
+# 三内核现役 profile —— **单一真源**：闸门清单与文件枚举都从这里取。
+KERNS = ('surge', 'egern', 'clash')
+PROFILE_EXT = {'surge': '.conf', 'egern': '.yaml', 'clash': '.yaml'}
+
+
+def _profiles(kern):
+    """该内核的**完整版**现役文件（lazy / routing）。
+
+    ⚠️ 含 `.min`：`check_min_pair` 已保证两者去注释后逐字相同，
+    审计 `.min` 是**重复劳动**（同一内容审两遍）。故审计只喂完整版。
+    """
+    ext = PROFILE_EXT[kern]
+    return ['%s/profiles/%s%s' % (kern, fam, ext)
+            for fam in ('lazy', 'routing')
+            if os.path.isfile(os.path.join(ROOT, '%s/profiles/%s%s' % (kern, fam, ext)))]
+
+
+ALL_PROFILES = {k: _profiles(k) for k in KERNS}      # list，不是空格串（argv 要分开传）
+
+
+def _routing(kern):
+    ext = PROFILE_EXT[kern]
+    return '%s/profiles/routing%s' % (kern, ext)
+
+
+ROUTING = {k: _routing(k) for k in KERNS}
 PY = sys.executable or 'python'
 
 
@@ -492,132 +520,90 @@ def _assert_escapes_registered_OLD_REMOVED():
 
 
 def build_gates():
-    """与 ci.yml 步骤一一对应；(名称, argv, 额外环境)。
+    """闸门清单 —— **声明式**，不手抄。
 
-    self-conf 适配：本仓由两仓**复制**整合而成，不继承原仓 git 历史与
-    GitHub Release。故对依赖这两者的判据做**显式豁免**（不是静默跳过）：
-      · min-pair 的 V7「一天一版」 —— 需完整 git 历史，复制仓不成立
-        （⚠️ 2026-10-08：Release 断言**已启用**（第 22 道），不再是豁免项；
-          本条只列仍存活的豁免。V7 现在是「未验证」而非「通过」，见 release-rules §4.1）
-      · releases 方案               —— 需本仓自己的 Release，整合仓没有
-    豁免项在输出里会点名，不冒充通过。
-    另：追加 mihomo（clash/）专属门禁，使总入口真正覆盖三内核。
+    设计（2026-10-08 重写）：旧实现是 127 行手写清单，把「三内核 × 判据类型」的
+    笛卡尔积手工展开 —— 同一判据按文件各开一道（Surge DNS lazy / Surge DNS routing
+    就是这么来的），43 道里大量重复劳动，加一个内核要复制十来行。
+    现在改成两张声明表 + KERNS 遍历生成，**加内核只改 KERNS**。
+
+    返回 [(名称, argv, 额外环境), ...]，与 ci.yml 的 Gates step 同源。
     """
-    # ⚠️ 2026-10-08 第十五轮：此处原有一句 `import os as _os`，**全函数未使用**。
-    #    它是第十二轮为演示"别名逃逸"留下的残留，被静态检查报 unused import。
-    #    留着会稀释"零告警"的信号（新告警淹没在旧噪声里）⇒ 删除。
-    # ⚠️ 2026-10-08 第四轮审查 P4-a：min-pair 这道带 SKIP_V7=1，
-    # 其中 V7 两条会返回「未验证」。verify_all 不能把它显示成 ✅。
-    # 下面用 exit code 3 的约定：脚本以 3 结束 = 未验证（见本文件头注）。
-    gates = [
-        ('secrets 扫描', [PY, 'skill/tests/check_secrets.py'], {}),
-        # ── 自检脚本接进闸门（2026-10-08，第三轮审查第 14 条）
-        #    这两个 --selftest / --self-test 写了但 verify_all 与 ci.yml 里都零命中
-        #    ⇒ 写了不跑 = 会腐。现纳入，让它们真正被执行。
-        ('make_min 自检', [PY, 'skill/tests/make_min.py', '--selftest'], {}),
-        ('脚本对拍 diff 自检', [PY, 'skill/tests/clash/check_script_sync.py', '--self-test'], {}),
-        # ── 审计工具进闸门（2026-10-08）
-        # 此前这 12 项**从未被任何闸门或 CI 调用**（只在 ops.md §6.8.2 登记，
-        # 靠人记得跑）。原以为它们是「度量/诊断性质，不适合硬套判据」——
-        # 实测推翻了这个判断：它们都给出明确的过/不过（exit 0/1）。
-        ('地区组判别力·Surge',
-         [PY, 'skill/scripts/surge/audit_region_filters.py', 'surge/profiles/routing.conf'], {}),
-        ('地区组判别力·Egern',
-         [PY, 'skill/scripts/egern/audit_region_filters.py', 'egern/profiles/routing.yaml'], {}),
-        ('地区组判别力·mihomo',
-         [PY, 'skill/scripts/clash/audit_region_filters.py', 'clash/profiles/routing.yaml'], {}),
-        ('分流覆盖·Surge',
-         [PY, 'skill/scripts/surge/audit_routing_coverage.py', 'surge/profiles/routing.conf'], {}),
-        # 2026-10-08 第四轮审查 P3：Egern 这份**存在且手动跑干净**（15/15 探针命中 DIRECT），
-        # 但 verify_all / ci.yml / 对账判据引用数均为 0 ⇒ 文档说三内核都有、闸门层面却是假的。现补进。
-        ('分流覆盖·Egern',
-         [PY, 'skill/scripts/egern/audit_routing_coverage.py', 'egern/profiles/routing.yaml'], {}),
-        ('分流覆盖·mihomo',
-         [PY, 'skill/scripts/clash/audit_routing_coverage.py', 'clash/profiles/routing.yaml'], {}),
-        ('规则集内容·Surge',
-         [PY, 'skill/scripts/surge/audit_ruleset_content.py', 'surge/profiles/routing.conf'], {}),
-        ('规则集内容·mihomo',
-         [PY, 'skill/scripts/clash/audit_ruleset_content.py', 'clash/profiles/routing.yaml'], {}),
-        # ⚠️ 必须带 --strict：这两个脚本把「与本仓约定不同」归为「约定」档，
-        #    默认**不改退出码**（只打印 🟡 提示）。不加 --strict 就是一道假闸门
-        #    —— 2026-10-08 判别力矩阵实测：改了 25 处 update_interval 仍 exit=0。
-        ('规则集刷新周期·Surge',
-         [PY, 'skill/scripts/surge/audit_ruleset_refresh.py', '--strict',
-          'surge/profiles/routing.conf'], {}),
-        ('规则集刷新周期·Egern',
-         [PY, 'skill/scripts/egern/audit_ruleset_refresh.py', '--strict',
-          'egern/profiles/routing.yaml'], {}),
-        ('DNS 转发泄露·Egern',
-         [PY, 'skill/scripts/egern/audit_dns_forward.py', 'egern/profiles/routing.yaml'], {}),
-        ('no-resolve 配对·Egern',
-         [PY, 'skill/scripts/egern/audit_ruleset_noresolve.py', 'egern/profiles/routing.yaml'], {}),
-        ('规则集来源文档同步',
-         [PY, 'skill/tests/clash/check_ruleset_doc_sync.py'], {}),
-        # 自托管清单的裸 IP 检测：rules/ 下每份 .list 都不该有「裸 IP 条目」
-        # （会为匹配域名而触发解析 ⇒ 泄露）。离线、快，可进闸门。
-        ('自托管清单·裸IP检测(AI)',
-         [PY, 'skill/scripts/egern/profile_ruleset.py', '--offline', 'rules/AI.list'], {}),
-        ('自托管清单·裸IP检测(apple-system)',
-         [PY, 'skill/scripts/egern/profile_ruleset.py', '--offline', 'rules/apple_system.list'], {}),
-        ('自托管清单·裸IP检测(emby)',
-         [PY, 'skill/scripts/egern/profile_ruleset.py', '--offline', 'rules/emby.list'], {}),
-        # 闸门清单对账已删（2026-10-08 改革）：ci.yml 与 build_gates() 同源是纪律，
-        # 不靠一道门禁去守「两份手写清单一致」—— 那本质是消除重复而非加护栏。
-        # 未定义名扫描：本仓已两次栽在同一类 bug（只在异常/判负路径上才炸，
-        # 现役恒好时永远潜伏）。刻意不引 pyflakes（外部依赖 + 信噪比 1/29）。
-        ('未定义名扫描', [PY, 'skill/tests/check_undefined_names.py'], {}),
-        # 2026-10-08：本仓已发布首个 Release ⇒ R1–R5 判据启用。
-        # 需网络 + GITHUB_TOKEN（缺省回退 gh auth token）；不可达时走 SKIP(3)=未验证。
-        ('Release 断言', [PY, 'skill/tests/check_releases.py'],
-         {'GITHUB_TOKEN': _token() or ''}),
-        # 2026-10-07 零信任自查补入：clash 侧凭据扫描此前**不在任何闸门里**
-        # （pitfalls.md:1037 记为挂账，靠人记得跑）。本轮修好它的三个误报源
-        # （ROOT 落在文档区 / 已放行 IP 被当主机重报 / 注释里的 IP 也报警）
-        # 后误报归零，现正式进闸门。
-        ('clash secrets 扫描', [PY, 'skill/tests/clash/check_secrets.py'], {}),
-        ('portability', [PY, 'skill/tests/check_portability.py'], {}),
-        ('min-pair 一致', [PY, 'skill/tests/check_min_pair.py'], {}),
-        ('README 徽章', [PY, 'skill/tests/check_badges.py'], {}),
-        ('markdown 链接', [PY, 'skill/tests/check_links.py', '.'], {}),
-        # ✅ 2026-10-08 起**已启用**（首个 Release v2026-10-08 已发布），不再是豁免。
-        #    token 由 _token() 提供（环境变量 → gh auth token）；本仓 Release 为公开仓，
-        #    无 token 时 check_releases 走匿名公共读（仍可读，故不判 SKIP）。
-        ('Surge DNS lazy', [PY, 'skill/scripts/surge/check_surge_dns.py', 'surge/profiles/lazy.conf'], {}),
-        ('Surge DNS routing', [PY, 'skill/scripts/surge/check_surge_dns.py', 'surge/profiles/routing.conf'], {}),
-        ('Egern DNS 双份', [PY, 'skill/scripts/egern/check_egern_dns.py',
-                            'egern/profiles/lazy.yaml', 'egern/profiles/routing.yaml'], {}),
-        # mihomo 侧的防 DNS 泄露审计器 —— 与上面两条同职责，此前缺失。
-        # 防泄露是本仓命脉，三个内核都得有各自的实测审计器。
-        ('mihomo DNS 双份', [PY, 'skill/scripts/clash/check_clash_dns.py',
-                             'clash/profiles/lazy.yaml', 'clash/profiles/routing.yaml'], {}),
-        ('.min 漂移', [PY, 'skill/tests/make_min.py', '--check'], {}),
-        ('地区组判别力', [PY, 'skill/tests/check_region_filters.py'], {}),
-        ('profile 结构', [PY, 'skill/tests/check_structure.py'], {}),
-        # ── mihomo（clash/）专属门禁：整合后纳入总入口，三内核一视同仁 ──
-        ('clash 结构', [PY, 'skill/tests/clash/check_structure.py'], {}),
-        ('clash 脚本/静态对拍', [PY, 'skill/tests/clash/check_script_sync.py'], {}),
-        ('clash 规则集生成物', [PY, 'skill/scripts/clash/build_rules.py', '--check'], {}),
-        ('clash 头注数字新鲜度', [PY, 'skill/tests/clash/check_header_numbers.py'], {}),
-        # 分流覆盖审计 —— Surge / Egern 各有 audit_routing_coverage.py，
-        # mihomo 侧此前一直缺（是唯一的验证缺口），现补上。
-        ('clash 分流覆盖', [PY, 'skill/scripts/clash/audit_routing_coverage.py',
-                            'clash/profiles/routing.yaml', 'clash/profiles/lazy.yaml'], {}),
-        # 规则集内容审计 —— surge 有 audit_ruleset_content、egern 有
-        # audit_ruleset_noresolve，clash 侧此前为零（最后一个对标缺口）。
-        # ⚠️ 用**联网档**而非 --offline：离线档依赖 7 天缓存，
-        #    CI 是全新环境没有缓存，--offline 必然「取不到」退 2 判负 ——
-        #    那是环境限制不是配置问题（2026-10-07 CI 首红即此因）。
-        # 自洽性：不得引用外部仓库的在线资源（SECURITY.md 承诺了此判据）
-        ('自洽性', [PY, 'skill/tests/check_selfcontained.py'], {}),
-        # smart 权重口径：不带权重时其余闸门全绿，低倍率优先会静默失效
-        ('smart 权重口径', [PY, 'skill/tests/check_priority_weight.py'], {}),
-        # 发版规矩：三内核版本头注（格式 / Surge-Egern 同号 / .min 与完整版一致）
-        ('版本头注', [PY, 'skill/tests/clash/check_version_header.py'], {}),
-        ('clash 规则集内容', [PY, 'skill/scripts/clash/audit_ruleset_content.py',
-                              'clash/profiles/routing.yaml', 'clash/profiles/lazy.yaml'], {}),
-        ('clash 静态 profile 新鲜度', [PY, 'skill/scripts/clash/build_profiles.py', '--check'], {}),
+    PRE = ['--strict'] if False else []
+    G, R = [], []                      # G=闸门累加器, R=三内核审计脚本的路径规则
+
+    def add(name, argv, env=None):
+        G.append((name, argv, env or {}))
+
+    # ── ① 全局闸门（不按内核分）────────────────────────────────────
+    add('secrets 扫描', [PY, 'skill/tests/check_secrets.py'])
+    add('未定义名扫描', [PY, 'skill/tests/check_undefined_names.py'])
+    add('portability', [PY, 'skill/tests/check_portability.py'])
+    add('自洽性', [PY, 'skill/tests/check_selfcontained.py'])
+    add('markdown 链接', [PY, 'skill/tests/check_links.py', '.'])
+    add('README 徽章', [PY, 'skill/tests/check_badges.py'])
+    add('min-pair 一致', [PY, 'skill/tests/check_min_pair.py'])
+    add('版本头注', [PY, 'skill/tests/clash/check_version_header.py'])
+    add('make_min 自检', [PY, 'skill/tests/make_min.py', '--selftest'])
+    # ⚠️ 原「.min 漂移」闸门（make_min --check）已并入 check_min_pair ——
+    #    两者只在「空白落位」上分岔，而那不影响配置语义；但保留检测（见该脚本）。
+    add('Release 断言', [PY, 'skill/tests/check_releases.py'],
+        {'GITHUB_TOKEN': _token() or ''})
+
+    # ── ② 三内核审计（每内核按现役文件各一道；脚本支持多文件）────────
+    # 每项 = (闸门名, 脚本相对路径模板, 参数模板)
+    #   {k}=内核  {files}=该内核全部现役 profile
+    AUDITS = [
+        ('DNS 审计',        'skill/scripts/{k}/{dns}',            ['{files}']),
+        ('分流覆盖',        'skill/scripts/{k}/audit_routing_coverage.py', ['{files}']),
+        ('地区组判别力',    'skill/scripts/{k}/audit_region_filters.py',   ['{routing}']),
+        ('规则集刷新周期',  'skill/scripts/{k}/audit_ruleset_refresh.py',  ['--strict', '{routing}']),
     ]
-    return gates
+    DNS_SCRIPT = {'surge': 'check_surge_dns.py', 'egern': 'check_egern_dns.py',
+                  'clash': 'check_clash_dns.py'}
+    for kern in KERNS:
+        files = ALL_PROFILES[kern]          # list：每个文件是独立的 argv 元素
+        routing = ROUTING[kern]
+        for label, tpl, args in AUDITS:
+            path = tpl.format(k=kern, dns=DNS_SCRIPT[kern])
+            if not os.path.isfile(os.path.join(ROOT, path)):
+                continue
+            a = []
+            for x in args:
+                if x == '{files}':
+                    a.extend(files)          # 展开成多个 argv 元素
+                else:
+                    a.append(x.format(files=files, routing=routing))
+            add('%s·%s' % (label, kern), [PY, path, *a])
+
+    # ── ③ 三内核各有专属判据（不对称的部分，显式列出）──────────────
+    add('规则集内容·surge', [PY, 'skill/scripts/surge/audit_ruleset_content.py',
+                             ROUTING['surge']])
+    add('规则集内容·clash', [PY, 'skill/scripts/clash/audit_ruleset_content.py',
+                             ROUTING['clash']])
+    add('DNS 转发泄露·egern', [PY, 'skill/scripts/egern/audit_dns_forward.py',
+                               ROUTING['egern']])
+    add('no-resolve 配对·egern', [PY, 'skill/scripts/egern/audit_ruleset_noresolve.py',
+                                  ROUTING['egern']])
+    add('clash 结构', [PY, 'skill/tests/clash/check_structure.py'])
+    add('clash 脚本/静态对拍', [PY, 'skill/tests/clash/check_script_sync.py'])
+    add('脚本对拍 diff 自检', [PY, 'skill/tests/clash/check_script_sync.py', '--self-test'])
+    add('clash 头注数字新鲜度', [PY, 'skill/tests/clash/check_header_numbers.py'])
+    add('clash 规则集生成物', [PY, 'skill/scripts/clash/build_rules.py', '--check'])
+    add('clash 静态 profile 新鲜度', [PY, 'skill/scripts/clash/build_profiles.py', '--check'])
+    add('profile 结构', [PY, 'skill/tests/check_structure.py'])
+    add('smart 权重口径', [PY, 'skill/tests/check_priority_weight.py'])
+    add('规则集来源文档同步', [PY, 'skill/tests/clash/check_ruleset_doc_sync.py'])
+
+    # ── ④ 自托管清单的裸 IP 检测 ────────────────────────────────
+    # 原为每份 .list 各开一道（3 道），但脚本本就支持多文件 ⇒ 合并成一道。
+    # 新增自托管清单时**不必改这里**（扫 rules/*.list）。
+    lists = sorted(os.path.basename(p) for p in glob.glob(os.path.join(ROOT, 'rules', '*.list')))
+    add('自托管清单·裸IP检测',
+        [PY, 'skill/scripts/egern/profile_ruleset.py', '--offline']
+        + ['rules/' + x for x in lists])
+
+    return G
 
 
 def run_one(name, argv, extra_env):

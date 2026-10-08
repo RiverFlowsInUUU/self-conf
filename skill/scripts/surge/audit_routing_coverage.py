@@ -351,18 +351,29 @@ class Matcher:
 
 def main():
     ap = argparse.ArgumentParser(description="分流覆盖审计（真实域名走一遍）")
-    ap.add_argument("profile", help="Surge .conf 文件路径")
+    ap.add_argument("profiles", nargs="+", help="Surge .conf 文件路径（可多个）")
     ap.add_argument("--cache-dir", default=None)
     ap.add_argument("--show-all", action="store_true", help="打印全部探针明细")
     a = ap.parse_args()
 
-    if not os.path.isfile(a.profile):
-        print(f"❌ 找不到文件：{a.profile}", file=sys.stderr)
-        return 2
+    for p in a.profiles:
+        if not os.path.isfile(p):
+            print(f"❌ 找不到文件：{p}", file=sys.stderr)
+            return 2
+    if len(a.profiles) > 1:
+        worst = 0
+        for p in a.profiles:
+            print(f"\n{'=' * 78}\n◆ {p}\n{'=' * 78}")
+            worst = max(worst, _run_one(p, a))
+        return worst
+    a.profile = a.profiles[0]
+    return _run_one(a.profile, a)
 
+
+def _run_one(profile, a):
     cache = a.cache_dir or os.path.join(tempfile.gettempdir(), "surge-ruleset-cache")
     print(f"规则集缓存：{cache}")
-    m = Matcher(a.profile, cache)
+    m = Matcher(profile, cache)
     print(f"[Rule] 段共 {len(m.rules)} 条规则\n")
 
     fails = []
@@ -432,7 +443,7 @@ def main():
     print(f"   {ok_dom}/{len(DOMESTIC_PROBES)} 命中 DIRECT\n")
 
     # ── B. 境外探针不能落 DIRECT ────────────────────────────────────────────
-    expectations = foreign_expectations(a.profile)
+    expectations = foreign_expectations(profile)
     print("── B · 境外探针（期望走对应应用组 / 代理组，不能落 DIRECT）")
     ok_for = 0
     for d, allow in expectations.items():
@@ -465,7 +476,7 @@ def main():
     # ── D. Apple 探针必须 DIRECT ────────────────────────────────────────────
     print("── D · Apple 探针（期望命中 DIRECT）")
     ok_ap = 0
-    apple_probes = apple_probes_for(a.profile)
+    apple_probes = apple_probes_for(profile)
     for d in apple_probes:
         r = m.match(d)
         pol = r["policy"] if r else "（无规则命中）"
@@ -481,7 +492,7 @@ def main():
     # ── E. OTA 探针必须命中 `Apple Update` 组（2026-10-06 立）────────────────
     #    守住分流版位 ④ 在 `SYSTEM` 之前这个顺序：改回去就静默失效（详见 APPLE_OTA_PROBES 注释）。
     #    ⚠️ 懒人版无 `Apple Update` 组 ⇒ 本组为空，不参与计数与判定。
-    ota_probes = ota_probes_for(a.profile)
+    ota_probes = ota_probes_for(profile)
     if ota_probes:
         print(f"── E · OTA 探针（期望命中 `Apple Update` 组）")
         ok_ota = 0

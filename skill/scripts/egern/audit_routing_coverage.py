@@ -168,12 +168,23 @@ def first_hit(doc, host, sets_cache, offline):
 
 def main():
     ap = argparse.ArgumentParser(description="审计 Egern profile 的分流覆盖（域名 → 命中规则 → 策略）")
-    ap.add_argument("profile")
+    ap.add_argument("profiles", nargs="+")
     ap.add_argument("--domain", action="append", default=[], help="追加探针域名，可重复")
     ap.add_argument("--offline", action="store_true")
     a = ap.parse_args()
 
-    doc = yaml.safe_load(io.open(a.profile, encoding="utf-8"))
+    # 多文件：逐个跑，取最坏退出码（与「每文件各开一道闸门」等价）
+    if len(a.profiles) > 1:
+        worst = 0
+        for p in a.profiles:
+            print("\n%s\n◆ %s\n%s" % ("=" * 78, p, "=" * 78))
+            worst = max(worst, _run_one(p, a))
+        return worst
+    return _run_one(a.profiles[0], a)
+
+
+def _run_one(profile, a):
+    doc = yaml.safe_load(io.open(profile, encoding="utf-8"))
     cache = {}
 
     # ---- Z0：应用段「组顺序 ↔ 规则顺序」必须逐位对齐（2026-10-05 立）----
