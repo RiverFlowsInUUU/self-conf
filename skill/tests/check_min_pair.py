@@ -313,7 +313,15 @@ def version_checks(root):
             note = "已判 %d 个更新日（≥ %s）" % (len(judged), CADENCE_FROM)
             if unknown:
                 note += "；另有 %d 个分组的日期不可得 ⇒ 未验证（浅克隆？见 ops.md §6.8）" % unknown
-        out.append(("V7 %s 一天一版" % fam, not over, note))
+        # ⚠️ 2026-10-08 第四轮审查 P4-b：
+        #    无 git（tarball 解包 / _probe 副本）时 groups 为空 ⇒ over 为空
+        #    ⇒ `not over` = True ⇒ 打印 ✅ 且计入 passed —— **假绿**，
+        #    而这恰恰是最容易发生的场景（不带 git 历史）。
+        #    现：只要存在「日期不可得」的分组，就记 None（未验证），不许顶着 ✅。
+        ok_v7 = None if unknown else (not over)
+        if unknown:
+            note += " ⇒ 未验证（不是通过）"
+        out.append(("V7 %s 一天一版" % fam, ok_v7, note))
     return out
 
 
@@ -377,6 +385,10 @@ def main():
     print("TOTAL: %d passed, %d failed%s"
           % (pairs - bad + v_pass, bad + v_bad,
              (", %d unverified" % v_unver) if v_unver else ""))
+    # ⚠️ 有「未验证」时以 3 结束（本仓约定：3 = 未验证，不是通过也不是判负），
+    #    好让上层 verify_all 显示 ⚠️ 而不是 ✅（第四轮审查 P4-a）。
+    if v_unver:
+        return 3
     return 1 if (bad or v_bad) else 0
 
 

@@ -12,7 +12,7 @@
 | 1 | 环境要求 | 8 | 生成物新鲜度（`build_rules.py`） |
 | 2 | 命令 | 9 | 判别力：怎么证明门禁真的会判负 |
 | 3 | 退出码约定 | 10 | 已知豁免项（豁免 ≠ 通过） |
-| 4 | 结构判据（`clash/check_structure.py`） | 11 | 44 道总览表 |
+| 4 | 结构判据（`clash/check_structure.py`） | 11 | 46 道总览表 |
 | 5 | 两形态对拍（`clash/check_min_pair.py`） | 12 | CI 怎么跑 |
 | 6 | 脚本 ↔ 静态对拍（`clash/check_script_sync.py`） | 13 | 判据演进史 |
 | 7 | 远程集可达性（`clash/check_remote_urls.py`） | 14 | 全绿 ≠ 可用 · FAQ · 维护者须知 |
@@ -69,7 +69,7 @@ def _default_root():
 ## 2 · 命令
 
 ```bash
-# ── 一键总入口（44 道并行，含三内核）────────────────────────────
+# ── 一键总入口（46 道并行，含三内核）────────────────────────────
 python skill/tests/verify_all.py                  # 期望 exit 0
 python skill/tests/verify_all.py -v               # 无论红绿都打印每个闸门输出尾部
 python skill/tests/verify_all.py --index          # 只读列闸门清单（不跑、不判负、exit 0）
@@ -97,7 +97,7 @@ python skill/tests/check_selfcontained.py         # 整合仓自洽性
 
 | 脚本 | 扫描面 | 判据 |
 |:-----|:-------|:-----|
-| `skill/tests/check_secrets.py`（跨内核，进 44 道）| 全仓 walk 到的 `.conf` / `.yaml` / `.yml`，**跳过 `icons/`** | 禁串 `tange365.com` / `wangxinyu`；IPv4 白名单；`YAML_CRED_KEYS` 值必须占位 |
+| `skill/tests/check_secrets.py`（跨内核，进 46 道）| 全仓 walk 到的 `.conf` / `.yaml` / `.yml`，**跳过 `icons/`** | 禁串 `tange365.com` / `wangxinyu`；IPv4 白名单；`YAML_CRED_KEYS` 值必须占位 |
 | `skill/tests/clash/check_secrets.py`（mihomo 版）| 全仓 walk 到的 `.js` / `.yaml` / `.yml` / `.md` / `.conf` / `.list` / `.txt` / `.json`，**跳过 `icons/` 与 `rules/` 的主机扫描** | 凭据字段非占位即报；IPv4 白名单；主机白名单；私钥头无条件报 |
 
 两者互不可替代：mihomo 版能扫 `.js`（脚本里也有订阅 URL），跨内核版带禁串黑名单
@@ -648,7 +648,7 @@ python skill/tests/clash/check_script_sync.py "$SB"   # 期望 0
 | `check_remote_urls.py` | ⚠️ 联网依赖，未逐个固定 | ❌ 无 |
 | `check_region_filters.py`（跨内核）| ✅ | ✅ **有**（唯一定期跑判负 fixture 的闸门）|
 
-> 📌 跨内核的 `check_region_filters.py` 是**唯一**把「判负 fixture」做进 44 道的闸门，
+> 📌 跨内核的 `check_region_filters.py` 是**唯一**把「判负 fixture」做进 46 道的闸门，
 > 且它对每个判负用例断言**退出码 + 输出标记**两条。mihomo 侧**还没有对应的自动化回归** ——
 > 上表前五行的"已实测"是**本次文档编写时人工跑出来的**，不是常驻 CI 的保证。
 >
@@ -704,13 +704,15 @@ _skip_v7 = {'SKIP_V7': '1'}
 3. **豁免项要么进 `build_gates()` 带 SKIP 标记、要么显式注释掉**。
    绝不允许"跑一遍然后无视结果" —— 那是静默假绿。
 
-## 11 · 44 道总览表
+## 11 · 46 道总览表
 
-> ⚠️ **本表由 `python skill/tests/verify_all.py --index` 现抓生成，请勿手抄。**
-> 2026-10-08 第三轮审查第 6 条：此表此前是手抄的，自称「不要手抄成死表」，
-> 实际编号与 `--index` 和 CI 全对不上（Release 写 27 实为 18、地区组写 28–30 实为 2–4、
-> 裸IP 写 40–42 实为 14–16），还把 `check_selfcontained` 同时列为「第 21 道」和「不进 44 道」。
-> ⇒ 现改为脚本生成，并加了 `闸门清单对账`（第 17 道）防止再次漂移。
+> ✅ **本表由 `python skill/scripts/gen_gate_table.py --apply` 生成**，
+> 真源是 `verify_all.py --index`，**不要手抄**。
+> 漂移由同一脚本的 `--check` 判负（已接闸门），不再靠人记得更新。
+>
+> 历史：此表曾长期是手抄死表 —— 表头自称「现抓、勿手抄」，实际编号与
+> `--index` 全对不上（Release 写 27 实为 18、地区组 28–30 实为 2–4），
+> 还把 `check_selfcontained` 同时列为「第 21 道」和「不进闸门」。（第三轮审查第 6 条）
 
 | # | 闸门 | 命令 |
 |:--|:-----|:-----|
@@ -721,57 +723,56 @@ _skip_v7 = {'SKIP_V7': '1'}
 | 5 | 地区组判别力·Egern | `skill/scripts/egern/audit_region_filters.py egern/profiles/routing.yaml` |
 | 6 | 地区组判别力·mihomo | `skill/scripts/clash/audit_region_filters.py clash/profiles/routing.yaml` |
 | 7 | 分流覆盖·Surge | `skill/scripts/surge/audit_routing_coverage.py surge/profiles/routing.conf` |
-| 8 | 分流覆盖·mihomo | `skill/scripts/clash/audit_routing_coverage.py clash/profiles/routing.yaml` |
-| 9 | 规则集内容·Surge | `skill/scripts/surge/audit_ruleset_content.py surge/profiles/routing.conf` |
-| 10 | 规则集内容·mihomo | `skill/scripts/clash/audit_ruleset_content.py clash/profiles/routing.yaml` |
-| 11 | 规则集刷新周期·Surge | `skill/scripts/surge/audit_ruleset_refresh.py --strict surge/profiles/routing.conf` |
-| 12 | 规则集刷新周期·Egern | `skill/scripts/egern/audit_ruleset_refresh.py --strict egern/profiles/routing.yaml` |
-| 13 | DNS 转发泄露·Egern | `skill/scripts/egern/audit_dns_forward.py egern/profiles/routing.yaml` |
-| 14 | no-resolve 配对·Egern | `skill/scripts/egern/audit_ruleset_noresolve.py egern/profiles/routing.yaml` |
-| 15 | 规则集来源文档同步 | `skill/tests/clash/check_ruleset_doc_sync.py` |
-| 16 | 自托管清单·裸IP检测(AI) | `skill/scripts/egern/profile_ruleset.py --offline rules/AI.list` |
-| 17 | 自托管清单·裸IP检测(apple-system) | `skill/scripts/egern/profile_ruleset.py --offline rules/apple_system.list` |
-| 18 | 自托管清单·裸IP检测(emby) | `skill/scripts/egern/profile_ruleset.py --offline rules/emby.list` |
-| 19 | 闸门清单对账 | `skill/tests/check_gate_manifest.py` |
-| 20 | Release 断言 | `skill/tests/check_releases.py` |
-| 21 | clash secrets 扫描 | `skill/tests/clash/check_secrets.py` |
-| 22 | portability | `skill/tests/check_portability.py` |
-| 23 | min-pair 一致 | `skill/tests/check_min_pair.py` |
-| 24 | README 徽章 | `skill/tests/check_badges.py` |
-| 25 | markdown 链接 | `skill/tests/check_links.py .` |
-| 26 | Surge DNS lazy | `skill/scripts/surge/check_surge_dns.py surge/profiles/lazy.conf` |
-| 27 | Surge DNS routing | `skill/scripts/surge/check_surge_dns.py surge/profiles/routing.conf` |
-| 28 | Egern DNS 双份 | `skill/scripts/egern/check_egern_dns.py egern/profiles/lazy.yaml egern/profiles/routing.yaml` |
-| 29 | mihomo DNS 双份 | `skill/scripts/clash/check_clash_dns.py clash/profiles/lazy.yaml clash/profiles/routing.yaml` |
-| 30 | .min 漂移 | `skill/tests/make_min.py --check` |
-| 31 | 地区组判别力 | `skill/tests/check_region_filters.py` |
-| 32 | profile 结构 | `skill/tests/check_structure.py` |
-| 33 | 文档 AUTO 同步 | `skill/tests/sync_docs.py --check` |
-| 34 | clash 结构 | `skill/tests/clash/check_structure.py` |
-| 35 | clash min 版一致 | `skill/tests/clash/check_min_pair.py` |
-| 36 | clash 脚本/静态对拍 | `skill/tests/clash/check_script_sync.py` |
-| 37 | clash 规则集生成物 | `skill/scripts/clash/build_rules.py --check` |
-| 38 | clash 头注数字新鲜度 | `skill/tests/clash/check_header_numbers.py` |
-| 39 | clash 分流覆盖 | `skill/scripts/clash/audit_routing_coverage.py clash/profiles/routing.yaml clash/profiles/lazy.yaml` |
-| 40 | 自洽性 | `skill/tests/check_selfcontained.py` |
-| 41 | smart 权重口径 | `skill/tests/check_priority_weight.py` |
-| 42 | 版本头注 | `skill/tests/clash/check_version_header.py` |
-| 43 | clash 规则集内容 | `skill/scripts/clash/audit_ruleset_content.py clash/profiles/routing.yaml clash/profiles/lazy.yaml` |
-| 44 | clash 静态 profile 新鲜度 | `skill/scripts/clash/build_profiles.py --check` |
+| 8 | 分流覆盖·Egern | `skill/scripts/egern/audit_routing_coverage.py egern/profiles/routing.yaml` |
+| 9 | 分流覆盖·mihomo | `skill/scripts/clash/audit_routing_coverage.py clash/profiles/routing.yaml` |
+| 10 | 规则集内容·Surge | `skill/scripts/surge/audit_ruleset_content.py surge/profiles/routing.conf` |
+| 11 | 规则集内容·mihomo | `skill/scripts/clash/audit_ruleset_content.py clash/profiles/routing.yaml` |
+| 12 | 规则集刷新周期·Surge | `skill/scripts/surge/audit_ruleset_refresh.py --strict surge/profiles/routing.conf` |
+| 13 | 规则集刷新周期·Egern | `skill/scripts/egern/audit_ruleset_refresh.py --strict egern/profiles/routing.yaml` |
+| 14 | DNS 转发泄露·Egern | `skill/scripts/egern/audit_dns_forward.py egern/profiles/routing.yaml` |
+| 15 | no-resolve 配对·Egern | `skill/scripts/egern/audit_ruleset_noresolve.py egern/profiles/routing.yaml` |
+| 16 | 规则集来源文档同步 | `skill/tests/clash/check_ruleset_doc_sync.py` |
+| 17 | 自托管清单·裸IP检测(AI) | `skill/scripts/egern/profile_ruleset.py --offline rules/AI.list` |
+| 18 | 自托管清单·裸IP检测(apple-system) | `skill/scripts/egern/profile_ruleset.py --offline rules/apple_system.list` |
+| 19 | 自托管清单·裸IP检测(emby) | `skill/scripts/egern/profile_ruleset.py --offline rules/emby.list` |
+| 20 | 闸门总览表同步 | `skill/scripts/gen_gate_table.py` |
+| 21 | 闸门清单对账 | `skill/tests/check_gate_manifest.py` |
+| 22 | Release 断言 | `skill/tests/check_releases.py` |
+| 23 | clash secrets 扫描 | `skill/tests/clash/check_secrets.py` |
+| 24 | portability | `skill/tests/check_portability.py` |
+| 25 | min-pair 一致 | `skill/tests/check_min_pair.py` |
+| 26 | README 徽章 | `skill/tests/check_badges.py` |
+| 27 | markdown 链接 | `skill/tests/check_links.py .` |
+| 28 | Surge DNS lazy | `skill/scripts/surge/check_surge_dns.py surge/profiles/lazy.conf` |
+| 29 | Surge DNS routing | `skill/scripts/surge/check_surge_dns.py surge/profiles/routing.conf` |
+| 30 | Egern DNS 双份 | `skill/scripts/egern/check_egern_dns.py egern/profiles/lazy.yaml egern/profiles/routing.yaml` |
+| 31 | mihomo DNS 双份 | `skill/scripts/clash/check_clash_dns.py clash/profiles/lazy.yaml clash/profiles/routing.yaml` |
+| 32 | .min 漂移 | `skill/tests/make_min.py --check` |
+| 33 | 地区组判别力 | `skill/tests/check_region_filters.py` |
+| 34 | profile 结构 | `skill/tests/check_structure.py` |
+| 35 | 文档 AUTO 同步 | `skill/tests/sync_docs.py --check` |
+| 36 | clash 结构 | `skill/tests/clash/check_structure.py` |
+| 37 | clash min 版一致 | `skill/tests/clash/check_min_pair.py` |
+| 38 | clash 脚本/静态对拍 | `skill/tests/clash/check_script_sync.py` |
+| 39 | clash 规则集生成物 | `skill/scripts/clash/build_rules.py --check` |
+| 40 | clash 头注数字新鲜度 | `skill/tests/clash/check_header_numbers.py` |
+| 41 | clash 分流覆盖 | `skill/scripts/clash/audit_routing_coverage.py clash/profiles/routing.yaml clash/profiles/lazy.yaml` |
+| 42 | 自洽性 | `skill/tests/check_selfcontained.py` |
+| 43 | smart 权重口径 | `skill/tests/check_priority_weight.py` |
+| 44 | 版本头注 | `skill/tests/clash/check_version_header.py` |
+| 45 | clash 规则集内容 | `skill/scripts/clash/audit_ruleset_content.py clash/profiles/routing.yaml clash/profiles/lazy.yaml` |
+| 46 | clash 静态 profile 新鲜度 | `skill/scripts/clash/build_profiles.py --check` |
 
-另有**不进 44 道**的两项（由第 17 道「闸门清单对账」登记并逐条点名理由）：
+另有**不进闸门**的两项（由「闸门清单对账」登记并逐条点名理由）：
 
 | 项 | 位置 | 为什么不进 |
 |:---|:-----|:-----------|
 | `clash/check_remote_urls.py` | CI 独立 step | 慢（需联网探测数十个 URL），不适合与快门并行 |
 | `egern/probe_dns_endpoints.py` | CI 独立 step | 需联网实测加密 DNS 端点，网络抖动会假红 |
 
-⚠️ `check_selfcontained.py` **已在 44 道内**（第 38 道「自洽性」）——
-此前文档说它「不进、手动」是错的，已更正。
-
-⚠️ 本仓 42 道中，`min-pair 一致` 一道含 V7「一天至多一版」两条断言，
-在本仓以 `SKIP_V7=1` 豁免 ⇒ 该两条记为 **未验证**而非通过，
-汇总行会显示 `, 2 unverified`。详见 `release-rules.md` §4.1。
+⚠️ `min-pair 一致` 一道含 V7「一天至多一版」两条断言；本仓以 `SKIP_V7=1` 豁免
+⇒ 该两条记为 **未验证**（⚠️）而非通过，本道以 exit 3 结束，上层显示 ⚠️。
+详见 `release-rules.md` §4.1。
 
 ### 11.1 汇总表怎么读
 
@@ -862,7 +863,7 @@ push 时严格，PR 时网络抖动不阻塞。⚠️ 这是**有意的非对称
 > **与 CI 同源是铁律** —— 本地绿但 CI 红属于竞态 / 环境差，不允许有"第三套判据"。
 
 ✅ **挂账已消（2026-10-07）**：新增 `skill/tests/check_gate_manifest.py` 做机器对账，
-**已进 44 道**（`闸门清单对账`）。它判三件事：
+**已进 46 道**（`闸门清单对账`）。它判三件事：
 ① `ci.yml` 里被调用的判据必须在 `verify_all` 清单里（豁免项逐条点名）；
 ② `verify_all` 列出的每一道，文件必须真实存在；
 ③ `skill/tests/` 下既没进闸门、也没登记在 `ops.md` §6.8.1 的脚本 ⇒ 报「永远不会跑」。
@@ -945,7 +946,7 @@ mihomo 侧的实例：
 
 **Q：`skill/tests/clash/check_secrets.py` 和 `skill/tests/check_secrets.py` 该跑哪个？**
 
-两个都跑 —— 44 道里进的是**跨内核版**（`skill/tests/check_secrets.py`，带禁串黑名单）。
+两个都跑 —— 46 道里进的是**跨内核版**（`skill/tests/check_secrets.py`，带禁串黑名单）。
 mihomo 版（`skill/tests/clash/check_secrets.py`）覆盖 `.js`、且跳过 `rules/` 的主机扫描
 （那目录内容本身就是域名清单，扫了全是误报）。**两者判据不同，互不可替代，别合并。**
 
@@ -1016,7 +1017,7 @@ python skill/tests/clash/check_min_pair.py
 python skill/tests/clash/check_script_sync.py
 python skill/scripts/clash/build_rules.py --check
 
-# 4. 总入口（44 道）
+# 4. 总入口（46 道）
 python skill/tests/verify_all.py
 
 # 5. 慢门，按需（联网）

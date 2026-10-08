@@ -207,7 +207,7 @@ mihomo 的实际值应以本页和 [`profile-anatomy.md`](../clash/profile-anato
 
 ### 8.1 `icons/`
 
-根目录当前有 **40 个图标 PNG + 1 个 SVG文件（40 个图标 PNG + 1 个 SVG）**。三侧配置都引用同一个
+根目录当前有 **40 个图标 PNG + 1 个 SVG**。三侧配置都引用同一个
 `https://raw.githubusercontent.com/RiverFlowsInUUU/self-conf/main/icons/…` 基址；覆写脚本也只定义这一份 `ICON`。
 
 因此换图标时可以直接三侧共用同一路径。需要同步复核的是：组名是否仍指向正确文件、目标客户端是否支持该文件格式，

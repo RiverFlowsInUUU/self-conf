@@ -222,7 +222,7 @@ if len(parsed.get("proxy-groups") or []) != ng or len(parsed.get("rules") or [])
 ### 判据固化在哪
 
 - **`skill/scripts/clash/build_profiles.py`** —— 覆盖写 + 自检两段（约 217–236 行）。
-- **`skill/tests/verify_all.py`** 的 `('clash 静态 profile 新鲜度', [PY, 'skill/scripts/clash/build_profiles.py', '--check'], {})` —— 第 44 道里的 clash 静态 profile 新鲜度。
+- **`skill/tests/verify_all.py`** 的 `('clash 静态 profile 新鲜度', [PY, 'skill/scripts/clash/build_profiles.py', '--check'], {})` —— 第 46 道里的 clash 静态 profile 新鲜度。
 - 判负样例：`checker.md` §9.2 第 14 条（往真源追加一行 → `--check` 报「已过期」）。
   ⚠️ `build_profiles.py --check` 的判负样例在 `checker.md` §9.2 里**尚未单列**（表里第 14 条是 `build_rules.py`），待补。
 
@@ -523,12 +523,12 @@ python skill/scripts/clash/build_profiles.py --check    # CI 用：过期即判�
 
 ### 判据固化在哪
 
-| 漂移方向 | 守门脚本 | 在 44 道里 |
+| 漂移方向 | 守门脚本 | 在 46 道里 |
 |:---------|:---------|:-------------|
 | 脚本 ↔ 静态 | `skill/tests/clash/check_script_sync.py` | ✅ 第 15 道 |
 | 完整版 ↔ `.min` | `skill/tests/clash/check_min_pair.py` | ✅ 第 14 道 |
-| 静态是否过期（脚本有更新未重生成）| `skill/scripts/clash/build_profiles.py --check` | ✅ 44 道之一 |
-| `rules/*.yaml` 是否过期（真源 `.list` 有更新）| `skill/scripts/clash/build_rules.py --check` | ✅ 第 44 道 |
+| 静态是否过期（脚本有更新未重生成）| `skill/scripts/clash/build_profiles.py --check` | ✅ 46 道之一 |
+| `rules/*.yaml` 是否过期（真源 `.list` 有更新）| `skill/scripts/clash/build_rules.py --check` | ✅ 第 46 道 |
 
 - 判负样例：`checker.md` §9.2 第 11 / 12 / 14 条。
 
@@ -1040,7 +1040,7 @@ for m in TOKEN_RE.finditer(txt):
 
 1. `HIGH_ENTROPY` 已加注释说明其定位（此前定义了但从未使用，属死代码，
    容易让人误以为「高熵密码已被扫描」）。
-2. **`skill/tests/clash/check_secrets.py` 现已进 `verify_all`（44 道之第 19 道）**。
+2. **`skill/tests/clash/check_secrets.py` 现已进 `verify_all`（46 道之第 19 道）**。
    此前它有 289 处误报，根因有三，均已修：
    · `ROOT` 只往上三级 ⇒ 落在 `skill/` 文档区 ⇒ 改成往上四级（仓库根）并排除 `skill/`；
    · 已在 `ALLOWED_IPS` 里的 IP（如 `1.1.1.1`）被 `HOST_RE` 再当主机报一次；
@@ -1143,7 +1143,7 @@ if ip.startswith("198.18."):
         这条路径对它自己是不是在工作，一个字的信息都没提供。
 ```
 
-本仓 44 道门**全部**是"跑现役配置、期望 0"。**没有任何一道常驻 CI 的闸门会验证
+本仓 46 道门**全部**是"跑现役配置、期望 0"。**没有任何一道常驻 CI 的闸门会验证
 「判据自己还判不判负」。** ⇒ 一旦出现「门禁逻辑改坏、判据不再判负、现役配置仍全绿」，
 **本仓没有闸门会发现。**
 

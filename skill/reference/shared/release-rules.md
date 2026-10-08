@@ -73,7 +73,8 @@
 
 | 规矩 | 判据 |
 |:--|:--|
-| 头注版本格式合法、跨内核同号、`.min` 一致 | `skill/tests/check_min_pair.py`（V1 / V2 / X 判据） |
+| 头注版本格式合法、`.min` 一致 | `skill/tests/check_min_pair.py`（V1 / X 判据） |
+| **三内核跨内核同号（统一 v1.0.0）** | `skill/tests/clash/check_version_header.py`（**V5** 断言，2026-10-08 新增） |
 | 一天一版 | `skill/tests/check_min_pair.py`（V7）—— **本仓以 `SKIP_V7=1` 豁免，见下 |
 | 现役版本与归档序列一致 | `skill/tests/check_min_pair.py`（V3–V6） |
 | 徽章承诺的组数 / 规则数与实际一致 | `skill/tests/check_badges.py` |
@@ -118,7 +119,7 @@
 
 
 ✅ `check_releases.py`（远端 Release 断言 R1–R5）**已于 2026-10-08 启用** ——
-本仓首个 Release `v2026-10-08`（三内核统一 v1.0.0）已发布，判据已进 44 道闸门。
+本仓首个 Release `v2026-10-08`（三内核统一 v1.0.0）已发布，判据已进 46 道闸门。
 判据如下：
 
 - R1 tag 匹配 `^v\d{4}-\d{2}-\d{2}$` 且无重复
@@ -138,6 +139,6 @@
 
 ## 6 · 已知取舍
 
-- mihomo 侧不参与 Surge / Egern 的「跨内核同号」判据（独立版本线）。
+- ~~mihomo 侧不参与 Surge / Egern 的「跨内核同号」判据（独立版本线）~~ ⇒ **2026-10-08 起已作废**：三内核统一 v1.0.0，由 `check_version_header.py` 的 V5 断言守着。
 - 归档文件（config_old）里的 URL 指向本仓，是为了自包含 —— 代价是归档不再忠实于
   发布当时的绝对地址。刻意如此（本仓是唯一真源）。

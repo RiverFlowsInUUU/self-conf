@@ -404,7 +404,7 @@ provider 均为 `behavior: ipcidr`、`format: mrs`，所以六个引用落点都
 「4 条 IP 类规则全部带 `no-resolve`」，懒人版对应为 2 条，两版均为 `0 high`。
 
 但这里必须保留事故复盘最重要的边界：**这两道静态门禁只证明 A，不自动证明 B。**
-本仓目前没有 mihomo 侧的专用分流覆盖审计脚本；因此每次增删 `no-resolve`、替换 `cn`
+本仓已有 mihomo 侧的分流覆盖审计脚本（`skill/scripts/clash/audit_routing_coverage.py`，闸门 #39）；但每次增删 `no-resolve`、替换 `cn`
 provider 或移动 `MATCH` 前规则时，还必须同时核对：
 
 - `cn` 仍是 `behavior: domain` 的国内域名集；

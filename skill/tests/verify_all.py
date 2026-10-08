@@ -86,6 +86,9 @@ def build_gates():
     另：追加 mihomo（clash/）专属门禁，使总入口真正覆盖三内核。
     """
     import os as _os
+    # ⚠️ 2026-10-08 第四轮审查 P4-a：min-pair 这道带 SKIP_V7=1，
+    # 其中 V7 两条会返回「未验证」。verify_all 不能把它显示成 ✅。
+    # 下面用 exit code 3 的约定：脚本以 3 结束 = 未验证（见本文件头注）。
     _skip_v7 = {'SKIP_V7': '1'}
     gates = [
         ('secrets 扫描', [PY, 'skill/tests/check_secrets.py'], {}),
@@ -106,6 +109,10 @@ def build_gates():
          [PY, 'skill/scripts/clash/audit_region_filters.py', 'clash/profiles/routing.yaml'], {}),
         ('分流覆盖·Surge',
          [PY, 'skill/scripts/surge/audit_routing_coverage.py', 'surge/profiles/routing.conf'], {}),
+        # 2026-10-08 第四轮审查 P3：Egern 这份**存在且手动跑干净**（15/15 探针命中 DIRECT），
+        # 但 verify_all / ci.yml / 对账判据引用数均为 0 ⇒ 文档说三内核都有、闸门层面却是假的。现补进。
+        ('分流覆盖·Egern',
+         [PY, 'skill/scripts/egern/audit_routing_coverage.py', 'egern/profiles/routing.yaml'], {}),
         ('分流覆盖·mihomo',
          [PY, 'skill/scripts/clash/audit_routing_coverage.py', 'clash/profiles/routing.yaml'], {}),
         ('规则集内容·Surge',
@@ -136,6 +143,9 @@ def build_gates():
         ('自托管清单·裸IP检测(emby)',
          [PY, 'skill/scripts/egern/profile_ruleset.py', '--offline', 'rules/emby.list'], {}),
         # 闸门清单对账：ci.yml 与 verify_all 跑的是不是同一套（消掉 checker.md §12.2 的挂账）
+        # 第四轮审查 P5：§11 总览表此前「没人生成、没人守」⇒ 会静默漂移。
+        # 现由 gen_gate_table.py 生成 + 同一脚本 --check 判负。
+        ('闸门总览表同步', [PY, 'skill/scripts/gen_gate_table.py'], {}),
         ('闸门清单对账', [PY, 'skill/tests/check_gate_manifest.py'], {}),
         # 2026-10-08：本仓已发布首个 Release ⇒ R1–R5 判据启用。
         # 需网络 + GITHUB_TOKEN（缺省回退 gh auth token）；不可达时走 SKIP(3)=未验证。

@@ -33,7 +33,7 @@ CI = os.path.join(ROOT, ".github", "workflows", "ci.yml")
 # 有意不在 verify_all 里的：CI 独立 step（慢 / 需真机），已在 ops.md §6.8.1 登记
 KNOWN_SEPARATE = {"check_remote_urls.py": "CI 独立 step（慢，需联网探测数十个 URL）",
                   "probe_dns_endpoints.py": ("CI 独立 step —— 需联网实测加密 DNS 端点，"
-                                             "有判负语义但抖动会假红，故不进 42 道"),
+                                             "有判负语义但抖动会假红，故不进 44 道"),
                   "check_real_kernel.py": "需真内核 + 真网络，仅本地人工跑（ops.md §6.8.1）",
                   # 2026-10-08：首个 Release（v2026-10-08）已发布 ⇒ 判据启用并进 27 道，
                   # 不再豁免。此处保留注释以存其沿革。
@@ -69,6 +69,16 @@ def gate_scripts():
             if tok.endswith(".py"):
                 names.add(os.path.basename(tok))
     return names
+
+
+def gates_all():
+    """现抓 verify_all.build_gates()（不手抄）。"""
+    sys.path.insert(0, os.path.join(ROOT, "skill", "tests"))
+    try:
+        import verify_all
+        return verify_all.build_gates()
+    except Exception:
+        return []
 
 
 def all_test_scripts():
@@ -136,6 +146,28 @@ def main():
             continue
         bad.append("%s 既不在 verify_all 也不在 ci.yml，且未登记 —— 它永远不会跑" % p)
 
+
+    # ④ **孤儿探测**（2026-10-08 第四轮审查 P3）：
+    #    上面三条只扫 skill/tests/，对 skill/scripts/ 的审计脚本是盲区 ——
+    #    「某内核的脚本接了闸门、另一内核的同名脚本没接」这类不一致永远发现不了
+    #    （Egern 的 audit_routing_coverage.py 就是这样漏的）。
+    #    现查：同一文件名，只要在某个内核下被引用、另一个内核下有文件却没引用 ⇒ 报。
+    used = {}
+    for _n, cmd, _e in gates_all():
+        for tok in cmd:
+            if tok.endswith(".py") and "/scripts/" in tok.replace("\\", "/"):
+                base = os.path.basename(tok)
+                for k in ("surge", "egern", "clash"):
+                    if "/%s/" % k in tok.replace("\\", "/"):
+                        used.setdefault(base, set()).add(k)
+    for base, kerns in sorted(used.items()):
+        for k in ("surge", "egern", "clash"):
+            if k in kerns:
+                continue
+            sib = os.path.join(ROOT, "skill", "scripts", k, base)
+            if os.path.isfile(sib):
+                bad.append("%s 存在但**未接闸门**（同名的 %s 已被 %s 引用）"
+                           % (os.path.relpath(sib, ROOT).replace("\\", "/"), base, "/".join(sorted(kerns))))
     if bad:
         for b in bad:
             print("  NG %s" % b)

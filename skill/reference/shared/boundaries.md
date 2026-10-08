@@ -24,7 +24,7 @@
 | 不做 E（AST 闸门 `check_exit_codes`） | `skill/SKILL.md` §3 其他共享纪律 | 见该处「推翻挂账的触发条件」 |
 | 不做闸门清单的机器对账（`ci.yml` ↔ `verify_all.py`） | `skill/tests/verify_all.py` 头注 | 见该处「推翻挂账的触发条件」 |
 | P5 `MyHome` 是**误报关闭**（照官方示例留的占位网络名），非缺陷 | [`ops.md`](ops.md) ／ [`cross-kernel-diff.md`](cross-kernel-diff.md) | 官方示例改名、或该段被实际启用时 |
-| **clash 侧没有分流覆盖审计脚本**（Surge 有 `audit_routing_coverage.py`、Egern 同） —— 意味着「规则是否真的接住了该接的域名」在 mihomo 侧**没有机器判据**，只能人工做 | [`hardening-checklist.md`](hardening-checklist.md) mihomo 章「验收标准」第 6 条；[`no-resolve-pairing.md`](no-resolve-pairing.md) mihomo 侧章（写明静态门禁只证明「不触发解析」，不能代替分流覆盖验证） | 补出 `skill/scripts/clash/audit_routing_coverage.py`（已于 2026-10-07 补出，离线档） 时 |
+| ~~clash 侧没有分流覆盖审计脚本~~ ⇒ **已于 2026-10-07 补出** `skill/scripts/clash/audit_routing_coverage.py`（闸门 #39） —— 意味着「规则是否真的接住了该接的域名」在 mihomo 侧**没有机器判据**，只能人工做 | [`hardening-checklist.md`](hardening-checklist.md) mihomo 章「验收标准」第 6 条；[`no-resolve-pairing.md`](no-resolve-pairing.md) mihomo 侧章（写明静态门禁只证明「不触发解析」，不能代替分流覆盖验证） | 补出 `skill/scripts/clash/audit_routing_coverage.py`（已于 2026-10-07 补出，离线档） 时 |
 | **浅克隆下 `check_releases` 的成片红是噪声，不是缺陷**（缺完整历史 → R3/R4 假红：`81/28` → 完整克隆 `113/0`） | [`ops.md`](ops.md) §6.8「跑判据前先确认前置条件」 | `check_releases` 不再依赖 `--find-object` 反查诞生日期时 |
 | Egern 审计**跨 profile 输出折叠**（约省 3 KB）不做 | `skill/reference/egern/checker.md`（记 22 离线 / 24 联网） | 该处不再引用这组条数时 |
 | 历史 release notes（`release_publish.PUBLIC_NOTES`）保留**发布当时**的条数，不回改 | 该值记录发布时点的事实（v3.9 条目即此例）；自 v2.0.1／v4.0.1 起新条目已改为「当前版本信息统一只保留在文件头注」 | 需修订历史记录本身（发布勘误） |
