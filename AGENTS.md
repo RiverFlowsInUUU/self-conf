@@ -109,7 +109,7 @@ grep -n "include-all" self-conf-skills/references/profiles/clash.md
 | Egern 的段怎么配 | `profiles/egern.md` | `policy_groups`(5) · `proxy_nameservers`(37) |
 | DNS 泄露怎么查 | `dns.md` | `抓包`(1) · `假 IP`(10) · `引导`(11) |
 | 规则集怎么选/多重 | `rulesets.md` | `重量`(4) · `体量`(5) · `刷新周期`(6) |
-| 改完怎么验证 | `ops.md` | `make_min`(6) · `升号`(7) · `动线`(8) |
+| 改完怎么验证 | `ops.md` | `make_min`(7) · `升号`(7) · `动线`(8) |
 | 出问题 | `pitfalls.md` | `假通过`(3) · `广告拦不住`(4) · `拒绝加载`(6) |
 | 门禁本身 | `gates.md` | `自查清单`(1) · `判别力`(15) · `注错`(15) |
 

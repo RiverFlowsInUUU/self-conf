@@ -567,8 +567,10 @@ mihomo 静态 profile **由脚本生成**（`build_profiles.py`），也带 `#! 
 ② 生成 .min：      python self-conf-skills/run/make_min.py --family routing|lazy|all        # 默认只出差异计划
                    python self-conf-skills/run/make_min.py --family all --apply              # 确认后写盘
 ③ 核豁免行：       .min 由生成器重算正文、按锚点继承注释 —— 仍要肉眼确认 `# audit-waive:` 那几行在 min 版里读得到
-④ 升版（仅当配置键有变动）：改 6 份 profile 头注的 `#! version=`（`.min` 由生成器重算继承）
-   —— ⚠️ **一天一版**：当天该产品线已升过号就跳过本步、沿用同号（见 §6.1）
+④ 升版（仅当配置键有变动）：改 **12 处**头注的 `#! version=`（三内核 × 两产品线 × 完整版/`.min`）
+   ⚠️ **clash 的 4 份要手改** —— 它的 profile 虽由脚本生成，但头注是**保留**而非生成的
+   ⚠️ Surge / Egern 改完整版后 `.min` 由 `make_min.py` 重算继承
+   ⚠️ **一天一版**：当天该产品线已升过号就跳过本步、沿用同号（见 §6.1）
 ⑤ 收尾：`python self-conf-skills/gates/check_secrets.py && python self-conf-skills/gates/check_portability.py && python self-conf-skills/gates/check_min_pair.py && python self-conf-skills/gates/check_links.py .`（push 后 CI 会再跑一遍同组检查）
    ↑ 也可一键：`python self-conf-skills/gates/verify_all.py` —— 与 ci.yml 同源的全套闸门并行跑、出汇总表（含 DNS 审计与 releases 方案，比本行列的更全）
 ⑥ 发布 Release（push 之后）：`python self-conf-skills/run/release_publish.py --apply`
