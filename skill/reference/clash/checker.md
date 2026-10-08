@@ -12,7 +12,7 @@
 | 1 | 环境要求 | 8 | 生成物新鲜度（`build_rules.py`） |
 | 2 | 命令 | 9 | 判别力：怎么证明门禁真的会判负 |
 | 3 | 退出码约定 | 10 | 已知豁免项（豁免 ≠ 通过） |
-| 4 | 结构判据（`clash/check_structure.py`） | 11 | 46 道总览表 |
+| 4 | 结构判据（`clash/check_structure.py`） | 11 | 47 道总览表 |
 | 5 | 两形态对拍（`clash/check_min_pair.py`） | 12 | CI 怎么跑 |
 | 6 | 脚本 ↔ 静态对拍（`clash/check_script_sync.py`） | 13 | 判据演进史 |
 | 7 | 远程集可达性（`clash/check_remote_urls.py`） | 14 | 全绿 ≠ 可用 · FAQ · 维护者须知 |
@@ -69,7 +69,7 @@ def _default_root():
 ## 2 · 命令
 
 ```bash
-# ── 一键总入口（46 道并行，含三内核）────────────────────────────
+# ── 一键总入口（47 道并行，含三内核）────────────────────────────
 python skill/tests/verify_all.py                  # 期望 exit 0
 python skill/tests/verify_all.py -v               # 无论红绿都打印每个闸门输出尾部
 python skill/tests/verify_all.py --index          # 只读列闸门清单（不跑、不判负、exit 0）
@@ -97,7 +97,7 @@ python skill/tests/check_selfcontained.py         # 整合仓自洽性
 
 | 脚本 | 扫描面 | 判据 |
 |:-----|:-------|:-----|
-| `skill/tests/check_secrets.py`（跨内核，进 46 道）| 全仓 walk 到的 `.conf` / `.yaml` / `.yml`，**跳过 `icons/`** | 禁串 `tange365.com` / `wangxinyu`；IPv4 白名单；`YAML_CRED_KEYS` 值必须占位 |
+| `skill/tests/check_secrets.py`（跨内核，进 47 道）| 全仓 walk 到的 `.conf` / `.yaml` / `.yml`，**跳过 `icons/`** | 禁串 `tange365.com` / `wangxinyu`；IPv4 白名单；`YAML_CRED_KEYS` 值必须占位 |
 | `skill/tests/clash/check_secrets.py`（mihomo 版）| 全仓 walk 到的 `.js` / `.yaml` / `.yml` / `.md` / `.conf` / `.list` / `.txt` / `.json`，**跳过 `icons/` 与 `rules/` 的主机扫描** | 凭据字段非占位即报；IPv4 白名单；主机白名单；私钥头无条件报 |
 
 两者互不可替代：mihomo 版能扫 `.js`（脚本里也有订阅 URL），跨内核版带禁串黑名单
@@ -648,7 +648,7 @@ python skill/tests/clash/check_script_sync.py "$SB"   # 期望 0
 | `check_remote_urls.py` | ⚠️ 联网依赖，未逐个固定 | ❌ 无 |
 | `check_region_filters.py`（跨内核）| ✅ | ✅ **有**（唯一定期跑判负 fixture 的闸门）|
 
-> 📌 跨内核的 `check_region_filters.py` 是**唯一**把「判负 fixture」做进 46 道的闸门，
+> 📌 跨内核的 `check_region_filters.py` 是**唯一**把「判负 fixture」做进 47 道的闸门，
 > 且它对每个判负用例断言**退出码 + 输出标记**两条。mihomo 侧**还没有对应的自动化回归** ——
 > 上表前五行的"已实测"是**本次文档编写时人工跑出来的**，不是常驻 CI 的保证。
 >
@@ -777,7 +777,7 @@ _skip_v7 = {'SKIP_V7': '1'}
 |:---|:-----|:-----------|
 | `check_real_kernel.py` | 手动（不在任何闸门） | 需真内核 + 真网络，仅本地人工跑（ops.md §6.8.1） |
 | `check_remote_urls.py` | CI 独立 step | CI 独立 step（慢，需联网探测数十个 URL） |
-| `probe_dns_endpoints.py` | CI 独立 step | CI 独立 step —— 需联网实测加密 DNS 端点，有判负语义但抖动会假红，故不进 46 道 |
+| `probe_dns_endpoints.py` | CI 独立 step | CI 独立 step —— 需联网实测加密 DNS 端点，有判负语义但抖动会假红，故不进 47 道 |
 | `verify_all.py` | CI 独立 step（总入口本身） | 它自己就是总入口，不是被调的判据 |
 ⚠️ `min-pair 一致` 一道含 V7「一天至多一版」两条断言；本仓以 `SKIP_V7=1` 豁免
 ⇒ 该两条记为 **未验证**（⚠️）而非通过，本道以 exit 3 结束，上层显示 ⚠️。
@@ -834,7 +834,7 @@ on:
 
 ### 12.1 两处必须理解的设计
 
-**① Step 6 编码门**
+**① 编码门（ci.yml「Gates」之后那步，按§11 8 行表为 Step 6、按 verify_all 脚注的 5 项清单为第 3 项）**
 
 ```
 中文 Windows 下 print 非 GBK 字符会 UnicodeEncodeError 并以退出码 1 结束，
@@ -873,7 +873,7 @@ push 时严格，PR 时网络抖动不阻塞。⚠️ 这是**有意的非对称
 > **与 CI 同源是铁律** —— 本地绿但 CI 红属于竞态 / 环境差，不允许有"第三套判据"。
 
 ✅ **挂账已消（2026-10-07）**：新增 `skill/tests/check_gate_manifest.py` 做机器对账，
-**已进 46 道**（`闸门清单对账`）。它判四件事（前三件 + 第四轮新增的孤儿检查）：
+**已进 47 道**（`闸门清单对账`）。它判四件事（前三件 + 第四轮新增的孤儿检查）：
 ① `ci.yml` 里被调用的判据必须在 `verify_all` 清单里（豁免项逐条点名）；
 ② `verify_all` 列出的每一道，文件必须真实存在；
 ③ `skill/tests/` 下既没进闸门、也没登记在 `ops.md` §6.8.1 的脚本 ⇒ 报「永远不会跑」。
@@ -958,7 +958,7 @@ mihomo 侧的实例：
 
 **Q：`skill/tests/clash/check_secrets.py` 和 `skill/tests/check_secrets.py` 该跑哪个？**
 
-两个都跑 —— 46 道里进的是**跨内核版**（`skill/tests/check_secrets.py`，带禁串黑名单）。
+两个都跑 —— 47 道里进的是**跨内核版**（`skill/tests/check_secrets.py`，带禁串黑名单）。
 mihomo 版（`skill/tests/clash/check_secrets.py`）覆盖 `.js`、且跳过 `rules/` 的主机扫描
 （那目录内容本身就是域名清单，扫了全是误报）。**两者判据不同，互不可替代，别合并。**
 
@@ -1029,7 +1029,7 @@ python skill/tests/clash/check_min_pair.py
 python skill/tests/clash/check_script_sync.py
 python skill/scripts/clash/build_rules.py --check
 
-# 4. 总入口（46 道）
+# 4. 总入口（47 道）
 python skill/tests/verify_all.py
 
 # 5. 慢门，按需（联网）

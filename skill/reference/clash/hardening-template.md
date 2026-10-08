@@ -351,7 +351,7 @@ proxy-providers:
 | 无真实凭据 | `python skill/tests/clash/check_secrets.py` |
 | 不引用外部仓库资源 | `python skill/tests/check_selfcontained.py` |
 | 生成物未过期 | `python skill/scripts/clash/build_rules.py --check`<br>`python skill/scripts/clash/build_profiles.py --check` |
-| 全跑 | `python skill/tests/verify_all.py`（46 道） |
+| 全跑 | `python skill/tests/verify_all.py`（47 道） |
 
 ## 12 · FAQ
 

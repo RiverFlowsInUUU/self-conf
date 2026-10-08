@@ -523,11 +523,11 @@ python skill/scripts/clash/build_profiles.py --check    # CI 用：过期即判�
 
 ### 判据固化在哪
 
-| 漂移方向 | 守门脚本 | 在 46 道里 |
+| 漂移方向 | 守门脚本 | 在 47 道里 |
 |:---------|:---------|:-------------|
 | 脚本 ↔ 静态 | `skill/tests/clash/check_script_sync.py` | ✅ 闸门 #38 |
 | 完整版 ↔ `.min` | `skill/tests/clash/check_min_pair.py` | ✅ 闸门 #37 |
-| 静态是否过期（脚本有更新未重生成）| `skill/scripts/clash/build_profiles.py --check` | ✅ 46 道之一 |
+| 静态是否过期（脚本有更新未重生成）| `skill/scripts/clash/build_profiles.py --check` | ✅ 47 道之一 |
 | `rules/*.yaml` 是否过期（真源 `.list` 有更新）| `skill/scripts/clash/build_rules.py --check` | ✅ 闸门 #39 |
 
 - 判负样例：`checker.md` §9.2 第 11 / 12 / 14 条。
@@ -1143,7 +1143,7 @@ if ip.startswith("198.18."):
         这条路径对它自己是不是在工作，一个字的信息都没提供。
 ```
 
-本仓 46 道门**全部**是"跑现役配置、期望 0"。**没有任何一道常驻 CI 的闸门会验证
+本仓 47 道门**全部**是"跑现役配置、期望 0"。**没有任何一道常驻 CI 的闸门会验证
 「判据自己还判不判负」。** ⇒ 一旦出现「门禁逻辑改坏、判据不再判负、现役配置仍全绿」，
 **本仓没有闸门会发现。**
 
