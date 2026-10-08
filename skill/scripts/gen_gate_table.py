@@ -54,17 +54,91 @@ def index_entries():
     return [tuple(x) for x in out]
 
 
+def _dup_groups(ents):
+    """近重复闸门组 —— 同一脚本 + **至少审一个相同的 profile 文件**。
+
+    判据收窄的原因（一次做对，别来回）：
+      · 只按脚本名 ⇒ 11 组（地区组判别力 ×3 也被算进去，但那是三个内核各查各的，
+        属合理分工，不是重复劳动）
+      · 加上"审同一份文件" ⇒ 只剩真正审重复内容的那几对
+    例：#9「分流覆盖·mihomo」审 routing.yaml；#41「clash 分流覆盖」审 routing+lazy
+        ⇒ 有交集（routing.yaml）⇒ 算近重复。#4/#5/#6 各审自己内核的 profile ⇒ 不算。
+    ⚠️ 同时取代了字面量 `#9 与 #41`（插入占位闸门后编号会漂移，--check 抓不到）。
+    """
+    by_script = {}
+    for num, name, cmd in ents:
+        m = re.search(r"([A-Za-z0-9_]+[.]py)", cmd or "")
+        if not m:
+            continue
+        files = frozenset(re.findall(r"[A-Za-z0-9_./-]+[.](?:conf|yaml|yml|list)", cmd or ""))
+        by_script.setdefault(m.group(1), []).append((num, name, files))
+    out = {}
+    for script, items in by_script.items():
+        if len(items) < 2:
+            continue
+        # 与**其它任一项**有文件交集 ⇒ 算近重复。
+        # ⚠️ 不能用"跟已入组的比"的增量算法：第一个入组的若是 #7（Surge），
+        #    后面 clash 的 #9/#41 与它无交集就都进不来 ⇒ 实测恒返回 0 组。
+        #    （这是第九轮来回改了三次才定位的错，记在此）
+        grp = [it for it in items
+               if any(it[2] & other[2] for other in items if other is not it)]
+        if len(grp) > 1:
+            out[script] = grp
+    return out
+
+
+def _not_in_gates_rows():
+    """「不进闸门」表行 —— 真源是 check_gate_manifest.KNOWN_SEPARATE。
+
+    第九轮问题 1：此前这张表在模板里硬编码，且谎称"以 KNOWN_SEPARATE 为真源"
+    （check_gate_manifest 从不读 §11）⇒ 声明是假的，两边已不一致。
+    """
+    sys.path.insert(0, os.path.join(ROOT, "skill", "tests"))
+    try:
+        import check_gate_manifest as m
+    except Exception:
+        return []
+    reasons = {
+        "check_remote_urls.py": "CI 独立 step —— 需联网探测数十个 URL，慢，不适合与快门并行",
+        "probe_dns_endpoints.py": "CI 独立 step —— 需联网实测加密 DNS 端点，网络抖动会假红",
+        "check_real_kernel.py": "需真实 mihomo 内核二进制 + 真网络，CI 沙箱两者都没有，仅本地人工跑",
+        "verify_all.py": "它自己就是总入口，不是被调的判据",
+    }
+    out = []
+    for name in sorted(m.KNOWN_SEPARATE):
+        why = m.KNOWN_SEPARATE[name]
+        out.append((name, reasons.get(name, why if isinstance(why, str) else str(why))))
+    return out
+
+
 def build_block():
     ents = index_entries()
     if not ents:
         return None, 0
     rows = "\n".join("| %d | %s | `%s` |" % (n, name, cmd or "—") for n, name, cmd in ents)
+
+    # 近重复：从 entries 现算（第九轮问题 2：不再用字面量 #9/#41）
+    dups = _dup_groups(ents)
+    _dup_n = len(dups)
+    if _dup_n:
+        _dup_desc = "；".join(
+            "%s（%s）" % (" 与 ".join("#%d" % it[0] for it in items),
+                          "|".join(it[1] for it in items))
+            for _sc, items in sorted(dups.items(),
+                                     key=lambda kv: min(it[0] for it in kv[1])))
+    else:
+        _dup_desc = "无"
+
+    # 「不进闸门」表：真源是 check_gate_manifest.KNOWN_SEPARATE（第九轮问题 1）
+    _sep = _not_in_gates_rows()
+    _sep_rows = chr(10).join("| `%s` | — | %s |" % (nm, why) for nm, why in _sep)
+    if not _sep_rows:
+        _sep_rows = "| （读不到 KNOWN_SEPARATE） | — | — |"
     block = (
         "## 11 · %d 道总览表\n\n"
         "> ⚠️ **关于道数（含近重复，对外说数量时心里有数）**：\n"
-        "> %d 道里有两对近重复 —— `#9 与 #41`（都审 mihomo 分流覆盖，后者多审 lazy 版）、\n"
-        "> `#11 与 #45`（规则集内容，同理）。**刻意保留**：双档覆盖能让分流版与懒人版\n"
-        "> 都查到；合并会让其中一档漏检。故这个数**含重复劳动**，不是 %d 种独立检查。\n"
+        "> %d 道里有 %d 组近重复 —— %s。**刻意保留**：双档覆盖能让分流版与\n"
+        "> 懒人版都查到；合并会让其中一档漏检。故这个数**含重复劳动**，不是 %d 种独立检查。\n"
         ">\n"
         "> ✅ **本表由 `python skill/scripts/gen_gate_table.py --apply` 生成**，\n"
         "> 真源是 `verify_all.py --index`，**不要手抄**。\n"
@@ -76,18 +150,15 @@ def build_block():
         "| # | 闸门 | 命令 |\n"
         "|:--|:-----|:-----|\n"
         "%s\n\n"
-        "另有**不进闸门**的几项（以 `check_gate_manifest.py` 的 KNOWN_SEPARATE 为**真源**，\n"
-        "> 下表若与之不符即为漂移；由「闸门清单对账」机器对账）：\n\n"
+        "另有**不进闸门**的 %d 项 —— 下表由 `check_gate_manifest.KNOWN_SEPARATE` **直接生成**，\n"
+        "> 与它不会分叉（第九轮问题 1：此前硬编码且谎称对账，两边曾不一致）：\n\n"
         "| 项 | 位置 | 为什么不进 |\n"
         "|:---|:-----|:-----------|\n"
-        "| `clash/check_remote_urls.py` | CI 独立 step | 慢（需联网探测数十个 URL），不适合与快门并行 |\n"
-        "| `egern/probe_dns_endpoints.py` | CI 独立 step | 需联网实测加密 DNS 端点，网络抖动会假红 |\n"
-        "| `clash/check_real_kernel.py` | 手动（不在任何闸门） | 需真实 mihomo 内核二进制 + 真网络，CI 沙箱两者都没有 |\n"
-        "| `skill/scripts/repo_state.py` | 手动（AI 动线①） | 「一屏现状」工具，不是判据；每个任务开工都该先跑它 |\n\n"
+        "%s\n"
         "⚠️ `min-pair 一致` 一道含 V7「一天至多一版」两条断言；本仓以 `SKIP_V7=1` 豁免\n"
         "⇒ 该两条记为 **未验证**（⚠️）而非通过，本道以 exit 3 结束，上层显示 ⚠️。\n"
         "详见 `release-rules.md` §4.1。\n\n"
-        % (len(ents), len(ents), len(ents), rows)
+        % (len(ents), len(ents), _dup_n, _dup_desc, len(ents), rows, len(_sep), _sep_rows)
     )
     return block, len(ents)
 

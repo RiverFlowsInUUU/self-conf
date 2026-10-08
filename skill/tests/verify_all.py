@@ -101,7 +101,10 @@ def _assert_allowlist_registered():
     if i < 0:
         raise SystemExit('❌ release-rules.md 里找不到「### 4.1 已知豁免」 —— '
                          'CI 豁免白名单无法校验，不放行')
-    seg = doc[i:i + 4000]
+    # ⚠️ 第九轮问题 6：原为固定 `doc[i:i+4000]` 窗口 —— §4.1 变长或登记挪后
+    #    会误判失败。现改为：从 §4.1 起，到**下一个 `### ` 同级标题**为止（整节）。
+    nxt = doc.find(chr(10) + '### ', i + 10)
+    seg = doc[i:nxt] if nxt > 0 else doc[i:]
     missing = []
     for x in CI_ALLOWED_SKIP:
         # 精确登记标记：反引号包裹的闸门名（避免"被提到过"就算登记）

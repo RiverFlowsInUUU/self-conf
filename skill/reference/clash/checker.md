@@ -709,9 +709,8 @@ _skip_v7 = {'SKIP_V7': '1'}
 ## 11 · 46 道总览表
 
 > ⚠️ **关于道数（含近重复，对外说数量时心里有数）**：
-> 46 道里有两对近重复 —— `#9 与 #41`（都审 mihomo 分流覆盖，后者多审 lazy 版）、
-> `#11 与 #45`（规则集内容，同理）。**刻意保留**：双档覆盖能让分流版与懒人版
-> 都查到；合并会让其中一档漏检。故这个数**含重复劳动**，不是 46 种独立检查。
+> 46 道里有 2 组近重复 —— #9 与 #41（分流覆盖·mihomo|clash 分流覆盖）；#11 与 #45（规则集内容·mihomo|clash 规则集内容）。**刻意保留**：双档覆盖能让分流版与
+> 懒人版都查到；合并会让其中一档漏检。故这个数**含重复劳动**，不是 46 种独立检查。
 >
 > ✅ **本表由 `python skill/scripts/gen_gate_table.py --apply` 生成**，
 > 真源是 `verify_all.py --index`，**不要手抄**。
@@ -770,16 +769,15 @@ _skip_v7 = {'SKIP_V7': '1'}
 | 45 | clash 规则集内容 | `skill/scripts/clash/audit_ruleset_content.py clash/profiles/routing.yaml clash/profiles/lazy.yaml` |
 | 46 | clash 静态 profile 新鲜度 | `skill/scripts/clash/build_profiles.py --check` |
 
-另有**不进闸门**的几项（以 `check_gate_manifest.py` 的 KNOWN_SEPARATE 为**真源**，
-> 下表若与之不符即为漂移；由「闸门清单对账」机器对账）：
+另有**不进闸门**的 4 项 —— 下表由 `check_gate_manifest.KNOWN_SEPARATE` **直接生成**，
+> 与它不会分叉（第九轮问题 1：此前硬编码且谎称对账，两边曾不一致）：
 
 | 项 | 位置 | 为什么不进 |
 |:---|:-----|:-----------|
-| `clash/check_remote_urls.py` | CI 独立 step | 慢（需联网探测数十个 URL），不适合与快门并行 |
-| `egern/probe_dns_endpoints.py` | CI 独立 step | 需联网实测加密 DNS 端点，网络抖动会假红 |
-| `clash/check_real_kernel.py` | 手动（不在任何闸门） | 需真实 mihomo 内核二进制 + 真网络，CI 沙箱两者都没有 |
-| `skill/scripts/repo_state.py` | 手动（AI 动线①） | 「一屏现状」工具，不是判据；每个任务开工都该先跑它 |
-
+| `check_real_kernel.py` | — | 需真实 mihomo 内核二进制 + 真网络，CI 沙箱两者都没有，仅本地人工跑 |
+| `check_remote_urls.py` | — | CI 独立 step —— 需联网探测数十个 URL，慢，不适合与快门并行 |
+| `probe_dns_endpoints.py` | — | CI 独立 step —— 需联网实测加密 DNS 端点，网络抖动会假红 |
+| `verify_all.py` | — | 它自己就是总入口，不是被调的判据 |
 ⚠️ `min-pair 一致` 一道含 V7「一天至多一版」两条断言；本仓以 `SKIP_V7=1` 豁免
 ⇒ 该两条记为 **未验证**（⚠️）而非通过，本道以 exit 3 结束，上层显示 ⚠️。
 详见 `release-rules.md` §4.1。

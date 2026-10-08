@@ -42,7 +42,7 @@ KNOWN_SEPARATE = {"check_remote_urls.py": "CI 独立 step（慢，需联网探�
                   "probe_dns_endpoints.py": ("CI 独立 step —— 需联网实测加密 DNS 端点，"
                                              "有判负语义但抖动会假红，故不进 46 道"),
                   "check_real_kernel.py": "需真内核 + 真网络，仅本地人工跑（ops.md §6.8.1）",
-                  # 2026-10-08：首个 Release（v2026-10-08）已发布 ⇒ 判据启用并进 27 道，
+                  # 2026-10-08：首个 Release（v2026-10-08）已发布 ⇒ 判据启用并进 46 道，
                   # 不再豁免。此处保留注释以存其沿革。
                   "verify_all.py": "它自己就是总入口，不是被调的判据"}
 
