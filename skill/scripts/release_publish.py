@@ -649,7 +649,7 @@ def api_req(url, token, method='GET', data=None, ctype='application/json', raw=N
     body = raw if raw is not None else (json.dumps(data, ensure_ascii=False).encode() if data is not None else None)
     req = urllib.request.Request(url, data=body, method=method)
     req.add_header('Accept', 'application/vnd.github+json')
-    req.add_header('User-Agent', 'self-configuration-release')
+    req.add_header('User-Agent', 'self-conf-release')
     if token:
         req.add_header('Authorization', f'Bearer {token}')
     if body is not None:
@@ -680,7 +680,7 @@ def _asset_stale(asset, path):
         return True
     try:
         req = urllib.request.Request(asset['browser_download_url'],
-                                     headers={'User-Agent': 'self-configuration-release'})
+                                     headers={'User-Agent': 'self-conf-release'})
         return urllib.request.urlopen(req).read() != local
     except Exception:                                  # noqa: BLE001
         return False
@@ -698,7 +698,7 @@ def apply(days, token):
     # mutating 发布器，读不到 Latest 只影响「要不要多 PATCH 一次」，走保守分支即
     # latest_ok=False（reconcile 幂等，多跑一次无害），不能把「读不到」升级成中断发版。
     req = urllib.request.Request(f'{API}/releases/latest',
-                                 headers={'User-Agent': 'self-configuration-release'})
+                                 headers={'User-Agent': 'self-conf-release'})
     try:
         latest_ok = json.load(urllib.request.urlopen(req)).get('tag_name') == current_tag
     except Exception:                                  # 404 = 仓库还没有任何 Latest

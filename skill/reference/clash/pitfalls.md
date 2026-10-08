@@ -222,7 +222,7 @@ if len(parsed.get("proxy-groups") or []) != ng or len(parsed.get("rules") or [])
 ### 判据固化在哪
 
 - **`skill/scripts/clash/build_profiles.py`** —— 覆盖写 + 自检两段（约 217–236 行）。
-- **`skill/tests/verify_all.py`** 的 `('clash 静态 profile 新鲜度', [PY, 'skill/scripts/clash/build_profiles.py', '--check'], {})` —— 闸门 #41（clash 静态 profile 新鲜度）。
+- **`skill/tests/verify_all.py`** 的 `('clash 静态 profile 新鲜度', [PY, 'skill/scripts/clash/build_profiles.py', '--check'], {})` —— 闸门 #46（clash 静态 profile 新鲜度）。
 - 判负样例：`checker.md` §9.2 第 14 条（往真源追加一行 → `--check` 报「已过期」）。
   ⚠️ `build_profiles.py --check` 的判负样例在 `checker.md` §9.2 里**尚未单列**（表里第 14 条是 `build_rules.py`），待补。
 
@@ -525,8 +525,8 @@ python skill/scripts/clash/build_profiles.py --check    # CI 用：过期即判�
 
 | 漂移方向 | 守门脚本 | 在 46 道里 |
 |:---------|:---------|:-------------|
-| 脚本 ↔ 静态 | `skill/tests/clash/check_script_sync.py` | ✅ 第 15 道 |
-| 完整版 ↔ `.min` | `skill/tests/clash/check_min_pair.py` | ✅ 第 14 道 |
+| 脚本 ↔ 静态 | `skill/tests/clash/check_script_sync.py` | ✅ 闸门 #38 |
+| 完整版 ↔ `.min` | `skill/tests/clash/check_min_pair.py` | ✅ 闸门 #37 |
 | 静态是否过期（脚本有更新未重生成）| `skill/scripts/clash/build_profiles.py --check` | ✅ 46 道之一 |
 | `rules/*.yaml` 是否过期（真源 `.list` 有更新）| `skill/scripts/clash/build_rules.py --check` | ✅ 闸门 #39 |
 

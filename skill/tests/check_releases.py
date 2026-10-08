@@ -90,7 +90,7 @@ def _api_json(path, token, allow_404=False):
     漏网的裸请求点 —— 同一套异常分类手抄第二遍，就必然漏改其中一处。
     """
     req = urllib.request.Request(f'{API}{path}')
-    req.add_header('User-Agent', 'self-configuration-release')
+    req.add_header('User-Agent', 'self-conf-release')
     if token:
         req.add_header('Authorization', f'Bearer {token}')
     try:

@@ -76,7 +76,29 @@ def _token():
 
 
 # CI 侧允许放行的已登记豁免闸门（见 release-rules.md §4.1）
+# ⚠️ 白名单护栏（2026-10-08 第七轮审查问题 5）：
+#   这个元组原本只是"按闸门名字硬编码"，不与任何登记交叉校验 ⇒
+#   任何人把它改大就能在 CI 上免除 SKIP 判负，没有断言拦着。
+#   现：每一项都必须能在 release-rules.md §4.1 找到对应的登记条目
+#   （按「闸门名 / 涉及脚本名」任一命中即可），否则启动即报错。
 CI_ALLOWED_SKIP = ('min-pair 一致',)
+_RULES_DOC = os.path.join(os.path.dirname(os.path.abspath(__file__)),
+                          '..', 'reference', 'shared', 'release-rules.md')
+
+
+def _assert_allowlist_registered():
+    """白名单项必须在 release-rules §4.1 有登记，防止悄悄扩权。"""
+    try:
+        doc = open(os.path.normpath(_RULES_DOC), encoding='utf-8').read()
+    except Exception:
+        return                      # 读不到就放过（不因文档缺失拖垮闸门）
+    i = doc.find('### 4.1 已知豁免')
+    seg = doc[i:i + 4000] if i >= 0 else doc
+    missing = [x for x in CI_ALLOWED_SKIP if x not in seg]
+    if missing:
+        raise SystemExit(
+            '❌ CI_ALLOWED_SKIP 里的 %s 未在 release-rules.md §4.1 登记 —— '
+            '不许悄悄扩权（要么先登记，要么别加）' % '、'.join(missing))
 
 
 def build_gates():
@@ -250,6 +272,7 @@ def print_index():
     要引用清单时**用本命令现抓**，别把它复制成第三份死表 —— 尤其**不要回填进 CI**（那等于把
     漂移面原样请回来）。输出仅供**人读 + 文档引用**。
     """
+    _assert_allowlist_registered()
     gates = build_gates()
     print(f'闸门清单：{len(gates)} 道（现抓自 build_gates()，勿手抄成死表）\n')
     for i, (name, argv, env) in enumerate(gates, 1):

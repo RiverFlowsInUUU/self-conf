@@ -321,7 +321,11 @@ def provider_semantics(name, behavior):
         #    于是 `geoip-cn,Proxy`（国内 IP 全走代理）**静默通过** ——
         #    而这恰恰是本闸门存在的理由。
         #    现：国内/私有语义的 ipcidr 集返回 DIRECT，让静态策略校验覆盖到它。
-        if any(k in n for k in ("cn", "private")):
+        # ⚠️ 第七轮审查问题 7：原 `any(k in n for k in ("cn","private"))` 过粗 ——
+        #    任何名字含 `cn` 的集（如未来的 `scn-*` / `*-cn-ip`）都会被强制要求 DIRECT。
+        #    收窄：只认**以 cn/private 结尾**或**等于**的集（本仓现役即这形态）。
+        tokens = re.split(r"[-_/]", n)
+        if "cn" in tokens or "private" in tokens or n in ("cn", "private"):
             return "DIRECT"
         return None
     if any(k in n for k in ("cn", "private", "apple-cn", "apple-system",

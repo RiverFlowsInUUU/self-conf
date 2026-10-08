@@ -61,6 +61,11 @@ def build_block():
     rows = "\n".join("| %d | %s | `%s` |" % (n, name, cmd or "—") for n, name, cmd in ents)
     block = (
         "## 11 · %d 道总览表\n\n"
+        "> ⚠️ **关于道数（含近重复，对外说数量时心里有数）**：\n"
+        "> %d 道里有两对近重复 —— `#9 与 #41`（都审 mihomo 分流覆盖，后者多审 lazy 版）、\n"
+        "> `#11 与 #45`（规则集内容，同理）。**刻意保留**：双档覆盖能让分流版与懒人版\n"
+        "> 都查到；合并会让其中一档漏检。故这个数**含重复劳动**，不是 %d 种独立检查。\n"
+        ">\n"
         "> ✅ **本表由 `python skill/scripts/gen_gate_table.py --apply` 生成**，\n"
         "> 真源是 `verify_all.py --index`，**不要手抄**。\n"
         "> 漂移由同一脚本的 `--check` 判负（已接闸门），不再靠人记得更新。\n"
@@ -79,7 +84,7 @@ def build_block():
         "⚠️ `min-pair 一致` 一道含 V7「一天至多一版」两条断言；本仓以 `SKIP_V7=1` 豁免\n"
         "⇒ 该两条记为 **未验证**（⚠️）而非通过，本道以 exit 3 结束，上层显示 ⚠️。\n"
         "详见 `release-rules.md` §4.1。\n\n"
-        % (len(ents), rows)
+        % (len(ents), len(ents), len(ents), rows)
     )
     return block, len(ents)
 

@@ -349,7 +349,7 @@ clash/
 
 | 环节 | 脚本 | 判据 |
 |:-----|:-----|:-----|
-| 静态 profile 新鲜度 | `skill/scripts/clash/build_profiles.py --check` | 脚本输出 ≠ 静态文件即判负（闸门 #41） |
+| 静态 profile 新鲜度 | `skill/scripts/clash/build_profiles.py --check` | 脚本输出 ≠ 静态文件即判负（闸门 #46） |
 | 规则集生成物新鲜度 | `skill/scripts/clash/build_rules.py --check` | `.yaml` 与 `.list` 真源不一致即判负 |
 | 脚本 ↔ 静态对拍 | `skill/tests/clash/check_script_sync.py` | 需 **node**（Windows 下由 `_clash_common.find_node()` 显式探测；Git Bash 的 PATH 不继承给 subprocess） |
 
