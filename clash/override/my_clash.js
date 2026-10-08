@@ -6,7 +6,7 @@
 //    对任意 mihomo 订阅配置做整体覆写，使其与 clash/profiles/routing.yaml 一致：
 //      · 22 个策略组（Proxy + Smart + 4 个 AI 组 + AI + 8 个应用组 + Apple Update + AD + 6 地区组）
 //      · 25 份规则集（20 份 MRS + 5 份 yaml）+ 27 条规则
-//        ⚠️ 这些数字由 tools/gates/clash/check_header_numbers.py 与脚本实际输出对拍，
+//        ⚠️ 这些数字由 self-conf-skills/gates/clash/check_header_numbers.py 与脚本实际输出对拍，
 //           改了策略组或规则后如不同步更新，CI 会判负。
 //      · DNS 双层广告拦截（fake-ip-filter + nameserver-policy rcode://success）
 //      · 订阅内的节点直接成为组内成员 —— 不再需要 Airport 订阅组

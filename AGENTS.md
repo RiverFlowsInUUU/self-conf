@@ -16,14 +16,14 @@ Surge / Egern / mihomo（Clash Meta）**三内核代理配置模板**。
 ## 命令
 
 ```bash
-python tools/gates/verify_all.py          # 门禁唯一入口（与 CI 同源）。绿了才算改完
-python tools/gates/verify_all.py -v       # 带详细输出
-python tools/gates/verify_all.py --index  # 列闸门清单（现抓，勿手抄）
+python self-conf-skills/gates/verify_all.py          # 门禁唯一入口（与 CI 同源）。绿了才算改完
+python self-conf-skills/gates/verify_all.py -v       # 带详细输出
+python self-conf-skills/gates/verify_all.py --index  # 列闸门清单（现抓，勿手抄）
 
-python tools/run/make_min.py --apply              # 改完完整版后同步 .min
-python tools/run/clash/build_profiles.py          # 改完 my_clash*.js 后重生成 mihomo profile
-python tools/run/clash/build_rules.py             # 改完 rules/*.list 后重生成 .yaml
-python tools/run/repo_state.py                    # 一屏现状：版本 / Release / CI
+python self-conf-skills/run/make_min.py --apply              # 改完完整版后同步 .min
+python self-conf-skills/run/clash/build_profiles.py          # 改完 my_clash*.js 后重生成 mihomo profile
+python self-conf-skills/run/clash/build_rules.py             # 改完 rules/*.list 后重生成 .yaml
+python self-conf-skills/run/repo_state.py                    # 一屏现状：版本 / Release / CI
 ```
 
 退出码：**0 = 全过 · 1 = 判负 · 2 = 环境不达标（先修环境，别读判据）· 3 = 未验证**。
@@ -39,7 +39,7 @@ python tools/run/repo_state.py                    # 一屏现状：版本 / Rele
 - 每条配置键的权威解释是**它自己在 profile 里的注释**（写满了理由）；改键前先读它
 
 **⚠️ 先问**
-- 改判据 / 加闸门（先说明「原判据错在哪」，再读 `tools/reference/gates.md` 的自查清单）
+- 改判据 / 加闸门（先说明「原判据错在哪」，再读 `self-conf-skills/references/gates.md` 的自查清单）
 - 结构性调整（先补判据，不靠"再跑一遍"）
 
 **🚫 从不**
@@ -69,11 +69,11 @@ python tools/run/repo_state.py                    # 一屏现状：版本 / Rele
 
 ## 文档怎么读（**不要整篇读**）
 
-`tools/reference/` 8 篇，每篇 45~135 KB。**整篇读是浪费** —— 它们都有完整标题层级，
+`self-conf-skills/references/` 8 篇，每篇 45~135 KB。**整篇读是浪费** —— 它们都有完整标题层级，
 用 `grep` 定位到节，通常只需读 2~5 KB：
 
 ```bash
-grep -n "include-all" tools/reference/profiles/clash.md   # 拿行号与节标题，只读那一节
+grep -n "include-all" self-conf-skills/references/profiles/clash.md   # 拿行号与节标题，只读那一节
 ```
 
 ---

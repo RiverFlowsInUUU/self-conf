@@ -14,8 +14,8 @@ clash/override/*.js   ──build_profiles.py──▶  clash/profiles/*.yaml + 
 
 | 你想改 | 改这个 | 然后跑 |
 |:--|:--|:--|
-| mihomo 的分组 / 规则 / DNS | `clash/override/my_clash.js`（分流版）或 `my_clash_lazy.js`（懒人版） | `python tools/run/clash/build_profiles.py` |
-| 自托管规则集的内容 | `rules/*.list` | `python tools/run/clash/build_rules.py` |
+| mihomo 的分组 / 规则 / DNS | `clash/override/my_clash.js`（分流版）或 `my_clash_lazy.js`（懒人版） | `python self-conf-skills/run/clash/build_profiles.py` |
+| 自托管规则集的内容 | `rules/*.list` | `python self-conf-skills/run/clash/build_rules.py` |
 
 ⚠️ **直接改 `clash/profiles/*.yaml` 会在下次生成时被覆盖** —— 这是本侧最高频的错误。
 
@@ -29,12 +29,12 @@ clash/override/*.js   ──build_profiles.py──▶  clash/profiles/*.yaml + 
 ## 本侧专属判据
 
 ```bash
-python tools/gates/clash/check_structure.py        # 结构完整性
-python tools/gates/clash/check_script_sync.py      # 脚本 ↔ 静态 profile 对拍
-python tools/gates/clash/check_version_header.py   # 头注版本（三内核同号）
-python tools/gates/clash/check_remote_urls.py      # 远程规则集可达（需联网，慢）
-python tools/gates/clash/check_ruleset_doc_sync.py # 配置 URL ↔ 文档表
-python tools/gates/clash/check_clash_dns.py clash/profiles/routing.yaml clash/profiles/lazy.yaml
+python self-conf-skills/gates/clash/check_structure.py        # 结构完整性
+python self-conf-skills/gates/clash/check_script_sync.py      # 脚本 ↔ 静态 profile 对拍
+python self-conf-skills/gates/clash/check_version_header.py   # 头注版本（三内核同号）
+python self-conf-skills/gates/clash/check_remote_urls.py      # 远程规则集可达（需联网，慢）
+python self-conf-skills/gates/clash/check_ruleset_doc_sync.py # 配置 URL ↔ 文档表
+python self-conf-skills/gates/clash/check_clash_dns.py clash/profiles/routing.yaml clash/profiles/lazy.yaml
 ```
 
 （`verify_all.py` 会跑其中大部分；单独跑这几个是**改完只想快速自查**时用。）
