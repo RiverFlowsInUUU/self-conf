@@ -104,8 +104,15 @@ def _token():
                            capture_output=True, text=True, timeout=15)
         if r.returncode == 0 and r.stdout.strip():
             return r.stdout.strip()
-    except Exception:
-        pass
+        # ⚠️ 第十二轮问题 1：`except Exception: pass` 把【gh 返回非零 / 超时 /
+        #    token 过期】全吞了，一句告警都没有 ⇒ 调用方只知道"没拿到 token"，
+        #    不知道是"没装 gh"还是"装了但失败" —— 与第十一轮那条
+        #    "文档给不存在的回落背书"是同一类隐蔽性。现在分情况都吭声。
+        print('   ⚠️ `gh auth token` 未取到 token（rc=%s）—— Release 断言退回匿名读；'
+              '若需要更高配额请设 GITHUB_TOKEN' % r.returncode)
+    except Exception as e:
+        print('   ⚠️ 调 `gh auth token` 失败（%s: %s）—— Release 断言退回匿名读'
+              % (type(e).__name__, str(e)[:60]))
     return None
 
 
@@ -177,6 +184,17 @@ def _collect_env_reads():
             except Exception:
                 continue
             got = set()
+            # ⚠️ 第十二轮问题 3：`check_min_pair.py` 写的是
+            #   `import os as _os` ⇒ AST 里 `b.value.id == '_os'`，而这里硬编码
+            #   只认 'os' ⇒ **SKIP_V7 从扫描结果里消失**（两头都错：删登记不判负 +
+            #   反向自检常态化误报"登记了但代码不读"）。
+            #   现按每个文件收集 `os` 的别名（`import os` / `import os as _os` 都算）。
+            os_names = {'os'}
+            for nd in ast.walk(tree):
+                if isinstance(nd, ast.Import):
+                    for al in nd.names:
+                        if al.name == 'os':
+                            os_names.add(al.asname or 'os')
 
             def _from_arg(node):
                 if node.args and isinstance(node.args[0], ast.Constant) \
@@ -190,13 +208,13 @@ def _collect_env_reads():
                         and nd.func.attr == 'get':
                     b = nd.func.value
                     if isinstance(b, ast.Attribute) and b.attr == 'environ' \
-                            and isinstance(b.value, ast.Name) and b.value.id == 'os':
+                            and isinstance(b.value, ast.Name) and b.value.id in os_names:
                         _from_arg(nd)
                 # os.environ["X"]
                 if isinstance(nd, ast.Subscript):
                     b = nd.value
                     if isinstance(b, ast.Attribute) and b.attr == 'environ' \
-                            and isinstance(b.value, ast.Name) and b.value.id == 'os':
+                            and isinstance(b.value, ast.Name) and b.value.id in os_names:
                         sl = nd.slice
                         if isinstance(sl, ast.Constant) and isinstance(sl.value, str) \
                                 and pat.match(sl.value):
@@ -242,20 +260,54 @@ def _assert_escapes_registered():
             if re.fullmatch(r'[A-Z_][A-Z0-9_]*', nm):
                 registered.add(nm)
 
-    # 只看真机读过的名字里，**确实能改判据宽严**的那些 —— 由一张显式清单定义。
-    GATE_CHANGING = ('SKIP_V7', 'STRICT_ARCHIVE', 'UNIFIED_VERSION')
+    # ⚠️ 第十二轮问题 2（护栏方向做反了）：
+    #   原实现是「遍历 GATE_CHANGING 这 3 个**硬编码**名字 → 查有没有登记」，
+    #   ⇒ 新加一个放行类后门（名字不在这 3 个里）**一个都抓不到**，
+    #     而 §4.2.1 正文却自称「反查 skill/**/*.py 读取的**每一个**环境变量名」
+    #     —— 文档与实现不符，且恰好放过了这条护栏声称要防的事。
+    #   现改为：**AST 抓到的全部名字 − §4.2.2 输入类白名单 = 放行类候选**，
+    #   再与表格做差集 ⇒ 任何新后门都无处可藏。
     found = _collect_env_reads()
     alive = set()
     for v in found.values():
         alive.update(v)
-    missing = [x for x in GATE_CHANGING if x in alive and x not in registered]
+
+    # §4.2.2 输入类白名单：这些不改判据宽严（缺了只是环境没准备好），不算逃生门。
+    # 从 §4.2.2 表格**现抓**，避免与文档分叉（与 §4.2.1 同一套解析）。
+    input_ok = set()
+    i2 = doc.find('#### 4.2.2')
+    if i2 > 0:
+        j2 = doc.find('\n### ', i2 + 10)
+        sec2 = doc[i2:j2] if j2 > 0 else doc[i2:]
+        for ln in sec2.splitlines():
+            st = ln.strip()
+            if not st.startswith('|'):
+                continue
+            cells = [c.strip() for c in st.strip('|').split('|')]
+            if cells and cells[0].startswith('`') and cells[0].endswith('`'):
+                nm = cells[0].strip('`')
+                if re.fullmatch(r'[A-Z_][A-Z0-9_]*', nm):
+                    input_ok.add(nm)
+    if not input_ok:
+        raise SystemExit('❌ release-rules.md §4.2.2 输入类白名单解析为空 —— '
+                         '无法区分逃生门与普通输入，不放行')
+
+    candidates = alive - input_ok
+    missing = sorted(x for x in candidates if x not in registered)
     if missing:
+        where = {}
+        for f, vs in found.items():
+            for x in missing:
+                if x in vs:
+                    where.setdefault(x, []).append(f)
         raise SystemExit(
-            '❌ 这些**放行类逃生门**读进了代码却没登记在 release-rules.md §4.2.1：%s\n'
-            '   —— 要么登记（说明默认安全与谁在用），要么别写进代码。不放行。'
-            % '、'.join(missing))
-    # 反向：登记了但代码已不再用 ⇒ 提醒（不报错，避免删代码被卡）
-    stale = [x for x in GATE_CHANGING if x in registered and x not in alive]
+            '❌ 这些环境变量被代码读取却**没登记**在 release-rules.md §4.2.1：\n'
+            + '\n'.join('     %s  ← %s' % (x, '、'.join(where.get(x, ['?'])))
+                         for x in missing)
+            + '\n   —— 若为放行类逃生门：登记（写明默认安全与谁在用）；'
+              '若只是输入类：加进 §4.2.2 白名单。不放行。')
+    # 反向：登记了但代码已不再读 ⇒ 提醒（不报错，避免删代码被卡）
+    stale = sorted(x for x in registered if x not in alive)
     if stale:
         print('   ℹ️ §4.2.1 登记了但代码不再读取：%s（可选清理）' % '、'.join(stale))
 
@@ -438,7 +490,7 @@ def print_index():
         need = '  [需 GITHUB_TOKEN]' if 'GITHUB_TOKEN' in env else ''
         print(f'{i:>2}. {name}{need}')
         print(f'      {" ".join(argv[1:])}')
-    print(f'\nCI 侧为 5 个 step（Install deps / Gates / Encoding gate / Remote ruleset / Encrypted DNS）（Surge 双 profile 合并在同一 run 内）—— 末位那个'
+    print(f'\nCI 侧为 5 个 step（Install deps / Gates / Encoding gate / Remote ruleset / Encrypted DNS）（Surge 双 profile 合并在同一 run 内）—— 其中第 2 个'
           f'「Encoding gate (cp936)」以本脚本为入口复跑一遍，故**不进 build_gates()**'
           f'（进去即递归）；与上表按 step 聚合后形状不同，属已知挂账，见本文件头注。')
     sys.exit(0)

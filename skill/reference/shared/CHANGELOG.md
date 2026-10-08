@@ -37,6 +37,44 @@
 
 ---
 
+## 2026-10-08（下午第二轮 · 第十一轮审查修复）
+
+### 修复
+
+- **`_token()` 的 gh 回落真能用了**（第十一轮问题 1）。上一轮只是"代码形状对"
+  （写了 `subprocess.run(['gh', ...])`），但 `gh.exe` 不在 Python 的 PATH 上 ⇒
+  异常被 `except Exception: pass` 吞掉 ⇒ **本机实际永远返回 None**，而 docstring
+  却写着"自动回退 gh auth token" —— 文档在为**不存在的回落**背书。
+  新增 `_gh_exe()`：PATH + `%LOCALAPPDATA%\Programs/GitHub CLI/bin\gh.exe` +
+  `%PROGRAMFILES%` + `/usr/bin` 等候选逐个定位；`_token()` 改用绝对路径调用。
+  实测：`_gh_exe()` 定位成功，`_token()` 真取到 token。
+
+- **逃生门登记建立 `§4.2`**（第十一轮问题 4）。`UNIFIED_VERSION` 此前是**未登记**的
+  逃生门（能改 V5 的期望值），与 `SKIP_V7` / `STRICT_ARCHIVE` 都登记了的自律不一致。
+  分两类：**4.2.1 放行类**（必须登记，缺失即判负）／**4.2.2 输入类**（仅备查，
+  `GITHUB_TOKEN` / `GITHUB_REPO` / `GITHUB_ACTIONS` / `CI`）。
+  分界线：动它会不会改变"该判负还是判通过"。
+  配套 `_assert_escapes_registered()`：AST 扫 `skill/**/*.py` 的 `os.environ` 读取，
+  与 §4.2.1 表格做差集，未登记 ⇒ 启动即报错。
+
+### 修掉的文档漂移
+
+- `public-repo.md`：标题写"仍在闸门之外"，代码块里两项**当时已经在跑**
+  （#42 自洽性 / #23 clash secrets 扫描），末句也称"不得声称 CI 已覆盖" ——
+  三者自相矛盾。改为表格写明编号，结论改为"CI 强制，无需人工补跑"。
+- `checker.md` 的 CI 步骤表补第 8 行「Encrypted DNS endpoints reachability (Egern)」
+  （`print_index()` 和 §11 都知道它，只有这张表漏了）。
+- `gen_gate_table`：`reasons{}` 与 `check_gate_manifest.KNOWN_SEPARATE` 是两份拷贝、
+  措辞还不一样（而 §11 正宣称"不会分叉"）⇒ 删掉本地拷贝，单一真源。
+- "位置"列由 `_where_of()` 动态判定（是否出现在 ci.yml 的**非注释行**、
+  且为真实调用形态），不再写死成 `—`。
+
+### 已知边界（不改，记录在案）
+
+- 真机验证（Surge / Egern 闭源且仅苹果系统；mihomo 需真内核二进制）**客观无法自动化**。
+
+---
+
 ## 2026-10-07
 
 ### 新增
