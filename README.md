@@ -54,18 +54,19 @@
 
 ## 🌐 隐私至上 · 无 DNS 泄露
 
-| | <div align="center"><img src="https://raw.githubusercontent.com/RiverFlowsInUUU/self-conf/main/icons/Surge-Icon.png" height="22" alt=""> Surge</div> | <div align="center"><img src="https://raw.githubusercontent.com/RiverFlowsInUUU/self-conf/main/icons/Egern-Icon.png" height="22" alt=""> Egern</div> | <div align="center"><img src="https://raw.githubusercontent.com/RiverFlowsInUUU/self-conf/main/icons/mihomo-Icon.png" height="22" alt=""> mihomo</div> |
+| 泄露出口 | <div align="center"><img src="https://raw.githubusercontent.com/RiverFlowsInUUU/self-conf/main/icons/Surge-Icon.png" height="22" alt=""> Surge</div> | <div align="center"><img src="https://raw.githubusercontent.com/RiverFlowsInUUU/self-conf/main/icons/Egern-Icon.png" height="22" alt=""> Egern</div> | <div align="center"><img src="https://raw.githubusercontent.com/RiverFlowsInUUU/self-conf/main/icons/mihomo-Icon.png" height="22" alt=""> mihomo</div> |
 |:--|:--|:--|:--|
-| 🚫 旁路设备 | `hijack-dns` 接管明文 `:53`（六个知名解析器） | `hijack_dns` 接管明文 `:53`（全量） | 由客户端 TUN 或透明代理重定向接管 |
-| 🔐 加密通道 | 主解析走 DoH，主机名端点经裸 IP 受控引导 | 主解析走 DoH/DoT，四条端点全是 IP 字面量 | 主解析走 DoH，端点一律写 IP 字面量 |
-| 🛡️ 明文回退 | `dns-server` 全裸 IP，绝不写 `system` | `forward` 兜底只指加密组，绝不落明文 | `default-nameserver` 裸 IP（仅引导）+ `proxy-server-nameserver` 专用通道 |
-| 🧭 规则克制 | IP 类规则一律 `no-resolve`；零 IP 的规则集不写 | IP 类规则一律 `no_resolve`；该键对 `rule_set` 不生效 | IP 类规则一律 `no-resolve`；纯域名规则集不写 |
-| ✂️ 远端解析 | 代理域名交节点解析，本地不留答案 | 代理域名交节点解析（`proxy_nameservers` 专用通道） | `fake-ip` 只回假 IP，真实解析在落地侧 |
-| 🔎 IPv6 | `ipv6 = false` | `ipv6: false` | 顶层 + `dns.ipv6` 两处都关 |
-| 🛑 广告拦截 | `pre-matching REJECT` | `forward` → `reject` | DNS 层双条件（`rcode://success` 与 `fake-ip-filter` 成对） |
-| 📦 数据库依赖 | 内置系统集 | 引用共享 `.list` | 零 dat 依赖，用 `.mrs` 远程集 |
+| 🚫 旁路设备<br><sub>绕过内核的设备直接发 `:53`</sub> | `hijack-dns` 接管明文 `:53`（六个知名解析器） | `hijack_dns` 接管明文 `:53`（全量） | 由客户端 TUN 或透明代理重定向接管 |
+| 🔐 加密通道<br><sub>端点写主机名 ⇒ 冷启动漏一次明文</sub> | 主解析走 DoH，主机名端点经裸 IP 受控引导 | 主解析走 DoH/DoT，四条端点全是 IP 字面量 | 主解析走 DoH，端点一律写 IP 字面量 |
+| 🛡️ 明文回退<br><sub>加密解析失败 ⇒ 回落明文</sub> | `dns-server` 全裸 IP，绝不写 `system` | `forward` 兜底只指加密组，绝不落明文 | `default-nameserver` 裸 IP（仅引导）+ `proxy-server-nameserver` 专用通道 |
+| 🧭 规则克制<br><sub>IP 类规则会触发本地解析</sub> | IP 类规则一律 `no-resolve`；零 IP 的规则集不写 | IP 类规则一律 `no_resolve`；该键对 `rule_set` 不生效 | IP 类规则一律 `no-resolve`；纯域名规则集不写 |
+| ✂️ 远端解析<br><sub>代理域名被本地解析、本地留答案</sub> | 代理域名交节点解析，本地不留答案 | 代理域名交节点解析（`proxy_nameservers` 专用通道） | `fake-ip` 只回假 IP，真实解析在落地侧 |
+| 🔎 IPv6<br><sub>AAAA 泄露，或绕过接管</sub> | `ipv6 = false` | `ipv6: false` | 顶层 + `dns.ipv6` 两处都关 |
+| 🛑 广告拦截<br><sub>顺带：解析阶段就拦掉</sub> | `pre-matching REJECT` | `forward` → `reject` | DNS 层双条件（`rcode://success` 与 `fake-ip-filter` 成对） |
+| 📦 数据库依赖<br><sub>顺带：零 dat，离线可用</sub> | 内置系统集 | 引用共享 `.list` | 零 dat 依赖，用 `.mrs` 远程集 |
 
-三内核共通的底线：**解析器全加密 · 明文入口收口 · 代理域名不给真答案 · IPv6 显式关闭 · 广告拦截前移**。
+前六行是必需项的“堵漏”清单（出口分类见 [`dns.md`](self-conf-skills/references/dns.md) 的「接到本模板上」），后两行是顺带得到的好处。
+三内核机制不同、写法不同，但**每一个出口都堵了**。
 
 每一条都有判据守着 —— 全套闸门 + CI，不是文档里的一句话。
 
