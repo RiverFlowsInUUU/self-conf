@@ -40,6 +40,27 @@ POINTERS = ["CLAUDE.md", "GEMINI.md", ".cursorrules",
 # 指针里必须内联的关键红线（关键词）
 MUST_MENTION = ["AGENTS.md", "verify_all", "生成物"]
 
+# ── 体积与内容纪律（2026-10-08 依据外部研究补）────────────────────────
+# 事实来源：
+#   · ETH Zurich（arXiv 2602.11988）：context files 平均**增加 20%+ 推理成本**，
+#     且**不普遍提升成功率**；"repository overviews 无益 —— agent 自己读代码"；
+#     结论：**只写最小必要要求**（unnecessary requirements make tasks harder）。
+#   · GitHub 分析 2500+ agents.md：primary failure mode 是**含糊**；
+#     有效的文件把**可执行命令放前面**、用**代码示例**而非描述、设**明确边界**；
+#     覆盖六域：commands / testing / structure / style / git / boundaries。
+#   · 实践建议：**< 150 行**（Codex 上限 32 KiB combined）。
+MAIN_MAX_LINES = 150
+
+# 六域关键词（各至少要能对上一处，否则说明该域缺失）
+SIX_AREAS = {
+    "命令": ["verify_all", "python"],
+    "测试/门禁": ["门禁", "verify_all", "退出码"],
+    "结构": ["tools/", "surge/", "profiles"],
+    "风格": ["注释", "真源", "生成物"],
+    "git/流程": ["CI", "提交", "PR", "发版"],
+    "边界": ["从不要", "从不", "红线", "禁止", "🚫"],
+}
+
 
 def main():
     if not os.path.isfile(os.path.join(ROOT, "surge", "profiles", "routing.conf")):
@@ -77,6 +98,28 @@ def main():
     # ③ 真源自身必须提到「换任何 AI 都能用」的机制说明
     if "唯一真源" not in main_txt or "薄指针" not in main_txt:
         bad.append("%s 里没有说明「指针机制」—— 后人会不知道这些文件是什么" % MAIN)
+
+    # ④ 体积纪律（研究：过长会推高成本且不提升成功率）
+    n_lines = len(main_txt.splitlines())
+    if n_lines > MAIN_MAX_LINES:
+        bad.append("%s 有 %d 行 > %d 行上限 —— 研究（ETH Zurich / GitHub 2500 仓）显示"
+                   "：过长的 context file 只增加推理成本，不提升成功率。"
+                   "把「agent 能自己看出来的」（目录结构、机制描述、已修好的坑）删掉，"
+                   "只留「推不出来的」（命令、边界、易错点）"
+                   % (MAIN, n_lines, MAIN_MAX_LINES))
+
+    # ⑤ 六域覆盖（GitHub 分析：缺任一域是第二常见的失败模式）
+    miss = [k for k, kws in SIX_AREAS.items() if not any(w in main_txt for w in kws)]
+    if miss:
+        bad.append("%s 缺这些核心域：%s（GitHub 2500 仓分析：缺域是第二常见失败模式）"
+                   % (MAIN, " / ".join(miss)))
+
+    # ⑥ 命令要在**前半部分**（研究：把可执行命令放前面，agent 会频繁引用）
+    _lines = main_txt.splitlines()
+    head = chr(10).join(_lines[:len(_lines) // 2])
+    if "verify_all" not in head:
+        bad.append("%s 的**前半部分**没有可执行命令 —— 研究建议命令放在前部"
+                   "（agent 会频繁引用）" % MAIN)
 
     print("AI 入口完整性（%s + %d 个工具指针）" % (MAIN, len(POINTERS)))
     print("-" * 78)
