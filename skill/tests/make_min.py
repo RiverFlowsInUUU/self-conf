@@ -44,7 +44,7 @@ HERE = os.path.dirname(os.path.abspath(__file__))
 REPO_ROOT = os.path.dirname(os.path.dirname(HERE))
 sys.path.insert(0, HERE)
 
-from check_min_pair import TRAIL, WHOLE, normalize, head_version, OLD_DIR   # noqa: E402  判据唯一来源
+from check_min_pair import TRAIL, WHOLE, normalize, head_version   # noqa: E402  判据唯一来源
 
 NL = chr(10)
 CRLF = chr(13) + NL
@@ -167,24 +167,8 @@ def run_once(root, fam):
         # 先在内存里过一遍，别写坏了才发现。
         if normalize(gen) != normalize(ft):
             raise SystemExit("❌ " + mn + "：生成结果与完整版 normalize 后仍不同 —— 规则漏了情形，别写盘")
-        rows.append((f, fp, mp, classify(mt, gen)[0], mt, gen, lost, snap_path(fp, mp)))
+        rows.append((f, fp, mp, classify(mt, gen)[0], mt, gen, lost))
     return rows
-
-
-def snap_path(fp, mp):
-    """这份 `.min` 的**同版本归档快照**路径 ⇒ str | None（存在才给路径）。
-
-    用途只有一个：写盘前提醒。归档是只读历史，本脚本不碰它 —— 而 V6 把"与线上同号的归档"
-    定义成线上文件的逐字节快照，所以改了 `.min` 又存在同号快照时，对拍器必然判负。
-    那条判负是**设计好的告警**（内容改了却没升版），不是要脚本代它改历史。
-    """
-    hv = head_version(fp)
-    if not hv:
-        return None
-    fam, ver = hv
-    p = os.path.join(os.path.dirname(mp), OLD_DIR,
-                     "%s_v%s.min.%s" % (fam, ver, mp.rsplit(".", 1)[1]))
-    return p if os.path.isfile(p) else None
 
 
 def selftest(root):
@@ -199,11 +183,11 @@ def selftest(root):
     rows = run_once(root, "all")
     chk("S1 四份都能生成且 normalize 自查通过", len(rows) == 4)
     chk("S2 Egern 两份是纯函数（与仓内现状逐字节相同）",
-        all(c == "same" for f, a, b, c, m, g, l, s in rows if b.endswith(".yaml")))
+        all(c == "same" for f, a, b, c, m, g, l in rows if b.endswith(".yaml")))
     chk("S3 Surge 两份的差异不含正文（只有空白/注释落位）",
-        all(c in ("same", "blank") for f, a, b, c, m, g, l, s in rows if b.endswith(".conf")))
+        all(c in ("same", "blank") for f, a, b, c, m, g, l in rows if b.endswith(".conf")))
     chk("S4 豁免指令留在下载文件里（对拍器不认它，审计认）",
-        all((WAIVE_OK in g) == (WAIVE_OK in m) for f, a, b, c, m, g, l, s in rows
+        all((WAIVE_OK in g) == (WAIVE_OK in m) for f, a, b, c, m, g, l in rows
             if b.endswith(".conf")))
     # S5：锚点消失 ⇒ 必须报出来，不能把注释随便插进正文（拿真档删掉 [Proxy Group] 那一行做反向实测）
     rp = os.path.join(root, "surge", "profiles", "routing.conf")
@@ -214,26 +198,9 @@ def selftest(root):
         "报出 %d 条（钉在 [Proxy Group] 上的那两条「怎么加节点」）" % len(lost))
     # S6：空白钉死之后再拿生成结果当"现有精简版"重跑一遍 ⇒ 必须逐字节幂等
     idem = all(make_min(read(fp), gen, "egern" if mp.endswith(".yaml") else "surge")[0] == gen
-               for f, fp, mp, c, mt, gen, l, s in rows)
+               for f, fp, mp, c, mt, gen, l in rows)
     chk("S6 生成一次后再钉一次 ⇒ 逐字节幂等", idem)
-    # S7：同号归档快照 ⇒ 只点名、绝不写盘（归档只读；V6 的判负留给升版处置，不由生成器代改历史）
-    import tempfile
-    with tempfile.TemporaryDirectory() as td:
-        d = os.path.join(td, "profiles")
-        od = os.path.join(d, OLD_DIR)
-        os.makedirs(od)
-        full, mn = os.path.join(d, "lazy.conf"), os.path.join(d, "lazy.min.conf")
-        io.open(full, "w", encoding="utf-8", newline="").write("#! version=lazy_v9.9" + NL + "X" + NL)
-        none_case = snap_path(full, mn)
-        p99, p98 = os.path.join(od, "lazy_v9.9.min.conf"), os.path.join(od, "lazy_v9.8.min.conf")
-        for p in (p99, p98):
-            io.open(p, "wb").write(b"OLD" + NL.encode())
-        got = snap_path(full, mn)
-        kept = all(io.open(p, "rb").read() == b"OLD" + NL.encode() for p in (p99, p98))
-        chk("S7 同号快照只点名不写盘（无⇒None · 有⇒该版路径，不认低版本）",
-            none_case is None and got == p99 and kept,
-            "无快照→%s · 有快照→%s · 归档字节未动→%s" % (none_case, os.path.basename(got or ""), kept))
-    print(("ALL GREEN" if ok else "有判负") + " · 自带回归 7 条")
+    print(("ALL GREEN" if ok else "有判负") + " · 自带回归 6 条")
     return 0 if ok else 1
 
 
@@ -259,7 +226,7 @@ def main():
         # 0929 修复：旧 CI 是「计划模式(恒 exit 0) + git diff(不写盘恒空)」——永远绿的空操作。
         # --check 直接比对磁盘 .min 与生成器输出：blank 也算漂移（闸门意图就是字节级一致），
         # 注释锚点丢失（lost）一并判负（连 --apply 都会拒写的情形）。
-        drifted = [(rel(mp), c, len(lost)) for f, fp, mp, c, mt, gen, lost, snap in rows
+        drifted = [(rel(mp), c, len(lost)) for f, fp, mp, c, mt, gen, lost in rows
                    if c != "same" or lost]
         if drifted:
             for mp, c, n in drifted:
@@ -270,28 +237,24 @@ def main():
         return 0
     if not a.apply:
         print("（计划模式：一个字都不写。加 --apply 才落盘）" + NL)
-    for f, fp, mp, c, mt, gen, lost, snap in rows:
+    for f, fp, mp, c, mt, gen, lost in rows:
         n_cur, n_gen = len(mt.split(NL)), len(gen.split(NL))
         print("%-34s %s（%d → %d 行）· %s" % (
             rel(mp), kinds[c], n_cur, n_gen,
             "正文未动" if c != "body" else "⚠️ 精简版与完整版的正文已漂移，这次会把精简版拉回完整版"))
         for l in lost:
             print("      ⚠️ 这条注释的锚点没了，生成器没地方放它，要人决定去处：" + l.strip()[:68])
-        if snap and (mt != gen):
-            print("      ⚠️ " + rel(mp) + " 在归档里有同号快照 " + rel(snap)
-                  + "，本脚本不碰它 ⇒ 对拍器 V6 会判负（'改了没升版'）。"
-                    "处置：升版（改四份 profile 头注 `#! version=`），别手改归档。")
     if not a.apply:
         print(NL + "确认后加 --apply")
         return 0
     # 全批次先验一遍再写：第一条能写、第二条没能落位 ⇒ 别留下半批已改的文件
-    bad = [(mp, n) for f, fp, mp, c, mt, gen, lost, s in rows if lost]
+    bad = [(mp, n) for f, fp, mp, c, mt, gen, lost in rows if lost]
     if bad:
         for mp, n in bad:
             print("❌ " + rel(mp) + "：有 %d 条注释没能落位" % n)
-        print("整批一个字节未写 —— 先按上面的提示定规则（归档同样没动）")
+        print("整批一个字节未写 —— 先按上面的提示定规则")
         return 1
-    for f, fp, mp, c, mt, gen, lost, snap in rows:
+    for f, fp, mp, c, mt, gen, lost in rows:
         if mt == gen:
             print("未动 " + rel(mp) + "（已是规则的输出）")
             continue

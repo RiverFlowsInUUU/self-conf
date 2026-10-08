@@ -11,7 +11,7 @@ mihomo 的地区组**不写成员表**，只靠 `filter` 正则在运行时从�
 
 Surge / Egern 两侧各有一份 `audit_region_filters.py`，守的是「正向关键词有没有
 逐字同步进 `Other Regions` 的负向断言」。mihomo 侧一直**没有**对应的审计器 ——
-`reference/clash/profile-anatomy.md` §8.3 自己写过这句：
+`reference/profiles/clash.md` §8.3 自己写过这句：
 「mihomo 侧目前**没有**这个比对器 —— 改地区正则时六处要一起改」。
 本脚本补的就是这个缺口，但判据**不止**"拷贝同步"一条：
 

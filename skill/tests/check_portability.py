@@ -479,7 +479,7 @@ def main():
     print("TOTAL: %d passed, %d failed" % (total - bad, bad))
     if bad:
         print("   修法：换设备一致性靠 `.gitattributes` 与命名纪律，不靠任何人改本机 git 配置。")
-        print("   详见 skill/reference/shared/troubleshoot-faq.md 的「换设备 / 双端一致」一节。")
+        print("   详见 skill/reference/pitfalls.md 的「换设备 / 双端一致」一节。")
     return 1 if bad else 0
 
 

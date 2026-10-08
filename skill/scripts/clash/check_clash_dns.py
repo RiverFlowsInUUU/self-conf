@@ -13,7 +13,7 @@
     python check_clash_dns.py clash/profiles/routing.yaml --quiet    # 只打印汇总
     python check_clash_dns.py override_out.yaml --override           # 覆写脚本输出形态：不要求 tun 段
 
-判据与 `skill/reference/clash/leak-localization.md` 的六个泄露面一一对应：
+判据与 `skill/reference/ops.md` 的六个泄露面一一对应：
 
     面① 引导解析   → 判据 2 / 3 / 4（端点写主机名 ⇒ 冷启动必走一次明文 :53）
     面② 回退链     → 判据 3 / 4（端点不带加密 scheme ⇒ 每一笔查询都是明文 :53）
@@ -376,7 +376,7 @@ def check_3_main_endpoints(dns, hosts):
                         "这一问只能用 default-nameserver（明文 UDP:53）完成："
                         "加密通道要先知道端点 IP 才能建立。改成 IP 字面量 "
                         f"（`https://1.1.1.1/dns-query`）即可消除 —— 详见 "
-                        "reference/clash/hardening-template.md §5。")
+                        "reference/profiles/clash.md §5。")
                 continue
             if not enc:
                 lvl = LOW if is_private_ip(h) else HIGH
