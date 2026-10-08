@@ -17,7 +17,7 @@
 > [6 · `smart` / `select` 组的差别](#6--smart--select-组的差别) ·
 > [7 · `underlying-proxy` 中转链](#7--underlying-proxy-中转链) ·
 > [8 · `pre-matching` 与 `extended-matching`](#8--pre-matching-与-extended-matching) ·
-> [9 · `always-real-ip` 与 Fake-IP](#9--always-real-ip-与-fake-ip) ·
+> [9 · Fake-IP 与 Real-IP](#9--fake-ip-与-real-ipalways-real-ip-的机制) ·
 > [10 · `hijack-dns` 的边界](#10--hijack-dns-的边界) ·
 > [11 · 规则集与刷新](#11--规则集与刷新) ·
 > [12 · `no-resolve` 的双刃](#12--no-resolve-的双刃) ·
@@ -28,7 +28,7 @@
 > [17 · FAQ](#17--faq) ·
 > [18 · 维护者须知](#18--维护者须知)
 
-### 1 · 文件结构与两份形态
+#### 1 · 文件结构与两份形态
 
 ```
 self-conf/                                   # Surge · Egern · mihomo 三内核同仓（2026-10-07）
@@ -45,7 +45,7 @@ self-conf/                                   # Surge · Egern · mihomo 三内�
     ├── SKILL.md                             # AI 唯一入口：六条底线 / 归档机制 / 动线 / 分支索引
     ├── reference/                           # 逐条判据（shared/ 七篇 + surge/ · egern/ 各七篇）
     ├── scripts/                             # surge/ 5 个审计脚本 + 1 个共享模块 · egern/ 10 个 + 1 个
-    └── tests/                               # 闸门脚本（secrets / portability / min_pair / links / make_min / …，共 43 道）
+    └── tests/                               # 闸门脚本（secrets / portability / min_pair / links / make_min / …，共全套）
 ```
 
 **两份配置是分工关系，不是版本关系**：`lazy` 是懒人版（4 组 / 10 条，全量一个出口），
@@ -66,7 +66,7 @@ self-conf/                                   # Surge · Egern · mihomo 三内�
 > ⚠️ `.min.conf` 里仍保留 `# audit-waive:` 那行 —— 它是**有语义的注释**，不是说明文字。
 > 删掉它，审计读数就从「2 waived」变成「2 high」。
 
-### 2 · 防泄露原理：从机制到推导
+#### 2 · 防泄露原理：从机制到推导
 
 #### 2.1 先定义「泄露」
 
@@ -170,7 +170,7 @@ RULE-SET,…,AI.list,…,no-resolve
 一个从没访问过的域名、一次极端网络切换，仍可能产生零星明文。**任何声称
 "绝对零泄露"的配置都在夸大**。
 
-### 3 · `[General]` 逐键
+#### 3 · `[General]` 逐键
 
 #### 3.1 DNS 段（防泄露本体）
 
@@ -260,7 +260,7 @@ always-real-ip = *.lan, *.local, *.localdomain, *.home.arpa,
 ⚠️ `always-real-ip` **只改变返回真实 IP 还是 Fake-IP，不改变流量的目的地**。
 它不参与分流 —— 想让游戏机流量走代理，还得靠 `[Rule]` 里的 `DOMAIN-SUFFIX` 规则。
 
-### 4 · `[Proxy]` 与占位符
+#### 4 · `[Proxy]` 与占位符
 
 #### 4.1 `[Proxy]` 段不写死节点（2026-10-06 起）
 
@@ -314,7 +314,7 @@ always-real-ip = *.lan, *.local, *.localdomain, *.home.arpa,
 只增加解析噪音；给从 Clash 迁过来的读者提个醒。⚠️ 这个知识点仍然成立，只是模板里
 那一行注释已随「节点缩减成 2 条」一起删掉了。
 
-### 5 · 占位符与脱敏规则
+#### 5 · 占位符与脱敏规则
 
 本仓库是公开模板，**所有节点信息都是占位符**。脱敏规则：
 
@@ -333,7 +333,7 @@ always-real-ip = *.lan, *.local, *.localdomain, *.home.arpa,
 > 🔐 `skill/reference/pitfalls.md` 里明确写着：**不要把真实节点提交回来**。
 > 改完本地用可以，`git push` 前跑一次 `check_secrets.py`。
 
-### 6 · `smart` / `select` 组的差别
+#### 6 · `smart` / `select` 组的差别
 
 #### 6.1 `smart` 的打分方式
 
@@ -368,7 +368,7 @@ always-real-ip = *.lan, *.local, *.localdomain, *.home.arpa,
 | `Airport` | `select` | 订阅槽位，`hidden=true`（不在面板显示，只被上两组 include） |
 | `AD` | `select` | 手动开关（独立于规则链路） |
 
-### 7 · `underlying-proxy` 中转链
+#### 7 · `underlying-proxy` 中转链
 
 > 📌 **当前模板不带中转链** —— 旧版 `lazy` 的 `Node-C` / `Node-D` 是这一形态，
 > 已随「占位节点缩减成 2 条」移除。本节讲的是**你自己在 `[Proxy]` 加链式节点时**的机制，
@@ -397,7 +397,7 @@ Node-C = https, cdn-relay.example.com, 443, …, underlying-proxy="落地节点�
 改了节点名之后，**先确认 `underlying-proxy` 引用的新名字存在，再保存**。
 这是本文件里唯一需要「按顺序改」的地方 —— 顺序错了会直接导致配置无法加载。
 
-### 8 · `pre-matching` 与 `extended-matching`
+#### 8 · `pre-matching` 与 `extended-matching`
 
 #### 8.1 `pre-matching`
 
@@ -430,39 +430,27 @@ Node-C = https, cdn-relay.example.com, 443, …, underlying-proxy="落地节点�
 `check_surge_dns.py` 的 `check_10` 只对带 `pre-matching` 的规则提示缺
 `extended-matching`，不给非拦截规则报负。
 
-### 9 · `always-real-ip` 与 Fake-IP
+#### 9 · Fake-IP 与 Real-IP（`always-real-ip` 的机制）
 
-#### 9.1 两种模式
+键本身的取值与两类主机名见 §1.8；**本节讲机制**，两处不重复。
 
 | 模式 | 对应用返回什么 | 后果 |
 |:-----|:---------------|:-----|
-| Fake-IP | 一个假地址（如 `198.18.x.x`），Surge 靠它反查域名 | 分流准确，但拿不到真实 IP |
-| Real-IP | 真实地址 | 应用能拿到真实 IP，但分流会变弱（只能靠 IP） |
+| Fake-IP | 一个假地址（如 `198.18.x.x`），内核靠它反查域名 | 分流准确，但应用拿不到真实 IP |
+| Real-IP | 真实地址 | 应用能拿到真实 IP，但分流变弱（只能靠 IP） |
 
-Surge 默认对走代理的域名用 Fake-IP，对 DIRECT 的域名用 Real-IP。
+Surge 默认：走代理的域名用 Fake-IP，DIRECT 的用 Real-IP。
+`always-real-ip` 里的主机名强制走 Real-IP —— 因为 NAT 类型检测（STUN）、
+时间同步（NTP）、游戏机配对**需要真实可路由地址**，给假 IP 会直接坏掉。
 
-#### 9.2 `always-real-ip` 强制某些主机名走 Real-IP
+⚠️ 它**只改变返回真实 IP 还是 Fake-IP，不改变流量的目的地** —— 不参与分流。
 
-NAT 类型检测（STUN）、时间同步（NTP）、游戏机配对，都需要真实可路由地址 ——
-给它们 Fake-IP 会直接坏掉。
+**与规则顺序的关系**：`always-real-ip` 里的主机名若没被域名规则接住，会走到
+后面的 IP 类规则 —— 而那些规则带 `no-resolve`，对未解析的主机名**跳过**，
+最终落 `FINAL → Proxy`（解析由节点远端完成，更准）。
+⚠️ 两份配置都不再为它们单开规则（2026-09-23，与 Egern 对齐）—— 结果去向与原先一致。
 
-⚠️ 再次强调：`always-real-ip` **不改变流量的目的地**。它只是让应用拿到真实 IP。
-
-#### 9.3 与规则顺序的关系
-
-`always-real-ip` 里的主机名，如果在 `[Rule]` 里没有被域名规则接住，
-就会走到后面的 IP 类规则 —— 而 IP 类规则带 `no-resolve`，对未解析的主机名**跳过**。
-
-于是它们最终落 `FINAL → Proxy`，其解析必须由节点远端完成 —— 这本身没问题
-（远端解析更准）。但**本地若需要它的地址**（NAT 检测要真实 IP），就会出问题。
-
-⚠️ **两份配置都不再为它们单开规则**（2026-09-23，与 Egern 对齐 —— Egern 侧本就没有对应规则，
-`lazy` 一并删除）。`always-real-ip` 保留不变 —— 这些主机名照旧拿到真实 IP；
-未被域名规则接住的会走到 IP 类规则（`no-resolve` 对未解析的主机名**跳过**），
-最终落 `FINAL → Proxy`，解析由节点远端完成（远端解析更准）——
-**结果去向与原先三条规则一致**（同为代理链），差别只在不再单独占一节。
-
-### 10 · `hijack-dns` 的边界
+#### 10 · `hijack-dns` 的边界
 
 #### 10.1 能拦什么
 
@@ -493,7 +481,7 @@ NAT 类型检测（STUN）、时间同步（NTP）、游戏机配对，都需要
 > 是无限的，列举永远不可能「列全」）。现在的判据是「还有多少**已知的**知名境外
 > 解析器没被覆盖」，且只报 LOW。
 
-### 11 · 规则集与刷新
+#### 11 · 规则集与刷新
 
 #### 11.1 引用清单
 
@@ -569,7 +557,7 @@ Surge 这边指向**字面量 `REJECT`** 而不是 `AD` 组，理由见 §13.3�
 
 见 §12。
 
-### 12 · `no-resolve` 的双刃
+#### 12 · `no-resolve` 的双刃
 
 这是全项目最需要注意的一处，也是 [`dns.md`](../dns.md)
 整篇复盘的由来。
@@ -619,7 +607,7 @@ GEOIP,CN,DIRECT,no-resolve    # 对未解析的主机名直接跳过
 `qq.com` / `taobao.com` / `miui.com` / `bilibili.com` / `jd.com` …
 （见脚本里的注释：「只有 `.cn` 后缀能直连的配置是**假通过**」）。
 
-### 13 · `[Proxy Group]`：组结构与两处「不能用组」的地方
+#### 13 · `[Proxy Group]`：组结构与两处「不能用组」的地方
 
 #### 13.1 两版的组结构
 
@@ -729,7 +717,7 @@ AD      = select, REJECT, icon-url=…/AdBlock.png
 Surge 的组名 / 节点名引用**不区分大小写地可解析**，但 `check_surge_dns.py`
 的 `check_7` 会同时按原名与全小写匹配，避免把 `Proxy` 与 `proxy` 判成两个东西。
 
-### 14 · `[Rule]`：两版规则顺序
+#### 14 · `[Rule]`：两版规则顺序
 
 `[Rule]` 是**有序的** —— 自上而下匹配，**第一条命中即决定去向**。
 
@@ -842,7 +830,7 @@ IP 类规则需要有已解析的地址。放在所有域名规则之后，使�
 > 后者多一层间接，换来的是**面板上可手动改道**。见
 > `docs/11` §5（原文档已随仓库精简移除）。
 
-### 15 · 审计体系
+#### 15 · 审计体系
 
 #### 15.1 五个脚本 + 两个测试
 
@@ -911,7 +899,7 @@ IP 类规则需要有已解析的地址。放在所有域名规则之后，使�
 审计脚本只覆盖**静态可判定**的部分。拦截效果、误杀、节点可用性必须实测。
 这是 Egern 项目连续 5 次「脚本全绿、实测仍有问题」换来的结论。
 
-### 16 · 已知取舍
+#### 16 · 已知取舍
 
 #### 16.1 `proxy-test-url` 保持境外端点（性能取向）
 
@@ -981,7 +969,7 @@ IP 类规则需要有已解析的地址。放在所有域名规则之后，使�
 两者都**不做**「分流兜底的境内 / 境外切分」。国内直连靠 `direct.txt` + `GEOIP,CN`
 正面覆盖，不靠兜底。
 
-### 17 · FAQ
+#### 17 · FAQ
 
 **Q：我照抄了，但国内网站慢 / 打不开。**
 
@@ -1020,7 +1008,7 @@ Surge iOS 版不支持本地文件配置，需要把 profile 内容托管到一�
 （Gist / 自己仓库），再用 URL 导入。`icons/` 里的图标地址已是绝对 URL，
 不依赖本地路径。
 
-### 18 · 维护者须知
+#### 18 · 维护者须知
 
 #### 18.1 改动前必须知道的三条
 
@@ -1074,7 +1062,7 @@ CI（根 `.github/workflows/ci.yml`）在 push / PR 自动跑同一组检查；�
 > 对两份配置都适用** —— 分流版只是在 `[Proxy Group]` 与 `[Rule]` 上更细。
 > 分流版专属的设计约束（`flatten` 的对应写法、Smart 组不能嵌套组、地区关键词双份）
 
-### 0 · 结构总览
+#### 0 · 结构总览
 
 ```
 [General]       全局：加密 DNS / IPv6 / GeoIP / 测试端点 / 安全开关
@@ -1087,7 +1075,7 @@ CI（根 `.github/workflows/ci.yml`）在 push / PR 自动跑同一组检查；�
 
 **顺序有语义**：`[Rule]` 自上而下匹配，第一条命中即决定去向。
 
-### 1 · `[General]`
+#### 1 · `[General]`
 
 #### 1.1 DNS 段（防泄露本体）
 
@@ -1265,7 +1253,7 @@ always-real-ip = *.lan, *.local, *.localdomain, *.home.arpa, *.srv.nintendo.net,
 而那些规则带 `no-resolve`，对未解析的主机名**跳过**。所以需要在 `[Rule]` 里
 用 `DOMAIN-SUFFIX` 先接住（见 §3.4）。
 
-### 2 · `[Proxy]`
+#### 2 · `[Proxy]`
 
 ```
 ```
@@ -1333,7 +1321,7 @@ AdBlock = reject
 ⚠️ 但 `pre-matching` 的规则**建议直接写字面量内置名** —— 别名的解析链路更长，
 字面量保证能过校验。
 
-### 3 · `[Proxy Group]`
+#### 3 · `[Proxy Group]`
 
 ```
 Airport = select, policy-path=https://sub.example.com/api/v1/client/subscribe?token=REPLACE_WITH_YOUR_TOKEN, update-interval=86400, hidden=true, icon-url=…/Airport.png
@@ -1385,7 +1373,7 @@ DIRECT**（组被切走 / 成员动态变化），Surge 无法保证"一定拦�
 **职责边界**：改默认拦截行为要改规则那一行；想让 `AD` 接管开关，把策略改成
 `AD` 并**一并去掉 `pre-matching`**（这是明确的取舍）。
 
-### 4 · `[Rule]`
+#### 4 · `[Rule]`
 
 ```
 RULE-SET,<surge-direct.list>,DIRECT
@@ -1479,7 +1467,7 @@ RULE-SET,https://raw.githubusercontent.com/Repcz/Tool/X/Surge/Rules/AI.list,AI,�
                                                       ^^^^^^^ 分支名（X = 该仓主分支）
 ```
 
-### 5 · `[Host]`
+#### 5 · `[Host]`
 
 ```
 localhost = server:system
@@ -1491,7 +1479,7 @@ localhost = server:system
 `localhost` 内部就能解析；`*.lan` 已被 `exclude-simple-hostnames` + LAN 规则覆盖，
 再映射一遍是冗余的 —— 但显式写入无害，且让意图清楚。
 
-### 6 · `[URL Rewrite]`
+#### 6 · `[URL Rewrite]`
 
 ```
 ^https?://(www\.)?g\.cn https://www.google.com 302
@@ -1500,7 +1488,7 @@ localhost = server:system
 
 可选段，与防泄露无关，纯便利。不需要可整段删掉。
 
-### 7 · 交付前自检清单
+#### 7 · 交付前自检清单
 
 ```
 [ ] dns-server 无 system、无主机名、≥2 个国内解析器

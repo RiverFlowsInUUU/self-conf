@@ -30,7 +30,7 @@
 > [17 · FAQ](#17--faq) ·
 > [18 · 维护者须知](#18--维护者须知)
 
-### 1 · 文件结构与两种交付形态
+#### 1 · 文件结构与两种交付形态
 
 ```
 self-conf/                                    # 三内核整合仓
@@ -109,7 +109,7 @@ self-conf/                                    # 三内核整合仓
 > `my_clash.js` 为「22 组 / 25 份 / 27 条」、`my_clash_lazy.js` 为「3 组 / 10 份（6 MRS + 4 yaml）/ 11 条」，
 > 均由 `check_header_numbers.py` 与脚本实际输出对拍守着 —— 见 §18.4。
 
-### 2 · 两种形态必须逐位一致
+#### 2 · 两种形态必须逐位一致
 
 #### 2.1 为什么需要这条判据
 
@@ -169,7 +169,7 @@ self-conf/                                    # 三内核整合仓
 两套判据都跳过注释 / 键序 / 缩进 / 引号风格 —— YAML 解析后比对象，
 所以「改了个引号」不会被判负，「改了个值」才会。
 
-### 3 · 与 Surge / Egern 的机制差异
+#### 3 · 与 Surge / Egern 的机制差异
 
 三内核共用 `rules/` 与 `icons/`，但机制差异决定了**不能互相照搬写法**。
 完整对照见 [`rulesets.md`](../rulesets.md)（Surge ↔ Egern），
@@ -208,7 +208,7 @@ self-conf/                                    # 三内核整合仓
 > 不是 `proxy-groups` 里的一个组。Surge / Egern 侧它是**隐藏的策略组**。
 > 把它当成「组」写进 `proxies` 会变成悬空引用（门禁 ① 会拦）。
 
-### 4 · 顶层键与 IPv6 双写
+#### 4 · 顶层键与 IPv6 双写
 
 #### 4.1 顶层键清单
 
@@ -259,7 +259,7 @@ if dns.get("ipv6") is not False:    errs.append("dns.ipv6 未显式关闭")
 > 节点 `server` 写 IP 字面量 ⇒ 不产生「解析节点域名」这一次查询（出口 ③，见
 > [`clash.md`](../profiles/clash.md) §2.3）。
 
-### 5 · 节点来源：`proxies` · `proxy-providers`
+#### 5 · 节点来源：`proxies` · `proxy-providers`
 
 #### 5.1 `proxy-providers`：订阅槽位
 
@@ -310,7 +310,7 @@ proxy-providers:
 > 但另两个内核不认识。整合时给它加了白名单。
 > ⇒ 这类「各内核的常识不同」是合并必须处理的，不是误报。
 
-### 6 · 节点入组的三件套：`use` / `include-all` / `include-all-proxies`
+#### 6 · 节点入组的三件套：`use` / `include-all` / `include-all-proxies`
 
 这是 mihomo 最容易写错的一组键，三者**不是别名**：
 
@@ -378,7 +378,7 @@ allNodes[ALL_KEY] = true;
 > 信息节点不可用，若不排除会进入 `url-test` 测速池、污染择优结果。
 > 实测（含信息节点的模拟订阅）：3 个信息节点全部被排除。
 
-### 7 · Smart 三档倍率 fallback
+#### 7 · Smart 三档倍率 fallback
 
 > 🧠 这是**模板专属**结构，脚本侧没有。分流版才有（`lazy` 的 `Proxy` 是单组 `url-test`）。
 
@@ -450,7 +450,7 @@ High Mult. : '^(?=.*(?:^|[^\d.])([1-9]\d*(?:\.\d+)?\s*(?:倍率|倍|x|X|\*)))((?
 ⇒ `Smart` 用 `fallback` 是刻意的：**三档之间有明确优先级（省钱优先），不该按延迟打断这个顺序**；
 档内才是 `url-test` 择优。
 
-### 8 · 策略组全表与 `filter`
+#### 8 · 策略组全表与 `filter`
 
 #### 8.1 分流版 25 组
 
@@ -527,7 +527,7 @@ AD   : select,   proxies: [REJECT]                                 # 单成员�
 `Airport` 在 mihomo 侧是 `proxy-providers` 里的槽位，本来就不是一个组，
 所以**没有** Surge / Egern 侧那个 `hidden=true` 的订阅组。
 
-### 9 · rule-providers：三种 format × 三种 behavior
+#### 9 · rule-providers：三种 format × 三种 behavior
 
 Surge / Egern 只有一种规则集载体（`.list`，URL 直接写在规则行里）。
 mihomo 要**先声明再引用**，声明时有两个关键字段：
@@ -614,7 +614,7 @@ rule-providers:
 > **懒人版一直挂着死链没人察觉** —— 因为当时没有 CI 定期问「这个 URL 还活着吗」。
 > ⇒ `skill/tests/clash/check_remote_urls.py` 就是那次之后加的（慢，按需跑）。
 
-### 10 · 规则集三级选型与自托管清单
+#### 10 · 规则集三级选型与自托管清单
 
 #### 10.1 三级优先
 
@@ -683,7 +683,7 @@ python skill/scripts/clash/build_rules.py --check   # CI 用：过期即判负
 > 📌 脚本里也保留这条内联（注释写明：上游的 Clash 版清单也只有这一条，
 > 与硬编码等效且无增益，挂远程反而多一次拉取）。
 
-### 11 · `rules`：两版顺序与排序约束
+#### 11 · `rules`：两版顺序与排序约束
 
 `rules` 是**有序的** —— 自上而下匹配，**第一条命中即决定去向**。
 
@@ -761,7 +761,7 @@ python skill/scripts/clash/build_rules.py --check   # CI 用：过期即判负
 
 ⇒ 这是「**因规则集包含关系而前移**」，与 `music.youtube.com` 同性质。
 
-### 12 · `no-resolve` 在 mihomo 侧的落点
+#### 12 · `no-resolve` 在 mihomo 侧的落点
 
 #### 12.1 同一条原则，三个内核落点不同
 
@@ -802,7 +802,7 @@ python skill/scripts/clash/build_rules.py --check   # CI 用：过期即判负
 2. **`lazy.yaml` 与 `docs/01` 里的注释写的是「两条 GEOIP **不带** `no-resolve`」，
    与当前配置（两条**都带**）相反** —— 注释随一次改动过期了，见 §18.4。
 
-### 13 · `dns` 段：五个解析器键
+#### 13 · `dns` 段：五个解析器键
 
 mihomo 的解析器不是一个，而是**各管一段路**。混用会让「本不该走代理的域名」
 或「本不该在本机解析的域名」走错路。
@@ -871,7 +871,7 @@ fallback-filter:
 > ⚠️ `listen` 是 `check_script_sync.py` 里唯一的 DNS 豁免键（`SKIP_DNS_KEYS`）：
 > 脚本整体替换 `dns` 时**不写**这个键，否则可能与客户端自身 DNS 端口冲突。
 
-### 14 · 双层广告拦截的两个必要条件
+#### 14 · 双层广告拦截的两个必要条件
 
 这是本仓**最容易静默失效**的一处 —— 缺一条就不生效，且**不报错**。
 
@@ -958,7 +958,7 @@ if cn_idx and ads_idx and min(ads_idx) > min(cn_idx):
 > ⚠️ 脚本注释写明**不设 `PASS`** —— `PASS` 语义为「绕过代理直连」，
 > 与「拦截 / 放行」二选一的口径不符，易误操作。
 
-### 15 · `fake-ip-filter` 的通配语义
+#### 15 · `fake-ip-filter` 的通配语义
 
 #### 15.1 17 条：15 条功能域 + 2 条广告集
 
@@ -1014,7 +1014,7 @@ Surge 的 `always-real-ip` 与 mihomo 的 `fake-ip-filter` 是**同一件事的�
 ⇒ mihomo 侧把「广告集跳过 fake-ip」也挂进了同一个键，这是 Surge 做不到的
 （Surge 必须靠 `pre-matching` 在规则层拦）。
 
-### 16 · 已知取舍
+#### 16 · 已知取舍
 
 #### 16.1 一份配置两种交付形态，靠对拍兜底
 
@@ -1074,7 +1074,7 @@ mihomo 自研的 IP 协议栈（可选 `system` / `gvisor` / `mixed` / `mips`）
 见 §10.3。mihomo 侧钉一天，Surge / Egern 侧钉一周。
 **不强行对齐** —— 两内核的键语义与缺省值都不同，对齐只是徒增困惑。
 
-### 17 · FAQ
+#### 17 · FAQ
 
 **Q：导入后所有走代理的流量都不通。**
 
@@ -1133,7 +1133,7 @@ Surge / Egern 侧的 secrets 扫描不认识它，整合时加了白名单（§5
 里面有 7 份首尾相接的完整配置（无 `---` 分隔、无注释），是生成/拼接残留，
 最后一份才是当前版。详见 §18.1 —— 这是个待清理的坑，不是设计。
 
-### 18 · 维护者须知
+#### 18 · 维护者须知
 
 #### 18.1 改动前必须知道的四条
 
@@ -1151,7 +1151,6 @@ Surge / Egern 侧的 secrets 扫描不认识它，整合时加了白名单（§5
 | `my_clash.js` 头注 | ~~20 / 20 / 26~~ → **22 / 25 / 27** | 22 / 25 / 27 | ✅ 已更正 |
 | `my_clash_lazy.js` 头注 | ~~5 MRS + 5 yaml~~ → **6 MRS + 4 yaml** | 6 mrs + 4 yaml | ✅ 已更正 |
 | `lazy.yaml` 规则注释 | 「两条 GEOIP **不带** `no-resolve`」 | 两条**都带** | 注释过期 |
-| `override/README.md` 表格 | ~~20 份（13+4+3）~~ → **25 份（15+4+1+5）** | 25 份 | ✅ 已更正 |
 | 分流版 vs 懒人版 | `nameserver-policy` 第三个键 `rule-set:private,cn` vs `geosite:private,cn` | 两版写法不同 | 见 §14.4 |
 | 分流版位 26 | `geoip-cn` **不带** `no-resolve`；懒人版位 10 **带** | 两版不同 | 见 §12.3 |
 
@@ -1222,7 +1221,6 @@ python skill/tests/clash/check_secrets.py        # 占位符纪律
 
 相关：[`rulesets.md`](../rulesets.md) ·
 [`dns.md`](../dns.md) ·
-[`../../../clash/override/README.md`](../../../clash/override/README.md) ·
 [`rulesets.md`](../rulesets.md) ·
 [`clash.md`](../profiles/clash.md) ·
 [`../../SKILL.md`](../../SKILL.md)
@@ -1246,7 +1244,7 @@ python skill/tests/clash/check_secrets.py        # 占位符纪律
 > [`ops.md`](../ops.md)（泄露面定位）·
 > [`pitfalls.md`](../pitfalls.md)（踩过的坑）
 
-### 1 · 结构总览与顺序语义
+#### 1 · 结构总览与顺序语义
 
 ```
 ipv6: false                  # ① 顶层开关（与 dns.ipv6 成对，见 §3.6）
@@ -1263,7 +1261,7 @@ tun:                         # 流量接管 + :53 劫持（见下）
 ⚠️ 本仓的生成顺序由 `skill/scripts/clash/build_profiles.py` 固定（见该脚本的 `order`），
 手工调整 YAML 顶层键顺序会在下次重新生成时被覆盖 —— 想改顺序改脚本，不要改文件。
 
-### 2 · `tun` 段：流量接管与 `:53` 劫持
+#### 2 · `tun` 段：流量接管与 `:53` 劫持
 
 > ⚠️ **本仓配置不带 `tun` 段** —— 静态 profile 与覆写脚本输出都不带。
 >
@@ -1332,7 +1330,7 @@ tun:
 
 删掉 tun 实测会报 4 处并判负。
 
-### 3 · `dns` 段：四个键各管一段路
+#### 3 · `dns` 段：四个键各管一段路
 
 mihomo 的 dns 段比 Surge / Egern 分得细，**四个键不要混用**：
 
@@ -1398,7 +1396,7 @@ dns:
 后果是双栈站点优先走 IPv6、绕过 TUN，出口 IP 与节点不符
 （表现为站点测到与节点所在地不同的 IP）。
 
-### 4 · `default-nameserver`：引导解析器
+#### 4 · `default-nameserver`：引导解析器
 
 ```yaml
 default-nameserver:
@@ -1411,9 +1409,8 @@ default-nameserver:
 
 本仓其余端点都写成 DoH URL 或 IP 字面量，引导需求只有极少数条目。
 
-### 5 · `nameserver` / `fallback`：主解析
+#### 5 · `nameserver` / `fallback`：主解析
 
-### 5 · `nameserver` / `fallback`：主解析
 
 ```yaml
 nameserver:
@@ -1435,9 +1432,8 @@ nameserver:
 `fallback` 同理，本仓设为与 `nameserver` 相同的两个端点，
 配 `fallback-filter.geoip: true`。
 
-### 6 · `nameserver-policy`：按域换解析器
+#### 6 · `nameserver-policy`：按域换解析器
 
-### 6 · `nameserver-policy`：按域换解析器
 
 ```yaml
 nameserver-policy:
@@ -1465,7 +1461,7 @@ nameserver-policy:
 拆成两条后语义明确，且两版统一用 `rule-set:` 前缀
 （本仓规则集都是 rule-provider，`geosite:` 无对应）。
 
-### 7 · `fake-ip-filter`：谁必须跳过假 IP
+#### 7 · `fake-ip-filter`：谁必须跳过假 IP
 
 ```yaml
 fake-ip-filter:
@@ -1492,7 +1488,7 @@ fake-ip-filter:
 
 **这类东西拿到假 IP 会直接失效**（NTP 对不上、游戏机连不上、联网探测误判离线）。
 
-### 8 · 广告拦截的两个必要条件
+#### 8 · 广告拦截的两个必要条件
 
 DNS 层拦截比规则层早（连接根本建立不起来），但要**两个条件同时满足**：
 
@@ -1507,7 +1503,7 @@ DNS 层拦截比规则层早（连接根本建立不起来），但要**两个�
 
 规则层 `AD` 组保留作兜底 —— DNS 拦截覆盖不到 IP 直连、DoH/DoT 与客户端缓存命中。
 
-### 9 · 规则层：顺序铁律与 `no-resolve`
+#### 9 · 规则层：顺序铁律与 `no-resolve`
 
 #### 9.1 顺序铁律
 
@@ -1542,7 +1538,7 @@ case "RULE-SET":
 > 「两条 GEOIP 都不带 no-resolve」，与懒人版实际写法矛盾 —— 已统一。
 
 
-### 10 · 订阅槽位：导入前必改的一处
+#### 10 · 订阅槽位：导入前必改的一处
 
 ```yaml
 proxy-providers:
@@ -1557,7 +1553,7 @@ proxy-providers:
 节点来源：各策略组用 `include-all` 引入（proxies + providers），
 不再需要手工列节点。`proxies` 段为空。
 
-### 11 · 逐项验证：用哪个脚本
+#### 11 · 逐项验证：用哪个脚本
 
 | 加固项 | 用什么验证 |
 |:--|:--|
@@ -1571,9 +1567,9 @@ proxy-providers:
 | 无真实凭据 | `python skill/tests/clash/check_secrets.py` |
 | 不引用外部仓库资源 | `python skill/tests/check_selfcontained.py` |
 | 生成物未过期 | `python skill/scripts/clash/build_rules.py --check`<br>`python skill/scripts/clash/build_profiles.py --check` |
-| 全跑 | `python skill/tests/verify_all.py`（43 道） |
+| 全跑 | `python skill/tests/verify_all.py`（全套闸门） |
 
-### 12 · FAQ
+#### 12 · FAQ
 
 **Q：`dns-hijack` 只写 `any:53` 够吗？**
 A：按官方语义它默认收 UDP:53。要收 TCP:53 需再加 `tcp://any:53`。
@@ -1597,7 +1593,7 @@ A：`python skill/scripts/clash/build_profiles.py` 重新生成两份 profile + 
 再跑 `verify_all.py`。不要手工改 profile —— 上次手工操作把 routing.yaml
 纵向堆了 7 份。
 
-### 13 · 维护者须知
+#### 13 · 维护者须知
 
 - **改配置改脚本**，不要手工改 `profiles/*.yaml` —— 它们由 `build_profiles.py` 生成，
   手工改会在下次生成时被覆盖（而追加写会堆叠）
@@ -1621,7 +1617,7 @@ A：`python skill/scripts/clash/build_profiles.py` 重新生成两份 profile + 
 > 当前仓库不是把三份配置揉成一份“万能配置”，而是把它们放在同一个验证框架里：
 > **产品目标尽量一致，内核语义允许不同，共享资产只保留一份。**
 
-### 1 · 三层分支模型
+#### 1 · 三层分支模型
 
 本仓的“分支”不是 Git branch，而是三个正交维度。先分清维度，才能避免复制出一堆
 名称相近、职责重叠、无人维护的文件。
@@ -1672,7 +1668,7 @@ self-conf/
 
 **判据**：能由旧配置升级得到的是“版本”；服务不同用户任务的才是“产品线”。
 
-### 2 · 三个内核怎么选
+#### 2 · 三个内核怎么选
 
 #### 2.1 定位总表
 
@@ -1706,7 +1702,7 @@ self-conf/
 跨内核移植前先读 [`rulesets.md`](../rulesets.md)。
 “目标一致”只允许复用验收结果，不允许复用未经翻译的键。
 
-### 3 · 两条产品线：懒人版与分流版
+#### 3 · 两条产品线：懒人版与分流版
 
 #### 3.1 当前规模
 
@@ -1768,7 +1764,7 @@ self-conf/
 - 国内域名直连集与 IP 类 `no-resolve` / `no_resolve` 成对考虑；
 - 完整版与 `.min` 版行为一致。
 
-### 4 · mihomo 的第三种形态：覆写脚本
+#### 4 · mihomo 的第三种形态：覆写脚本
 
 Surge / Egern 各有“完整版 + `.min`”两种文件表现；mihomo 在此之外多一层**运行时覆写**：
 
@@ -1811,7 +1807,7 @@ PyYAML 只取最后一份，门禁看似全绿，真实文件却已畸形。**�
 `check_script_sync.py` 继续对拍规则、规则集 URL、组成员、DNS 与 IPv6；
 三档倍率组和 `dns.listen` 是明示白名单，不算漂移。
 
-### 5 · 选择与切换流程
+#### 5 · 选择与切换流程
 
 #### 5.1 决策树
 
@@ -1850,7 +1846,7 @@ PyYAML 只取最后一份，门禁看似全绿，真实文件却已畸形。**�
 - 切换后比较最终组数 / 规则数。分流版 25 ↔ 22 的差值应只来自倍率三档；
 - 若 DNS、规则顺序或规则集 URL 不同，不是正常形态差异，应由 `check_script_sync.py` 判负。
 
-### 6 · 各形态取舍总表
+#### 6 · 各形态取舍总表
 
 | 形态 | 控制粒度 | 节点接入 | 维护成本 | 主要优点 | 主要代价 |
 |:-----|:---------|:---------|:---------|:---------|:---------|
@@ -1863,7 +1859,7 @@ PyYAML 只取最后一份，门禁看似全绿，真实文件却已畸形。**�
 | mihomo 懒人脚本 | 低 | 复用订阅节点 | 中 | 不改订阅即可套规则；与静态版同构 | 依赖客户端覆写能力 |
 | mihomo 分流脚本 | 高 | 复用订阅节点 | 高 | 22 组 / 27 规则，适合动态订阅 | 无静态三档倍率；最终结果需执行后审计 |
 
-### 7 · 共享什么，不共享什么
+#### 7 · 共享什么，不共享什么
 
 #### 7.1 共享资产是单一真源
 
@@ -1891,7 +1887,7 @@ PyYAML 只取最后一份，门禁看似全绿，真实文件却已畸形。**�
 共享的是**目标与测试意图**，不是实现文本。例如“三内核都要关闭 IPv6 绕行”是共享目标，
 但具体键数量与落点仍由各内核门禁负责。
 
-### 8 · 新增一个变体要改什么
+#### 8 · 新增一个变体要改什么
 
 先回答：它是否服务一个现有两线都无法覆盖的稳定用户任务？若只是“同配置换一套组名”、
 “少几条注释”或“一次试验”，不要新增产品线。
@@ -1913,7 +1909,7 @@ PyYAML 只取最后一份，门禁看似全绿，真实文件却已畸形。**�
 
 **能被现有总入口漏掉的新文件，不算完成接入。**
 
-### 9 · 新增一个内核要改什么
+#### 9 · 新增一个内核要改什么
 
 新增内核不是“再放一个配置文件”，而是新增一条可独立维护的纵向切片。
 
@@ -1938,7 +1934,7 @@ PyYAML 只取最后一份，门禁看似全绿，真实文件却已畸形。**�
 另外要检查新内核的保留地址常识。mihomo 的 fake-ip 保留段曾被 Surge / Egern 的 secrets 判据
 当成真实节点地址；正确做法是用规范依据增加**窄白名单**，不是关闭 IPv4 扫描。
 
-### 10 · 本仓的定位与纪律
+#### 10 · 本仓的定位与纪律
 
 三个内核在本仓是**并列关系**，不是主次关系。各自保留实现逻辑与语法，
 共享的只有 `icons/` 与 `rules/` 的内容。
@@ -1953,7 +1949,7 @@ PyYAML 只取最后一份，门禁看似全绿，真实文件却已畸形。**�
 本仓可以做结构性调整（统一图标 URL、改生成链、改判据形态），代价是结论需要额外证据支撑 —— 见下一节。
 
 
-### 11 · 改动何时算稳定（验收清单）
+#### 11 · 改动何时算稳定（验收清单）
 
 「跑通一次」不等于稳定。建议同时满足以下条件：
 
@@ -1970,7 +1966,7 @@ PyYAML 只取最后一份，门禁看似全绿，真实文件却已畸形。**�
 涉及多个内核时，各内核独立验收（各自的审计器跑一遍），而不是「一侧过了就算过」。
 共享资产仍要指定唯一真源，不要重新制造双份手工维护。
 
-### 12 · FAQ
+#### 12 · FAQ
 
 **Q：我同时导入懒人版和分流版，按需切换可以吗？**
 
@@ -2000,7 +1996,7 @@ Surge / Egern 直接消费 `.list`；mihomo 消费生成的 `.yaml`。因此只�
 不能只看“兼容”二字。至少核对 provider format、覆写 API、策略组 filter、fake-ip 与 DNS 键，
 再做真实导入。语法能解析不等于行为一致。
 
-### 13 · 维护者须知
+#### 13 · 维护者须知
 
 1. **先分类，再改文件**：内核、产品线、交付形态三层中，只改真正变化的那一层。
 2. **数字以解析结果为准**：不要用 `grep` 数 YAML，也不要相信可能过期的头注；生成器输出才是当前规模。
@@ -2044,7 +2040,7 @@ Surge / Egern 直接消费 `.list`；mihomo 消费生成的 `.yaml`。因此只�
 
 ---
 
-### 1 · 先定义「泄露」
+#### 1 · 先定义「泄露」
 
 本文所说的 DNS 泄露，**不是**「请求加密了没有」，也不是「权威服务器知道你是谁」。定义收紧到一条：
 
@@ -2055,7 +2051,7 @@ Surge / Egern 直接消费 `.list`；mihomo 消费生成的 `.yaml`。因此只�
 
 ---
 
-### 2 · 明文查询从哪来：三条出口
+#### 2 · 明文查询从哪来：三条出口
 
 mihomo 的 DNS 是**内核内建**型：解析器在 `dns` 段指定，查询入口在 `tun` 段收口。明文 `UDP:53` 的出口有三条。
 
@@ -2114,7 +2110,7 @@ fake-ip-range: 198.18.0.1/16
 
 ---
 
-### 3 · `dns` 段逐键
+#### 3 · `dns` 段逐键
 
 | 键 | 值 | 作用 |
 |:--|:--|:--|
@@ -2184,7 +2180,7 @@ if "respect-rules" is turned on, "proxy-server-nameserver" cannot be empty
 
 ---
 
-### 4 · `tun` 段：收口装置
+#### 4 · `tun` 段：收口装置
 
 | 键 | 值 | 作用 |
 |:--|:--|:--|
@@ -2199,7 +2195,7 @@ if "respect-rules" is turned on, "proxy-server-nameserver" cannot be empty
 
 ---
 
-### 5 · 明文泄露面实测
+#### 5 · 明文泄露面实测
 
 **方法**：`default-nameserver` 是本配置里唯一还会走明文 `UDP:53` 的键（见 §6）。把它顶到一个本机 DNS sink 上（`127.0.0.1`，记录每个查询的名字与类型）再跑真实解析 —— 内核每一次明文引导都会落到 sink，明文泄露面就变成一份**可枚举的域名清单**。全程 TUN 关闭、只监听回环地址，明文查询不出网。
 
@@ -2223,7 +2219,7 @@ if "respect-rules" is turned on, "proxy-server-nameserver" cannot be empty
 
 ---
 
-### 6 · 已知代价与取舍
+#### 6 · 已知代价与取舍
 
 | 项 | 代价 | 为什么接受 |
 |:--|:--|:--|
@@ -2245,7 +2241,7 @@ if "respect-rules" is turned on, "proxy-server-nameserver" cannot be empty
 >
 > 首页只讲「能实现怎样的分流」。这一页是组件清单：用了哪些规则集、各自从哪来、按什么顺序生效。
 
-### 0 · 选型原则：三级优先
+#### 0 · 选型原则：三级优先
 
 两份配置统一按这一条原则选规则集：
 
@@ -2311,7 +2307,7 @@ WeChat 换到上游活跃维护的 `.mrs`（原因见 §0.3）。
 
 > 内核实测（不是读文档）：`type: http` + `format: mrs` 加载后 `ruleCount = 30`、`behavior = Domain`、`vehicle = HTTP`。
 
-### 1 · 全部规则集
+#### 1 · 全部规则集
 
 | 规则集 | 格式 | 行为 | 去向 | 用在哪 | 来源 |
 |:-------|:-----|:-----|:-----|:--:|:-----|
@@ -2366,7 +2362,7 @@ Apple 则由 `GEOSITE,apple`（1792 条）做**全量直连**（懒人版只要�
 
 `.mrs` 是 mihomo 的规则集二进制格式（zstd 压缩，文件头 `28 b5 2f fd`）：省流量、解析更快，代价是可读性差（要看内容得先转回文本）。`behavior` 决定匹配方式 —— `classical` 走完整规则语法，`domain` 只做域名匹配。
 
-### 2 · 匹配顺序
+#### 2 · 匹配顺序
 
 自上而下，第一条命中即决定去向。懒人版 11 条、分流版 22 条。
 
@@ -2403,7 +2399,7 @@ Apple 则由 `GEOSITE,apple`（1792 条）做**全量直连**（懒人版只要�
 | ⑳–㉑ | `GEOSITE,cn` / `GEOIP,cn` | 国内 | `DIRECT` |
 | ㉒ | `MATCH` | 兜底 | `Final` |
 
-### 3 · 排序约束
+#### 3 · 排序约束
 
 1. **白名单必须排在两条广告规则之前** —— `AWAvenue-Ads` 与 `jinx-ads` 存在重叠域名，顺序颠倒会把白名单里的功能域误杀。
 2. **两条广告规则并列、同出口** —— 都指向 `AD` 组，一起切才一致（两份配置的 `AD` 组都只有一个 `REJECT` 子策略）。
@@ -2417,7 +2413,7 @@ Apple 则由 `GEOSITE,apple`（1792 条）做**全量直连**（懒人版只要�
 
 > ⚠️ 两条 `GEOIP` **不带 `no-resolve`**：走到它们的域名会多触发一次本地解析。本地解析走的是加密解析器，不产生明文，代价只是首个请求多一次解析耗时。取舍依据见 [`clash.md`](../profiles/clash.md)（`GEOIP` 行）。
 
-### 4 · 素材与许可
+#### 4 · 素材与许可
 
 | 素材 | 用途 | 来源 |
 |:-----|:-----|:-----|

@@ -3,7 +3,7 @@
 
 ## 闸门纪律 —— 怎么证明一道闸门不是摆设
 
-> 本仓 43 道闸门，唯一入口 `python skill/tests/verify_all.py`。
+> 本仓全套闸门，唯一入口 `python skill/tests/verify_all.py`。
 > **数量不是风险，「永远绿」才是** —— 一道从不判红的闸门比没有更糟。
 >
 > **三内核共通**（下面各侧不再重复）：
@@ -161,7 +161,7 @@ python skill/tests/verify_all.py
 >
 > 逐条事故复盘见 [`pitfalls.md`](./pitfalls.md)。
 
-### 1 · 环境要求
+#### 1 · 环境要求
 
 | 项 | 要求 |
 |:---|:-----|
@@ -186,7 +186,7 @@ fi
 ⚠️ 拼接路径**一律用 `/`**，不要用 `\\` —— `cygpath -w` 给的是 `C:\Users\...`（反斜杠），
 再拼 `\\check.py` 在 Linux 上会把反斜杠变成文件名的一部分 ⇒ file not found。
 
-### 2 · 命令
+#### 2 · 命令
 
 ```bash
 S=./skill/scripts/surge
@@ -232,7 +232,7 @@ python ./skill/scripts/surge/check_surge_dns.py surge/profiles/routing.conf
 
 用 `--cache-dir` 指定别处；用 `--force` 忽略缓存重下。
 
-### 3 · 退出码约定
+#### 3 · 退出码约定
 
 | 码 | 含义 |
 |:--:|:-----|
@@ -254,7 +254,7 @@ fi
 
 > **铁律：审计器的故障绝不能被计成一次成功的判负。**
 
-### 4 · 12 项判据（`check_surge_dns.py`）
+#### 4 · 12 项判据（`check_surge_dns.py`）
 
 | # | 检查 | 判负级别 | 判据细节 |
 |:-:|:-----|:--------:|:---------|
@@ -332,7 +332,7 @@ result: 0 high, 0 medium, 2 low, 12 ok, 2 waived
 
 `--quiet` 只打印最后两行。
 
-### 5 · 规则集内容判据（`audit_ruleset_content.py`）
+#### 5 · 规则集内容判据（`audit_ruleset_content.py`）
 
 对每条远程 `RULE-SET`：
 
@@ -374,7 +374,7 @@ BUILTIN_SETS = {"system", "lan", "direct", "proxy", "final", "reject",
 `URLError` / `HTTPError` / `OSError` → 计 `medium`（"结论未知"），**不判 HIGH**。
 理由：网络抖动不该被报成一个配置缺陷。
 
-### 6 · 分流覆盖判据（`audit_routing_coverage.py`）
+#### 6 · 分流覆盖判据（`audit_routing_coverage.py`）
 
 | 组 | 探针数 | 期望 |
 |:--:|:------:|:-----|
@@ -480,7 +480,7 @@ APPLE_PROBES = [
 判据仍会通过（因为 `FINAL → Proxy` 对境外探针是正确的）。
 若将来有探针因此误判，应改成显式枚举内置集合的已知内容。
 
-### 7 · 架构不变量（`check_secrets.py`）
+#### 7 · 架构不变量（`check_secrets.py`）
 
 #### ① 占位符纪律
 
@@ -544,7 +544,7 @@ DNS_KEYS = [
 ⚠️ ③-b 的两条是**独立的约束**，不是「DIRECT 在 REJECT 之前」一条。
 见 [`pitfalls.md`](./pitfalls.md) 坑 9。
 
-### 9 · 全绿 ≠ 可用
+#### 9 · 全绿 ≠ 可用
 
 审计脚本覆盖的是**静态可判定**的部分。以下必须实测：
 
@@ -565,7 +565,7 @@ DNS_KEYS = [
 
 > **何时读**：跑审计脚本前（命令与环境要求），或要改判据时。
 
-### 1 · 环境要求
+#### 1 · 环境要求
 
 | 项 | 要求 |
 |:---|:-----|
@@ -612,7 +612,7 @@ def _default_root:
 
 ⚠️ 千万别"顺手"把 CWD 优先改回 `__file__` 优先。那是已经踩过的坑（见 `SKILL.md` §7）。
 
-### 2 · 命令
+#### 2 · 命令
 
 ```bash
 python skill/tests/verify_all.py                  # 期望 exit 0
@@ -639,13 +639,13 @@ python skill/tests/check_selfcontained.py         # 整合仓自洽性
 
 | 脚本 | 扫描面 | 判据 |
 |:-----|:-------|:-----|
-| `skill/tests/check_secrets.py`（跨内核，进 43 道）| 全仓 walk 到的 `.conf` / `.yaml` / `.yml`，**跳过 `icons/`** | 禁串 `tange365.com` / `wangxinyu`；IPv4 白名单；`YAML_CRED_KEYS` 值必须占位 |
+| `skill/tests/check_secrets.py`（跨内核，进闸门）| 全仓 walk 到的 `.conf` / `.yaml` / `.yml`，**跳过 `icons/`** | 禁串 `tange365.com` / `wangxinyu`；IPv4 白名单；`YAML_CRED_KEYS` 值必须占位 |
 | `skill/tests/clash/check_secrets.py`（mihomo 版）| 全仓 walk 到的 `.js` / `.yaml` / `.yml` / `.md` / `.conf` / `.list` / `.txt` / `.json`，**跳过 `icons/` 与 `rules/` 的主机扫描** | 凭据字段非占位即报；IPv4 白名单；主机白名单；私钥头无条件报 |
 
 两者互不可替代：mihomo 版能扫 `.js`（脚本里也有订阅 URL），跨内核版带禁串黑名单
 （旧仓教训，条条有据）。**改名合并会同时丢掉两边的判据。**
 
-### 3 · 退出码约定
+#### 3 · 退出码约定
 
 全仓统一（出处：`reference/pitfalls.md` §8.2）：
 
@@ -677,7 +677,7 @@ python skill/tests/check_selfcontained.py         # 整合仓自洽性
 | `scripts/clash/build_rules.py` | 0 / 1 |
 | `check_selfcontained.py` | 0 / 1 |
 
-### 4 · 结构判据（`clash/check_structure.py`）
+#### 4 · 结构判据（`clash/check_structure.py`）
 
 扫四份 profile（`lazy.yaml` / `lazy.min.yaml` / `routing.yaml` / `routing.min.yaml`），
 **四份全过才算过**。守四类事：
@@ -790,7 +790,7 @@ if dns.get("ipv6") is not False:
 ⚠️ 四份 profile 都要改（`.min` 是同一份配置的另一种形态，见 §5）。
 **只改完整版会让 `check_min_pair.py` 立刻判负。**
 
-### 5 · 两形态对拍（`clash/check_min_pair.py`）
+#### 5 · 两形态对拍（`clash/check_min_pair.py`）
 
 #### 为什么单独要这一项
 
@@ -857,7 +857,7 @@ d = diff(a, b)
 
 ⚠️ 若差异集中在 `.dns.*`，先怀疑是**只改了完整版的 DNS 段** —— DNS 段在四份里必须完全一致。
 
-### 6 · 脚本 ↔ 静态对拍（`clash/check_script_sync.py`）
+#### 6 · 脚本 ↔ 静态对拍（`clash/check_script_sync.py`）
 
 #### 为什么单独要这一项（本仓特有，姊妹仓没有）
 
@@ -949,7 +949,7 @@ if out.get("rules") != (st.get("rules") or []):
 4. `ipv6` 漂移 ⇒ 脚本里 `config.ipv6 = false` 与静态 `ipv6: false` 对齐。
 5. 改完跑 `check_script_sync.py` 与 `check_structure.py`（后者会同时校验四份 profile）。
 
-### 7 · 远程集可达性（`clash/check_remote_urls.py`）
+#### 7 · 远程集可达性（`clash/check_remote_urls.py`）
 
 #### 为什么单独要这一项（本仓的切肤之痛）
 
@@ -1007,7 +1007,7 @@ for method in ("HEAD", "GET"):
 ⚠️ **改 URL 后必须同时跑 `check_script_sync.py`** —— 它比对两侧 `rule-providers` 的 URL 集合，
 只改一侧会立刻判负。
 
-### 8 · 生成物新鲜度（`build_rules.py`）
+#### 8 · 生成物新鲜度（`build_rules.py`）
 
 #### 为什么需要（合并项目最直接的收益）
 
@@ -1063,7 +1063,7 @@ python skill/scripts/clash/build_rules.py           # 重新生成（不是改 .
 
 ❌ **红线：不手工编辑 `rules/*.yaml`**（`SKILL.md` §8）。改内容只改 `.list`，重跑脚本。
 
-### 9 · 判别力：怎么证明门禁真的会判负
+#### 9 · 判别力：怎么证明门禁真的会判负
 
 #### 9.1 为什么"好配置通过"证明不了任何事
 
@@ -1186,14 +1186,14 @@ python skill/tests/clash/check_script_sync.py "$SB"   # 期望 0
 | `check_remote_urls.py` | ⚠️ 联网依赖，未逐个固定 | ❌ 无 |
 | `check_region_filters.py`（跨内核）| ✅ | ✅ **有**（唯一定期跑判负 fixture 的闸门）|
 
-> 📌 跨内核的 `check_region_filters.py` 是**唯一**把「判负 fixture」做进 43 道的闸门，
+> 📌 跨内核的 `check_region_filters.py` 是**唯一**把「判负 fixture」做进闸门的闸门，
 > 且它对每个判负用例断言**退出码 + 输出标记**两条。mihomo 侧**还没有对应的自动化回归** ——
 > 上表前五行的"已实测"是**本次文档编写时人工跑出来的**，不是常驻 CI 的保证。
 >
 > **已知缺口**：mihomo 侧门禁的判别力靠"人记得跑"，不是靠机器守住（见 §16.4）。
 > 一旦出现「门禁逻辑改坏、判据不再判负、现役配置仍全绿」，本仓**没有闸门会发现**。
 
-### 10 · 已知豁免项（豁免 ≠ 通过）
+#### 10 · 已知豁免项（豁免 ≠ 通过）
 
 本仓的 git 历史从整合完成起算，Release 亦从本仓发布。
 因此对依赖这两者的判据做**显式豁免**（不是静默跳过）。
@@ -1226,11 +1226,11 @@ _skip_v7 = {'SKIP_V7': '1'}
 ```
 
 直接从 `build_gates` 里**注释掉**，不是跑完跳过。理由：
-检查对象是「本仓自己的 Release 发布纪律」。✅ **已于 2026-10-08 启用**（首个 Release `v2026-10-08` 已发布），现为闸门第 22 道。
+检查对象是「本仓自己的 Release 发布纪律」。✅ **已于 2026-10-08 启用**（首个 Release `v2026-10-08` 已发布），已进入闸门。
 
 ⚠️ 这道门在姊妹仓是有效判据（需 `GITHUB_TOKEN`，缺省回退 `gh auth token`；
 都没读到、或 API 离线/限流/上游 5xx/非 JSON 时返回 **3**）。
-✅ **已于 2026-10-08 启用**（首个 Release `v2026-10-08` 发布后）—— 现为闸门第 22 道「Release 断言」，不再是豁免项。
+✅ **已于 2026-10-08 启用**（首个 Release `v2026-10-08` 发布后）—— 现为「Release 断言」闸门，不再是豁免项。
 
 #### 10.3 豁免的三条纪律
 
@@ -1239,7 +1239,7 @@ _skip_v7 = {'SKIP_V7': '1'}
 3. **豁免项要么进 `build_gates` 带 SKIP 标记、要么显式注释掉**。
    绝不允许"跑一遍然后无视结果" —— 那是静默假绿。
 
-### 12 · CI 怎么跑（`.github/workflows/ci.yml`）
+#### 12 · CI 怎么跑（`.github/workflows/ci.yml`）
 
 ```yaml
 on:
@@ -1327,30 +1327,23 @@ python skill/tests/verify_all.py --index
 CI 侧 3 视为失败（CI 带 token，读不到远端即 CI 环境异常）。这是**严格化**，不是第三套判据。
 CI 偶发 3（共享 runner IP 被限流）→ 重跑即可。
 
-### 14 · 全绿 ≠ 可用
+#### 14 · 全绿 ≠ 可用
 
-审计脚本覆盖的是**静态可判定**的部分。以下必须实测：
+同 Surge 侧 §9 —— 但 mihomo 侧**多两条必须实测的维度**：
 
 | 维度 | 为什么脚本做不到 | 怎么做 |
 |:-----|:-----------------|:-------|
 | 冷启动有无明文 `:53` | 需要抓包 | 本地 DNS sink + mihomo 内核实测 |
-| IPv6 是否真的不通 | 需要真实双栈环境 | 见 [`ops.md`](./ops.md) §6 |
-| 拦截效果 | 需要真实访问 | 打开几个广告密集的站点看 |
-| 误杀 | 需要真实访问 | `github.com` / `jsdelivr.net` / `icloud.com` 是否能开 |
-| 节点可用性 | 需要真实网络 | 面板上逐个测 |
-| NAT 类型 / 时间同步 | 需要真实设备 | 游戏机连一下 |
-| 远程规则集内容 | 脚本只看 URL 活不活 | 拉下来数（IP 条目是否带 `no-resolve`）|
+| IPv6 是否真的不通 | 需要真实双栈环境 | 见 [`ops.md`](./ops.md) 的泄露定位章 |
 
-> ⚠️ 这是本项目的核心立场：**审计通过 ≠ 配置可用。**
-> 每修好一次判据，都要假设「还存在审计器看不见的维度」。
+> ⚠️ 核心立场：**审计通过 ≠ 配置可用。** 每修好一次判据，都要假设
+> 「还存在审计器看不见的维度」。
 
----
-
-### 15 · FAQ
+#### 15 · FAQ
 
 **Q：`skill/tests/clash/check_secrets.py` 和 `skill/tests/check_secrets.py` 该跑哪个？**
 
-两个都跑 —— 43 道里进的是**跨内核版**（`skill/tests/check_secrets.py`，带禁串黑名单）。
+两个都跑 —— 进闸门的是**跨内核版**（`skill/tests/check_secrets.py`，带禁串黑名单）。
 mihomo 版（`skill/tests/clash/check_secrets.py`）覆盖 `.js`、且跳过 `rules/` 的主机扫描
 （那目录内容本身就是域名清单，扫了全是误报）。**两者判据不同，互不可替代，别合并。**
 
@@ -1403,7 +1396,7 @@ mihomo 版（`skill/tests/clash/check_secrets.py`）覆盖 `.js`、且跳过 `ru
 或本地缺 node（`check_script_sync` / `check_remote_urls` 需要）。
 其次看 3：本地允许 SKIP，CI 侧 3 视为失败（CI 带 token）。**这是有意的严格化。**
 
-### 16 · 维护者须知
+#### 16 · 维护者须知
 
 #### 16.1 改 mihomo 配置的最小闭环
 
@@ -1468,7 +1461,7 @@ python skill/tests/clash/check_remote_urls.py
 
 > **何时读**：要更新模板、了解仓库结构或门面纪律时。
 
-### 1 · 交付物清单
+#### 1 · 交付物清单
 
 ```
 self-conf/
@@ -1505,7 +1498,7 @@ self-conf/
 ⚠️ **不要把工作过程倒进产品文档。** 内部重构、仓库运维、行尾规范化 —— 使用者无感，
 不进 README。改动历史看 git log（备份 tag：`pre-cleanup-20260927`）。
 
-### 2 · README 门面纪律
+#### 2 · README 门面纪律
 
 README 是**产品介绍**：读者要知道「这东西是什么、怎么用」。已定下的规矩：
 
@@ -1527,7 +1520,7 @@ README 是**产品介绍**：读者要知道「这东西是什么、怎么用」
 
 **自查**：README 里出现「为什么…」「不算」「误标」「判据」「原写」，八成是改动记录漏出来了。
 
-### 3 · 文件组织
+#### 3 · 文件组织
 
 #### 3.1 分工关系，不是版本关系
 
@@ -1556,7 +1549,7 @@ README 是**产品介绍**：读者要知道「这东西是什么、怎么用」
 
 **能过测试的才叫一份新配置，否则只是一个改坏了的副本。**
 
-### 4 · 脱敏规则（公开模板的底线）
+#### 4 · 脱敏规则（公开模板的底线）
 
 | 字段 | 占位形式 |
 |:-----|:---------|
@@ -1587,7 +1580,7 @@ grep -rn -iE '<你的私有域名|你的密码片段|你的用户名>' . \
 > ⚠️ 不要用 `grep -rn 'github'` 这类宽泛关键词 —— 规则集 URL 全含
 > `githubusercontent`，几百条假阳性会淹没真命中。
 
-### 5 · 验证
+#### 5 · 验证
 
 CI（根 `.github/workflows/ci.yml`）在 push / PR 自动跑：占位符扫描 → 可移植性 → `.min` 对拍 →
 链接锚点 → 两侧 DNS 审计 → `.min` 漂移检查。本地同组命令见 [`SKILL.md`](../SKILL.md) §3 动线第 ⑤ 步。
@@ -1617,7 +1610,7 @@ MSYS_NO_PATHCONV=1 gh api --method POST /markdown \
 > ⚠️ 表头居中只能给单元格包 `<div align="center">`；**不能**改用列对齐 `:--:` —— 它按列生效，
 > 会把表体的长句一并居中（取向见 §2「清单类内容用列表不用表格」）。
 
-### 6 · 这个仓库最容易被改坏的地方
+#### 6 · 这个仓库最容易被改坏的地方
 
 按风险排序：
 
@@ -1686,7 +1679,7 @@ egern/profiles/routing.yaml / .min.yaml     # 分流版 · 推荐（脱敏模板
 机场订阅 URL（含 token）→ 占位；`mitm.ca_p12` + `ca_passphrase`（个人 CA 私钥）→ **注释掉**；
 机场组名/节点名 → `Airport-A` / `Node-1`；`dns.forward` 里的**节点域名** → `example-node.com`。
 
-### README 的边界：只讲产品，不讲改动过程
+#### README 的边界：只讲产品，不讲改动过程
 
 README 是**产品介绍** —— 读者要知道「这东西是什么、怎么用」。以下三类**不属于**它：
 
@@ -1707,7 +1700,7 @@ README 是**产品介绍** —— 读者要知道「这东西是什么、怎么�
 实测反例（2026-09-22）：在 README 里补「我们为什么这样归类 / 上面是分类顺序」这类说明，
 用户一句打回 —— 「readme 是产品介绍，不是自说自话的地方」。
 
-### 首页不列规则集
+#### 首页不列规则集
 
 规则集属**实现侧**：用了哪些 `.list`、从哪个仓库拉、顺序怎么排。使用者关心的是**分流结果**。
 
@@ -1742,7 +1735,7 @@ README 是**产品介绍** —— 读者要知道「这东西是什么、怎么�
 > 安全事件的正式报告通道以 [`SECURITY.md`](../../SECURITY.md) 为准；
 > 自动化命令与退出码见 [`gates.md`](./gates.md)。
 
-### 1 · 公开模板的威胁模型
+#### 1 · 公开模板的威胁模型
 
 本仓没有运行中的服务，也没有传统意义上的服务端依赖；主要风险集中在三类数据与一类供应链：
 
@@ -1759,7 +1752,7 @@ README 是**产品介绍** —— 读者要知道「这东西是什么、怎么�
 - **允许但要登记的依赖**：MetaCubeX、blackmatrix7 等第三方规则源。它们是产品设计的一部分，
   不能被伪装成本仓资产，也不能因为“允许”就跳过供应链评估。
 
-### 2 · 占位符纪律
+#### 2 · 占位符纪律
 
 #### 2.1 一条总规则
 
@@ -1818,7 +1811,7 @@ README 是**产品介绍** —— 读者要知道「这东西是什么、怎么�
 从假模板填入真实值，失败通常是“漏填，连接不上”；从真实配置反向脱敏，失败则是“漏删一个，永久公开”。
 公开仓应选择前者。
 
-### 3 · 为什么真实值推上来不可回收
+#### 3 · 为什么真实值推上来不可回收
 
 #### 3.1 删除文件不等于删除秘密
 
@@ -1848,7 +1841,7 @@ README 是**产品介绍** —— 读者要知道「这东西是什么、怎么�
 
 **历史改写是清理动作，不是恢复秘密性的证明。** 一旦公开，应按“已泄露”处理并轮换。
 
-### 4 · 自洽性纪律与 2511 处事故
+#### 4 · 自洽性纪律与 2511 处事故
 
 #### 4.1 自洽的定义
 
@@ -1893,7 +1886,7 @@ python skill/tests/check_selfcontained.py .
 边界也要写清：它按仓库名识别已知的外部仓库，不是通用的“零外链证明器”；纯注释、Markdown 与跳过目录
 不在当前扫描面。新增外部仓库、镜像域名或新文件后缀时，必须同步扩判据。
 
-### 5 · 自动化守门各自负责什么
+#### 5 · 自动化守门各自负责什么
 
 #### 5.1 两道 secrets 扫描不要混为一个
 
@@ -1941,7 +1934,7 @@ secrets 扫描发现新的主机或 IP 时，只有两种正确处理：
 
 禁止把整段地址、任意域名后缀或“所有 GitHub raw”当作绕过手段。白名单越宽，未来真实泄露越容易假绿。
 
-### 6 · CI 能证明什么、不能证明什么
+#### 6 · CI 能证明什么、不能证明什么
 
 #### 6.1 当前流水线
 
@@ -1971,7 +1964,7 @@ secrets 扫描发现新的主机或 IP 时，只有两种正确处理：
 ⇒ 二者均由 CI **强制**执行，无需人工补跑；本地既然是同一个 `verify_all.py`，
   也不用单独手敲。编号以 `python skill/tests/verify_all.py --index` 现抓为准。
 
-### 7 · Issue、日志与截图纪律
+#### 7 · Issue、日志与截图纪律
 
 #### 7.1 公开 issue 里不能贴什么
 
@@ -2008,7 +2001,7 @@ uuid: REPLACE_WITH_YOUR_UUID
 - 在本地记录文件名与行号，轮换后再提交脱敏结果；
 - 维护者在修扫描器时使用不可用的合成坏样例。
 
-### 8 · 漏洞报告与泄露处置
+#### 8 · 漏洞报告与泄露处置
 
 以下问题走 GitHub **Security → Report a vulnerability** 的私密安全通告，不发公开 issue：
 
@@ -2024,7 +2017,7 @@ uuid: REPLACE_WITH_YOUR_UUID
 
 处置优先级：轮换凭据 > 阻止继续分发 > 清理当前树与历史 > 修门禁 > 复盘。
 
-### 9 · 第三方规则集供应链
+#### 9 · 第三方规则集供应链
 
 #### 9.1 当前六类主要上游
 
@@ -2065,7 +2058,7 @@ uuid: REPLACE_WITH_YOUR_UUID
 刷新更快不是天然更安全。广告、DIRECT 与 DNS 相关清单的 blast radius 大，若没有内容门禁，
 一天刷新只是把上游错误更快送到所有客户端。
 
-### 10 · 新增上游的评估流程
+#### 10 · 新增上游的评估流程
 
 #### 10.1 准入前十问
 
@@ -2117,7 +2110,7 @@ uuid: REPLACE_WITH_YOUR_UUID
 - 与现有来源高度重复，却没有覆盖增益或故障隔离价值；
 - 无法说明失效与回滚路径。
 
-### 11 · 发布前检查单
+#### 11 · 发布前检查单
 
 #### 11.1 提交前
 
@@ -2149,7 +2142,7 @@ python skill/tests/clash/check_remote_urls.py --timeout 20
 - [ ] 用匿名 / 未登录窗口确认公开面看不到不应公开的日志或 artifact；
 - [ ] 定时任务首次运行后复查上游可达性。
 
-### 12 · FAQ
+#### 12 · FAQ
 
 **Q：把真实 token 改成失效 token 后可以留在历史里吗？**
 
@@ -2181,7 +2174,7 @@ python skill/tests/clash/check_remote_urls.py --timeout 20
 先制作最小复现：保留键与规则顺序，把所有地址、凭据、节点名和订阅换成占位符。
 若问题本身就是泄露或门禁绕过，改走私密安全通告。
 
-### 13 · 维护者须知
+#### 13 · 维护者须知
 
 1. **秘密先轮换，后清历史。** 不要把强推当成撤回能力。
 2. **占位符必须可机器识别。** 新凭据键出现时，同一 PR 扩扫描器和坏样例。

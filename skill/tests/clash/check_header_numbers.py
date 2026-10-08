@@ -73,7 +73,6 @@ SCRIPTS = ["my_clash.js", "my_clash_lazy.js"]
 SCAN = [
     "override/my_clash.js",
     "override/my_clash_lazy.js",
-    "override/README.md",
     "profiles/routing.yaml",
     "profiles/lazy.yaml",
 ]

@@ -16,7 +16,7 @@
 |:-:|:-----|:-----|
 | 1 | **固定名四件**：每侧现役只有 `routing` / `lazy` × 完整版 / `.min` 共四件，订阅地址不随版本改名 | 三侧一致，见 §6.1 |
 | 2 | **`.min` 不手工编辑**：它是"同一份配置去掉注释"，漂了肉眼看不出来 | Surge / Egern → `make_min.py`；mihomo → `build_profiles.py`（见下表） |
-| 3 | **改完跑全套闸门**：`python skill/tests/verify_all.py`（现 43 道，其中 mihomo 相关 13 道） | §6.2 动线⑤ |
+| 3 | **改完跑全套闸门**：`python skill/tests/verify_all.py`（全套闸门（含 mihomo 相关）） | §6.2 动线⑤ |
 | 4 | **不提交真实地址 / 凭据 / token** | `check_secrets.py` 两份都跑（跨内核版 + mihomo 版，见 §5.9） |
 | 5 | **改配置去适配判据，不是改判据去适配配置** | §6.8 |
 
@@ -324,7 +324,7 @@ clash/
 脚本侧 `Smart` 是单组 `fallback`，做不到这三档）。规则数、provider 数、provider URL 集合两边相同。
 懒人版则**完全同构**：脚本 3 组 / 11 条 / 10 份，与 `lazy.yaml` 逐位相同。
 
-> ℹ️ **过期文字已清理（2026-10-07）**：此前脚本头注与 `override/README.md` 表格里写着旧数字
+> ℹ️ **过期文字已清理（2026-10-07）**：此前脚本头注与覆写脚本文档里写着旧数字
 > （`my_clash.js`「20 组 / 20 份 / 26 条」、`routing.yaml`「23 / 22 / 24」、`my_clash_lazy.js`「5 MRS + 5 yaml」等），
 > 现已全部按实际值更正为 22 组 / 25 份 / 27 条（分流版）与 3 组 / 10 份 / 11 条（懒人版）。
 > **判据以配置文件为准** —— 头注数字由 `check_header_numbers.py` 与脚本实际输出对拍。
@@ -336,7 +336,7 @@ clash/
 ② 重生成 profile： python skill/scripts/clash/build_profiles.py
                   # 一次性写好 routing/lazy 的 .yaml 与 .min.yaml 四件
 ③ 若动了规则集内容：python skill/scripts/clash/build_rules.py   # rules/*.list → *.yaml
-④ 跑全套闸门：      python skill/tests/verify_all.py            # 现 43 道，含 mihomo 相关 13 道
+④ 跑全套闸门：      python skill/tests/verify_all.py            # 全套闸门，含 mihomo 相关
 ```
 
 > ⚠️ **步骤 ② 不可跳过，也不可用手工同步替代。** 脚本与静态是同一套配置的两个形态，
@@ -344,7 +344,7 @@ clash/
 > `proxy-groups` / `dns` / `ipv6`）。只改一边 ⇒ 用户遇到「照文档用脚本订阅，
 > 效果跟直接导入配置不一样」，而两边都能正常跑、都不报错 —— 只能靠对拍发现。
 >
-> ⚠️ **步骤 ② 的 `--check` 是门禁**（`build_profiles.py --check` 是 43 道之一）：
+> ⚠️ **步骤 ② 的 `--check` 是门禁**（`build_profiles.py --check` 是闸门之一）：
 > 脚本有更新而静态 profile 没重生成 ⇒ 判负。想只看看有没有漂移，跑这个。
 
 三个只在这一侧存在的环节，逐个说清：
@@ -485,7 +485,7 @@ python skill/tests/check_min_pair.py
 python skill/tests/clash/check_script_sync.py          # 需 node
 python skill/scripts/clash/build_profiles.py --check
 python skill/scripts/clash/build_rules.py --check
-python skill/tests/verify_all.py                       # 全套 43 道
+python skill/tests/verify_all.py                       # 全套闸门
 python skill/tests/clash/check_remote_urls.py          # 慢，联网，按需
 ```
 
@@ -498,7 +498,7 @@ python skill/tests/clash/check_remote_urls.py          # 慢，联网，按需
 
 | 脚本 | 扫描面 | 判据 |
 |:-----|:-------|:-----|
-| `skill/tests/check_secrets.py`（跨内核，进 43 道） | 全仓 `.conf` / `.yaml` / `.yml`，**跳过 `icons/`** | 禁串 `tange365.com` / `wangxinyu`；IPv4 白名单；`YAML_CRED_KEYS` 值必须占位 |
+| `skill/tests/check_secrets.py`（跨内核，进闸门） | 全仓 `.conf` / `.yaml` / `.yml`，**跳过 `icons/`** | 禁串 `tange365.com` / `wangxinyu`；IPv4 白名单；`YAML_CRED_KEYS` 值必须占位 |
 | `skill/tests/clash/check_secrets.py`（mihomo 版） | 全仓 **`.js`** / `.yaml` / `.md` / `.conf` / `.list` / `.txt` / `.json`，跳过 `icons/` 与 `rules/` 的主机扫描 | 凭据字段非占位即报；IPv4 白名单；主机白名单；私钥头无条件报 |
 
 两者互不可替代：mihomo 版能扫 **`.js`**（脚本里也有订阅 URL），跨内核版带禁串黑名单。
@@ -557,7 +557,7 @@ mihomo 静态 profile **由脚本生成**（`build_profiles.py`），也带 `#! 
 ④ 升版（仅当配置键有变动）：改 6 份 profile 头注的 `#! version=`（`.min` 由生成器重算继承）
    —— ⚠️ **一天一版**：当天该产品线已升过号就跳过本步、沿用同号（见 §6.1）
 ⑤ 收尾：`python skill/tests/check_secrets.py && python skill/tests/check_portability.py && python skill/tests/check_min_pair.py && python skill/tests/check_links.py .`（push 后 CI 会再跑一遍同组检查）
-   ↑ 也可一键：`python skill/tests/verify_all.py` —— 与 ci.yml 同源的 43 道闸门并行跑、出汇总表（含 DNS 审计与 releases 方案，比本行列的更全）
+   ↑ 也可一键：`python skill/tests/verify_all.py` —— 与 ci.yml 同源的全套闸门并行跑、出汇总表（含 DNS 审计与 releases 方案，比本行列的更全）
 ⑥ 发布 Release（push 之后）：`python skill/scripts/release_publish.py --apply`
    —— 说明**从 commit subject 自动汇总**，无需手写条目表。详见 §6.9
 ```
@@ -628,7 +628,7 @@ python skill/tests/check_portability.py
 
 #### 6.8.1 无 CI 兜底的工具（用了才知道，别指望 CI 替你验）
 
-以下脚本**不在 43 道闸门里**，CI 对它们**没有任何自动化兜底** —— 绿不绿都跟它们无关。
+以下脚本**不在闸门里**，CI 对它们**没有任何自动化兜底** —— 绿不绿都跟它们无关。
 它们必须**人工在本地跑**，且各有硬前置（真内核 / 真网络 / 真订阅）。
 
 | 脚本 | 为什么进不了 CI | 怎么跑 |
@@ -656,12 +656,12 @@ python skill/tests/check_portability.py
 |:-----|:---------------|
 | `weigh_ruleset.py` | 输出是条目列表与耗时读数，无判负语义 —— 排查「规则集太重」时手动跑 |
 | `probe_doh.py` | 逐端点打印响应，无总结计数；且需联网 —— 排查 DoH 端点时手动跑 |
-| `probe_dns_endpoints.py` | 有「失效端点：N / 总数」计数，**语义上可判负**，但需联网实测 10 个端点 ⇒ 网络抖动会造成假红。故**不进 43 道**，改由 CI 周任务级检查（同 check_remote_urls 的处理） |
+| `probe_dns_endpoints.py` | 有「失效端点：N / 总数」计数，**语义上可判负**，但需联网实测 10 个端点 ⇒ 网络抖动会造成假红。故**不进闸门**，改由 CI 周任务级检查（同 check_remote_urls 的处理） |
 | `profile_ruleset.py` | ✅ **已进闸门**（#17–19）|
 
 #### 6.8.3 `skill/scripts/` 是工具区，不是判据区（原始说明，保留沿革）
 
-`skill/scripts/{surge,egern,clash}/` 下的**审计 / 探测 / 生成**脚本，大多**不进 43 道**，
+`skill/scripts/{surge,egern,clash}/` 下的**审计 / 探测 / 生成**脚本，大多**不进闸门**，
 也不在 CI 里 —— 它们是**人用的分析工具**，按需手动跑（都要传 `profile` 参数，
 直接无参跑会打印 usage 并以 exit 2 结束，那不是崩溃）。
 
@@ -681,7 +681,7 @@ python skill/tests/check_portability.py
 硬套判据会得到一堆需要人工解读的"红"。保持工具定位，但**必须被看见** —— 故登记于此。
 
 📌 已被闸门调用的（不用手动跑）：`audit_routing_coverage` · `audit_ruleset_content` ·
-`audit_ruleset_noresolve` · `check_clash_dns` —— 这些**已进 43 道**。
+`audit_ruleset_noresolve` · `check_clash_dns` —— 这些**已进闸门**。
 
 📌 **本仓的 CI 不受此影响**：`.github/workflows/ci.yml` 已固定 `fetch-depth: 0`（该处注释亦写明"shallow clone 会把所有日期退化成 push 当天"）。这条纪律管的是**本地与人工审查**场景。
 
@@ -1041,7 +1041,7 @@ python skill/tests/clash/check_structure.py
 | 徽章承诺的组数 / 规则数与实际一致 | `check_badges.py` |
 | 线上 Release 与当前版本一致 | `check_releases.py`（R1–R5） |
 
-**没有豁免项。** 43 道闸门全部对现役判，不存在「已登记的跳过」。
+**没有豁免项。** 全套闸门全部对现役判，不存在「已登记的跳过」。
 （改革前有 `SKIP_V7` / `STRICT_ARCHIVE` 两个逃生门 —— 它们只服务于已删除的归档机制，
 随归档一并移除。现在 verify_all 在 CI 里对任何 SKIP 一律判失败。）
 
@@ -1095,7 +1095,7 @@ tag = `vYYYY-MM-DD`（发布日）。同一天重复 `--apply` 是幂等的（�
 > **何时读**：用户报「leak test 显示 China Telecom / 电信 / 联通 / 移动」，
 > 或者**只是感觉**有泄露但说不清哪里漏。
 
-### 0 · 先分清三类"泄露"
+#### 0 · 先分清三类"泄露"
 
 `leak test` 的结果需要**分类解读**，它们指向完全不同的修法：
 
@@ -1108,7 +1108,7 @@ tag = `vYYYY-MM-DD`（发布日）。同一天重复 `--apply` 是幂等的（�
 ⚠️ 第三类是常见误报。很多 leak test 网站会把"你从哪来"也列出来 ——
 那正是代理在工作的标志。
 
-### 1 · 抓包定位（最可靠）
+#### 1 · 抓包定位（最可靠）
 
 #### 1.1 环境
 
@@ -1168,7 +1168,7 @@ IP 192.168.1.50.51000 > 1.1.1.1.443: ...                             ← ✅ DoH
 
 只在"已经跑了一阵"的状态下抓，出口 ① 已经被掩盖了。
 
-### 2 · 不抓包的近似判断
+#### 2 · 不抓包的近似判断
 
 如果没法抓包，按这个顺序排查：
 
@@ -1225,7 +1225,7 @@ grep 'proxy-test-url\|internet-test-url' <profile>
 
 > 这一条曾是本项目的**误报来源** —— 详见 `pitfalls.md` 坑 14。
 
-### 3 · 修法对照表
+#### 3 · 修法对照表
 
 | 定位到的出口 | 修法 | 注意 |
 |:-------------|:-----|:-----|
@@ -1247,7 +1247,7 @@ python skill/scripts/surge/audit_routing_coverage.py <profile>
 
 期望国内探针全部命中 `DIRECT`。详见 [`pitfalls.md`](./pitfalls.md) 坑 1。
 
-### 4 · 验证修好了
+#### 4 · 验证修好了
 
 ```
 1. 冷启动抓包（§1.4 的 5 步）→ 应无明文 :53
@@ -1260,7 +1260,7 @@ python skill/scripts/surge/audit_routing_coverage.py <profile>
 
 ⚠️ 第 5 步的解读见 §0 —— **leak test 显示节点出口城市不是泄露**。
 
-### 5 · 边界：什么情况不该"修"
+#### 5 · 边界：什么情况不该"修"
 
 不是所有明文 `:53` 都必须消除。以下情况属**可接受的取舍**，纠结它们是浪费：
 
@@ -1339,24 +1339,9 @@ nslookup -type=A whoami.akamai.net 192.168.2.168    # 若返回 198.18.x 说明�
 > 三侧的**归并方式一致**（按「谁触发了一次明文查询」分类），但**通道清单不同**：
 > mihomo 侧多一条 IPv6 面，且引导链的键名与语义完全不同。
 
-### 1 · 先分清三类"泄露"
+<!-- Egern 侧同 Surge 侧，见上方 §0 —— 唯一差异：mihomo 侧多一类 fake-ip 假象（见下） -->
 
-`leak test` 的结果需要**分类解读**，它们指向完全不同的修法：
-
-| 现象 | 含义 | 属于本项目的范围吗 |
-|:-----|:-----|:-------------------|
-| 检测到运营商 DNS 服务器 IP | **明文 `:53` 被链路读到** | ✅ 是，本文处理 |
-| 检测到的是境外公共解析器（`8.8.8.8`） | 明文但也可能是你自己配的 | ✅ 是（面 ① 或 ②）|
-| 显示节点出口 IP 的城市 | **不是泄露** —— 是你实际走代理的证据 | ❌ 否 |
-
-⚠️ 第三类是**常见误报**。很多 leak test 网站会把"你从哪来"也列出来 ——
-那正是代理在工作的标志。
-
-⚠️ mihomo 侧还多一类**假象**：检测到 `198.18.x.x`。
-那是 **fake-ip 段**（本仓 `fake-ip-range: 198.18.0.1/16`），
-不是泄露 —— 它恰恰说明查询**被 mihomo 接住了**，只是没做真实解析。
-
-### 2 · mihomo 的 DNS 通路图
+#### 2 · mihomo 的 DNS 通路图
 
 先建立机制模型，再谈定位。mihomo 的解析器分**五层**，各管一件事：
 
@@ -1410,7 +1395,7 @@ tun:
 而且它只解析那两个 DoH 端点的域名（`dns.cloudflare.com` / `dns.google`）。
 这正是本仓实测过的结论 —— 见 §4.1。
 
-### 3 · 抓包定位（最可靠）
+#### 3 · 抓包定位（最可靠）
 
 #### 3.1 环境
 
@@ -1429,13 +1414,7 @@ tun:
 
 #### 3.2 抓包命令
 
-```bash
-sudo tcpdump -i en0 -n -s 0 'udp port 53 or tcp port 53' -w dns.pcap
-
-sudo tcpdump -i en0 -n 'udp port 53' | awk '{print $3, $5}'
-
-sudo tcpdump -i en0 -n 'ip6 and not port 443' | head -40
-```
+同 Surge 侧 §1.2（`tcpdump` 命令逐字相同）。
 
 #### 3.3 读结果
 
@@ -1471,7 +1450,7 @@ IP6 2001:db8::2 > 2400:3200::1.53: AAAA? www.google.com               ← ❌ �
 
 只在"已经跑了一阵"的状态下抓，面① 已经被掩盖了。
 
-### 4 · 五类泄露面 · 定位与收口
+#### 4 · 五类泄露面 · 定位与收口
 
 归并口径：**谁触发了一次明文查询**。同一类"现象"可能来自不同触发者，
 修法完全不同 —— 所以按触发者分，不按现象分。
@@ -1743,7 +1722,7 @@ curl -s https://raw.githubusercontent.com/RiverFlowsInUUU/Jinx/main/mihomo-direc
 > 姊妹仓 Surge 侧有 `check_surge_dns.py`（12 项判据）、Egern 侧有 `check_egern_dns.py`
 > —— **mihomo 侧缺这一层**。定位泄露面因此必须靠机制推导 + 抓包实测。
 
-### 5 · 不抓包的近似判断
+#### 5 · 不抓包的近似判断
 
 #### 5.1 一张核对清单（按顺序过）
 
@@ -1786,7 +1765,7 @@ mihomo 侧的健康检查与延迟测试 URL（`proxy-providers.*.health-check.u
 for s in 223.5.5.5 119.29.29.29 1.1.1.1 8.8.8.8; do nslookup www.qq.com "$s"; done
 ```
 
-### 6 · ③′ IPv6 泄露面（本仓特有，Surge / Egern 侧无对应物）
+#### 6 · ③′ IPv6 泄露面（本仓特有，Surge / Egern 侧无对应物）
 
 ⭐ **这一节是 mihomo 侧独有的。** Surge / Egern 侧的 `ipv6: false` 只影响
 "是否返回 AAAA"，它们**没有 TUN** ⇒ 不存在"绕过 TUN"这条通路。
@@ -1874,7 +1853,7 @@ if dns.get("ipv6") is not False:
 
 ⭐ **面③′ 是六个面里唯一有门禁的。** 其余五面都没有 —— 见 §4.6。
 
-### 7 · 修法对照表
+#### 7 · 修法对照表
 
 | 面 | 修法 | 注意 |
 |:---|:---|:---|
@@ -1896,7 +1875,7 @@ if dns.get("ipv6") is not False:
 ✅ 本仓 **mihomo 侧已有分流覆盖审计脚本**（闸门 #9）⇒ 第 1、2 条可先跑它；⚠️ 但它的**离线档按规则集名推演**，不读实际策略（见 §4.4.1），所以仍需实测兜底 —— 别把它当充分条件。
 这是与姊妹仓的已知差距（Surge 侧有 `audit_routing_coverage.py`，43 条判据）。
 
-### 8 · 验证修好了
+#### 8 · 验证修好了
 
 ```
 1. 冷启动抓包（§3.4 的 5 步）→ 应无业务域名的明文 :53
@@ -1906,7 +1885,7 @@ if dns.get("ipv6") is not False:
 4. python skill/tests/clash/check_script_sync.py      → exit 0
 5. python skill/scripts/clash/build_rules.py --check   → exit 0
 6. python skill/tests/clash/check_remote_urls.py      → exit 0（慢，按需）
-7. python skill/tests/verify_all.py                   → exit 0（43 道）
+7. python skill/tests/verify_all.py                   → exit 0（全套闸门）
 8. leak test 网站复测 → 不再显示运营商 DNS
 9. 实测：国内直连；游戏机 NAT 正常；IPv6 侧不再露真实地址
 ```
@@ -1914,7 +1893,7 @@ if dns.get("ipv6") is not False:
 ⚠️ 第 8 步的解读见 §1 —— **leak test 显示节点出口城市不是泄露**；
 显示 `198.18.x.x` 也不是泄露（那是 fake-ip，说明被接住了）。
 
-### 9 · 结论：五类必须全堵
+#### 9 · 结论：五类必须全堵
 
 #### 9.1 归并口径回顾
 
@@ -1958,13 +1937,13 @@ if dns.get("ipv6") is not False:
 >
 > ⇒ 上表里 ② ③ 的「✅ 收口」是**当前文件的状态**，不是**被机器守住的状态**。
 > 哪天有人把 `dns-hijack` 删掉、或把 `fallback` 改成明文解析器，
-> **43 道门禁会全绿**。
+> **全套门禁会全绿**。
 >
 > ⇒ 参照姊妹仓：Surge 侧有 `check_surge_dns.py`（12 项判据）、
 > Egern 侧有 `check_egern_dns.py` + `audit_ruleset_noresolve.py`。
 > **mihomo 侧缺这一层** —— 这是整合后最值得补的一块。
 
-### 10 · 边界：什么情况不该"修"
+#### 10 · 边界：什么情况不该"修"
 
 不是所有明文 `:53` 都必须消除。以下属**可接受的取舍**，纠结它们是浪费：
 
@@ -1982,7 +1961,7 @@ if dns.get("ipv6") is not False:
 
 ---
 
-### 11 · FAQ
+#### 11 · FAQ
 
 **Q：leak test 显示运营商 DNS，但我的 `nameserver` 全是 `https://`，怎么会漏？**
 

@@ -5,46 +5,46 @@ description: Surge / Egern / mihomo（Clash Meta）三内核代理配置模板�
 
 # self-conf 维护
 
-三内核（Surge / Egern / mihomo）配置模板仓。**配置本身是给人读的**（注释写满了「为什么」）；
+三内核（Surge / Egern / mihomo）配置模板仓。**配置本身是给人读的**（注释写满「为什么」）；
 本技能是给 AI 的操作规程。
 
 ---
 
 ## 0 · 三条底线
 
-1. **改配置 = 改两份**。每份 profile 都有 `.conf`/`.yaml` 与 `.min` 两份形态，
-   **只差注释、内容必须逐字相同**。改完整版必须同步 `.min`（或跑 `make_min.py`）。
-   漂移由 `check_min_pair.py` 兜底。
+1. **改配置 = 改两份**。每份 profile 有 `.conf`/`.yaml` 与 `.min` 两份形态，**只差注释、
+   内容必须逐字相同**。改完整版后跑 `make_min.py --apply` 同步（漂移由 `check_min_pair.py` 兜底）。
 2. **`rules/*.yaml` 是生成物，不手改**。真源是 `rules/*.list`，跑
    `python skill/scripts/clash/build_rules.py` 重生成。
-3. **改完必须跑门禁**。`python skill/tests/verify_all.py` —— 它是唯一入口，
-   与 CI 同源。**"我改对了"不算做完，门禁绿了才算。**
+3. **改完必须跑门禁**：`python skill/tests/verify_all.py` —— 唯一入口，与 CI 同源。
+   **"我改对了"不算做完，门禁绿了才算。**
 
 ---
 
-## 1 · 我要做什么 → 读哪份 → 跑哪道门禁
+## 1 · 怎么用这些文档（**先看这里，不要整篇读**）
 
-| 你要做的事 | 先读 | 改完跑 |
+8 篇文档每篇 45~135 KB。**整篇读是浪费** —— 它们都带完整标题层级，
+用 `grep` 定位到节，通常只需读 2~5 KB。
+
+```bash
+# ① 定位：先 grep 关键词拿行号与节标题
+grep -n "include-all" skill/reference/profiles/clash.md
+# ② 只读那一节：从命中行往上找最近的标题，往下读到下一个同级标题
+```
+
+| 你要做的事 | 读哪份 | 常见 grep 关键词 |
 |:--|:--|:--|
-| 改 Surge 配置的某个键 | `reference/profiles/surge.md` + 该键在 `surge/profiles/*.conf` 里的注释 | `verify_all.py` |
-| 改 Egern 配置 | `reference/profiles/egern.md` + `egern/profiles/*.yaml` 注释 | `verify_all.py` |
-| 改 mihomo 配置 / 覆写脚本 | `reference/profiles/clash.md` | `verify_all.py` + `build_profiles.py --check` |
-| 动 DNS / 防泄露逻辑 | `reference/dns.md` | `verify_all.py`（含 3 道 DNS 审计） |
-| 加 / 换 / 删规则集 | `reference/rulesets.md` | `verify_all.py` |
-| 排查拦截失效、分流异常 | `reference/pitfalls.md` | 按该篇定位 |
-| 日常操作、发版、加固清单 | `reference/ops.md` | `verify_all.py` |
-| 改门禁脚本、改判据 | `reference/gates.md` | `verify_all.py` + 该篇「新增闸门自查清单」 |
+| 改 Surge 配置的某个键 | `reference/profiles/surge.md` | 键名（`hijack-dns` / `ipv6` / `proxy-test-url`） |
+| 改 Egern 配置 | `reference/profiles/egern.md` | 键名（`forward` / `policy_groups` / `proxy_nameservers`） |
+| 改 mihomo 配置 / 覆写脚本 | `reference/profiles/clash.md` | 键名（`include-all` / `fake-ip-filter` / `nameserver-policy`） |
+| 动 DNS / 防泄露逻辑 | `reference/dns.md` | `泄露` / `引导` / `no-resolve` / `明文` |
+| 加 / 换 / 删规则集 | `reference/rulesets.md` | 规则集名（`AI.list` / `Jinja` / `mrs`） |
+| 排查拦截失效、分流异常 | `reference/pitfalls.md` | 现象词（`没有拦截` / `走直连` / `解析`） |
+| 日常操作 / 发版 / 加固清单 | `reference/ops.md` | `升号` / `Release` / `加固清单` |
+| 改门禁脚本 / 改判据 | `reference/gates.md` | `判据` / `退出码` / `新增闸门` |
 
-**reference/ 只有 8 篇**，全部在 `skill/reference/` 下：
-
-```
-profiles/{surge,egern,clash}.md   逐键语义 + 加固模板（改配置前查这里）
-dns.md                            DNS 泄露原理 + 三内核落地语法
-rulesets.md                       规则集选型、权重、跨内核差异
-pitfalls.md                       事故复盘（排查时查这里）
-ops.md                            日常操作 / 加固清单 / 发版规矩
-gates.md                          门禁判据与纪律（改判据前必读）
-```
+**每条配置键的权威解释，是它自己在 profile 里的注释**（写满了理由）。
+文档是「跨键的机制与取舍」，不是注释的复述。改键之前先读那个键的注释。
 
 ---
 
@@ -59,9 +59,9 @@ rules/             AI.list · apple_system.list · emby.list（唯一真源）
 icons/             策略组图标，三内核共用
 skill/
   SKILL.md         本文件（AI 入口）
-  reference/       8 篇技术文档
-  scripts/         审计 / 生成脚本（<kernel>/ 分子目录）
-  tests/           门禁脚本 + verify_all.py（唯一入口）
+  reference/       8 篇：profiles/{surge,egern,clash}.md · dns · rulesets · pitfalls · ops · gates
+  scripts/<kern>/  审计 / 生成脚本
+  tests/           门禁 + verify_all.py（唯一入口）
 ```
 
 **三内核并列、不混放**：同名判据脚本判据完全不同，按内核分目录 ⇒ 零改名、零冲突。
@@ -105,13 +105,13 @@ python skill/scripts/clash/build_rules.py --check   # 过期即判负（CI 用�
 | CRLF 判负 | Clash 侧曾混入 CRLF | 已转 LF + `.gitattributes` 钉 `eol=lf` |
 | 子进程输出 UnicodeDecodeError | 中文 Windows 管道默认 GBK，而内容是 UTF-8 | 一律显式 `encoding='utf-8'` |
 | 联网探测偶发超时 → CI 红 | 冷连接 / 丢包，不是端点失效 | 已加重试（`RETRIES=3`） |
+| **改了闸门却「改了没红」** | 注错**没落在判据的扫描面上** | **先怀疑注错，再怀疑判据**（见 `gates.md` 注错三铁律） |
 
-**最重要的一条：本地全绿 ≠ 线上能跑。** 路径探测、编码、网络这类环境相关的东西，
-必须让 CI 跑一遍才算数。
+**最重要的一条：本地全绿 ≠ 线上能跑。**
 
 ---
 
-## 6 · 门禁（唯一入口 `verify_all.py`）
+## 6 · 门禁
 
 ```bash
 python skill/tests/verify_all.py          # 全跑，出汇总表
@@ -121,7 +121,7 @@ python skill/tests/verify_all.py --index  # 只列清单（现抓，勿手抄）
 
 退出码：**0 = 全过 · 1 = 判负 · 2 = 环境不达标（先修环境，别读判据）· 3 = 未验证**。
 
-⚠️ **3 不是绿**。汇总表里显示 ⚠️ 且不计入 passed。
+⚠️ **3 不是绿**（汇总表显示 ⚠️ 且不计入 passed）。
 分界线只有一条：**没读到远端真值 = 3；读到了但不过 = 1。**
 
 判据要改？先读 `reference/gates.md` 的「新增闸门自查清单」——
@@ -134,4 +134,5 @@ python skill/tests/verify_all.py --index  # 只列清单（现抓，勿手抄）
 - ❌ 不手工编辑 `rules/*.yaml`（生成物，改真源 `.list`）
 - ❌ 不让 `.min` 与完整版漂移（改一份必须同步另一份）
 - ❌ 不为让门禁变绿而改判据 —— 改判据需要先说明「原判据错在哪」
+- ❌ 不把「文档里写的数字」当权威 —— 组数/条数一律现抓（`verify_all --index` / 脚本输出）
 - ⚠️ 结构性调整先补判据，不靠"再跑一遍"
