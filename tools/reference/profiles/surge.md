@@ -40,7 +40,7 @@ self-conf/                                   # Surge · Egern · mihomo 三内�
 ├── egern/                                   # 姊妹内核一侧（同构：profiles + tools/reference/profiles/egern.md）
 ├── clash/                                   # mihomo 一侧（profiles / override）
 ├── icons/                                   # 策略组图标 PNG + SVG —— 仓库根，三内核共用、不跨项目引用
-├── AGENTS.md                                # ★ AI 入口（其余 CLAUDE.md / GEMINI.md / .cursorrules 为指针）
+├── AGENTS.md                                # ★ AI 入口（唯一真源，所有 AI 工具都读这份）
 ├── LICENSE · SECURITY.md · README.md        # 许可证 · 安全披露 · 门面（订阅入口 + 指路）
 └── tools/                                   # AI 知识库与工具集（本仓唯一文档区）
     ├── reference/                           # 8 篇知识（profiles/ · dns · rulesets · pitfalls · ops · gates）

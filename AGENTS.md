@@ -3,9 +3,13 @@
 Surge / Egern / mihomo（Clash Meta）**三内核代理配置模板**。
 人类请看 [`README.md`](./README.md)；公开仓安全纪律见 [`SECURITY.md`](./SECURITY.md)。
 
-> 本文件是各 AI 工具入口的**唯一真源**。`CLAUDE.md` · `GEMINI.md` · `.cursorrules` ·
-> `.github/copilot-instructions.md` 是薄指针，内容以本文件为准。
-> ⚠️ `clash/` 有独立的生成链，**在那里工作时先读 [`clash/AGENTS.md`](./clash/AGENTS.md)**（就近生效）。
+> 本文件是 AI 操作手册的**唯一真源**——**任何 AI 工具都读这一份**。
+> （`AGENTS.md` 是跨工具开放格式：Codex / Cursor / Copilot / Claude Code / Amp /
+> Jules / Windsurf / Zed 等 20+ 工具原生支持。**不要**再建 `CLAUDE.md` /
+> `.cursorrules` / `copilot-instructions.md` —— 官方明确：`CLAUDE.md` 存在时
+> Claude **只读它、不读** `AGENTS.md`，那是重复且会屏蔽真源。
+> `GEMINI.md` 是唯一例外：Gemini CLI 默认只读它，故保留一个**不复制内容**的一行指针。）
+> ⚠️ `clash/` 有独立的生成链，**在那里工作时先读就近的 [`clash/AGENTS.md`](./clash/AGENTS.md)**。
 
 ---
 
