@@ -1272,9 +1272,9 @@ on:
 
 | # | Step | 说明 |
 |:-:|:-----|:-----|
-| 1 | `actions/checkout@v4`（`fetch-depth: 0`）| 保留完整历史（V7 虽豁免仍保留）|
-| 2 | `setup-python@v5` → 3.12 | |
-| 3 | `setup-node@v4` → 20 | **mihomo 两道门要跑 JS** |
+| 1 | `actions/checkout@v7`（`fetch-depth: 0`）| 保留完整历史（V7 虽豁免仍保留）|
+| 2 | `setup-python@v7` → 3.12 | |
+| 3 | `setup-node@v7` → 24 | **mihomo 两道门要跑 JS**；⚠️ 别退回 20（2026-04 已 EOL）|
 | 4 | Install deps：`pip install pyyaml` | 缺 PyYAML ⇒ 三道 clash 门直接 exit 2 |
 | 5 | **Gates (Surge + Egern + mihomo)** | `python self-conf-skills/gates/verify_all.py` |
 | 6 | **Encoding gate (cp936)** | 同上命令，但 `PYTHONIOENCODING: cp936` |

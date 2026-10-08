@@ -16,19 +16,22 @@ jobs:
   gate:
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v7
         with:
           # 需 tag：release_publish 从「上一个 tag..HEAD」汇总发布说明。
           # （归档判据已删，不再需要完整历史。）
           fetch-depth: 0
 
-      - uses: actions/setup-python@v5
+      - uses: actions/setup-python@v7
         with:
           python-version: '3.12'
 
-      - uses: actions/setup-node@v4
+      - uses: actions/setup-node@v7
         with:
-          node-version: '20'
+          # 24 = 现役 LTS。⚠️ 别退回 20：它已于 2026-04 EOL（不再有安全更新），
+          # 且 Node 20 的 action 运行时已被 GitHub 弃用。
+          # 本仓只用 node 跑 override/*.js（纯老语法，无 ?? / ?. / .at()）⇒ 24 绰绰有余。
+          node-version: '24'
 
       - name: Install deps
         run: |
