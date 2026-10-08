@@ -601,7 +601,7 @@ if dns.get("ipv6") is not False:
 ```
 
 ✅ 本仓 **mihomo 侧已有分流覆盖审计脚本**（闸门 #9）⇒ 第 1、2 条可先跑它；⚠️ 但它的**离线档按规则集名推演**，不读实际策略（见 §4.4.1），所以仍需实测兜底 —— 别把它当充分条件。
-这是与姊妹仓的已知差距（Surge 侧有 `audit_routing_coverage.py`，39 个探针）。
+这是与姊妹仓的已知差距（Surge 侧有 `audit_routing_coverage.py`，43 条判据）。
 
 ## 8 · 验证修好了
 

@@ -317,7 +317,13 @@ def provider_semantics(name, behavior):
     返回 'DIRECT' / 'PROXY-ish' / None（无法判定）。"""
     n = str(name).lower()
     if behavior == "ipcidr":
-        return None                      # IP 规则，域名探针走不到（除非触发解析）
+        # ⚠️ 2026-10-08 第六轮审查问题 2a：原先一律返回 None ⇒ 整条被跳过，
+        #    于是 `geoip-cn,Proxy`（国内 IP 全走代理）**静默通过** ——
+        #    而这恰恰是本闸门存在的理由。
+        #    现：国内/私有语义的 ipcidr 集返回 DIRECT，让静态策略校验覆盖到它。
+        if any(k in n for k in ("cn", "private")):
+            return "DIRECT"
+        return None
     if any(k in n for k in ("cn", "private", "apple-cn", "apple-system",
                             "apple-update", "jinx-cn")):
         return "DIRECT"
@@ -384,8 +390,11 @@ def analyze(path, offline=True):
         #    （名字含 "apple"/"cn" 就归 DIRECT），而 apple-update 实际走
         #    「Apple Update」组、category-ai-chat-!cn 实际走「AI」组 —— 都是对的。
         #    故加白名单排除「名字像但语义不是纯直连」的集。
-        _NOT_PURE_DIRECT = {"apple-update", "apple-system", "category-ai-chat-!cn",
-                            "apple-cn"}
+        # ⚠️ 第六轮审查问题 2b：原白名单含 `apple-system` ⇒
+        #    `apple-system,Proxy`（Apple 系统域走代理）静默溜过。
+        #    实际 apple-system 属**直连语义**，改为策略校验要覆盖它；
+        #    真正该豁免的只有「名字像直连但语义是别的组」的那几个。
+        _NOT_PURE_DIRECT = {"apple-update", "category-ai-chat-!cn"}
         if name in _NOT_PURE_DIRECT:
             continue
         if sem == "DIRECT" and policy != "DIRECT":

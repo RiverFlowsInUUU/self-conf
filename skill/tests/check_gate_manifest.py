@@ -31,6 +31,13 @@ ROOT = os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__)
 CI = os.path.join(ROOT, ".github", "workflows", "ci.yml")
 
 # 有意不在 verify_all 里的：CI 独立 step（慢 / 需真机），已在 ops.md §6.8.1 登记
+# ⚠️ 覆盖边界（2026-10-08 第四轮审查 P3 / 第六轮审查问题 6 均指出）：
+#   本判据的「孤儿探测」只抓**同名跨内核**那一类 ——
+#   即：同一文件名，在某内核被闸门引用、另一内核有文件却没引用 ⇒ 报。
+#   **独有名字**的新脚本（如 `skill/scripts/surge/audit_brand_new_orphan.py`）
+#   ⇒ 本判据**不报**（exit 0）。这是有意的：全扫 skill/scripts/ 会假报十几处，
+#   把人用的分析工具也当漏跑判据。但代价是「让孤儿可见」只做到一半 —— 已知，记在此。
+#   将来若加「新增脚本必须登记」的流程，再把这条扩成全覆盖。
 KNOWN_SEPARATE = {"check_remote_urls.py": "CI 独立 step（慢，需联网探测数十个 URL）",
                   "probe_dns_endpoints.py": ("CI 独立 step —— 需联网实测加密 DNS 端点，"
                                              "有判负语义但抖动会假红，故不进 46 道"),

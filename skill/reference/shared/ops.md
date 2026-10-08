@@ -349,7 +349,7 @@ clash/
 
 | 环节 | 脚本 | 判据 |
 |:-----|:-----|:-----|
-| 静态 profile 新鲜度 | `skill/scripts/clash/build_profiles.py --check` | 脚本输出 ≠ 静态文件即判负（46 道之第 46 道） |
+| 静态 profile 新鲜度 | `skill/scripts/clash/build_profiles.py --check` | 脚本输出 ≠ 静态文件即判负（闸门 #41） |
 | 规则集生成物新鲜度 | `skill/scripts/clash/build_rules.py --check` | `.yaml` 与 `.list` 真源不一致即判负 |
 | 脚本 ↔ 静态对拍 | `skill/tests/clash/check_script_sync.py` | 需 **node**（Windows 下由 `_clash_common.find_node()` 显式探测；Git Bash 的 PATH 不继承给 subprocess） |
 
@@ -385,7 +385,7 @@ clash/
 
 ```bash
 python skill/scripts/clash/build_rules.py            # 生成
-python skill/scripts/clash/build_rules.py --check    # CI 用：过期即判负（46 道之第 35 道）
+python skill/scripts/clash/build_rules.py --check    # CI 用：过期即判负（闸门 #39）
 ```
 
 改内容**只改 `.list`**，重跑脚本 —— 物理上不可能漂移。
@@ -638,12 +638,12 @@ python skill/tests/check_portability.py
 
 ⚠️ **本节已被推翻重写**：原先判定这些工具「度量/诊断性质，不适合硬套判据」⇒
 登记了事、靠人记得跑。**实测推翻了这判断** —— 它们都给出明确的过/不过（exit 0/1）。
-现 11 项已进 46 道闸门（地区组判别力 ×3、分流覆盖 ×2、规则集内容 ×2、
+现 **12** 项已进闸门（地区组判别力 ×3、分流覆盖 **×3**、规则集内容 ×2、
 刷新周期 ×2、DNS 转发泄露、no-resolve 配对），不再需要人记得跑。
 📌 计数订正（2026-10-08 第五轮）：分流覆盖是 **×3**（Surge / Egern / mihomo），合计 **12 项**审计工具已进闸门（此前误写 ×2 / 11 项）。
 
 ⚠️ **又一次校准（同日）**：`profile_ruleset.py` 实测输出
-「✅ 没有裸 IP 条目」+ 明确退出码 ⇒ 也可进闸门，已作为 #16–18 道接入（离线、快）。
+「✅ 没有裸 IP 条目」+ 明确退出码 ⇒ 也可进闸门，已作为 **#17–19** 道接入（离线、快）。
 
 至今**仍在闸门外的**（实测确认是纯读数 / 需联网，无过-不过语义）：
 | 脚本 | 为什么留在外面 |
@@ -651,7 +651,7 @@ python skill/tests/check_portability.py
 | `weigh_ruleset.py` | 输出是条目列表与耗时读数，无判负语义 —— 排查「规则集太重」时手动跑 |
 | `probe_doh.py` | 逐端点打印响应，无总结计数；且需联网 —— 排查 DoH 端点时手动跑 |
 | `probe_dns_endpoints.py` | 有「失效端点：N / 总数」计数，**语义上可判负**，但需联网实测 10 个端点 ⇒ 网络抖动会造成假红。故**不进 46 道**，改由 CI 周任务级检查（同 check_remote_urls 的处理） |
-| `profile_ruleset.py` | ✅ **已进闸门**（#16–18）|
+| `profile_ruleset.py` | ✅ **已进闸门**（#17–19）|
 
 ### 6.8.3 `skill/scripts/` 是工具区，不是判据区（原始说明，保留沿革）
 

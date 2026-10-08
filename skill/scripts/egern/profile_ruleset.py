@@ -149,7 +149,12 @@ def main():
                 print(f"     样例: {l}")
             worst = max(worst, 1)
         else:
-            print("✅ 没有裸 IP 条目（不会为匹配域名而触发解析）。")
+            if not entries:
+                print("❌ 规则集为空 —— 一份没有条目的清单等于没有规则，"
+                      "若它仍在配置里被引用，等于那条规则静默失效")
+                return 1
+            else:
+                print("✅ 没有裸 IP 条目（不会为匹配域名而触发解析）。")
     print("=" * 88)
     return worst
 

@@ -292,6 +292,17 @@ def main():
         print('⚠️ 以下闸门被跳过（未验证 ≠ 绿）：'
               + '、'.join(r['name'] for r in skipped))
 
+    # ⚠️ 2026-10-08 第六轮审查问题 1：
+    #    本文件 docstring 写着「CI 侧 3 视为失败」，但代码里**从来没有任何 CI 分支**，
+    #    实际是 `sys.exit(1 if failed else 0)` ⇒ SKIP(3) 永远不算失败。
+    #    后果：GITHUB_TOKEN 缺失/过期时 `Release 断言` 返回 3，而 verify_all 仍 exit 0
+    #    ⇒ **Release 纪律在 CI 里被静默关掉，构建照样绿**。
+    #    这正是本仓自己在防的「共享环境变量掩盖真实失败」。现按 docstring 的意图补上。
+    in_ci = os.environ.get("GITHUB_ACTIONS") == "true" or os.environ.get("CI") == "true"
+    if in_ci and skipped:
+        print('🔴 CI 环境：未验证（exit 3）视为失败 —— '
+              '读不到远端通常是 token 缺失或环境异常，不能静默放行。')
+        sys.exit(1)
     sys.exit(1 if failed else 0)
 
 

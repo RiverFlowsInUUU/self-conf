@@ -160,6 +160,19 @@ def main():
             for i in problems:
                 print("       %s" % i)
         if not problems and not unknown:
+            # ⚠️ 零 provider ⇒ 「全部相符」是空集上的全称命题 ⇒ 恒真（真空通过）。
+            #    这里直接读一次配置数 provider，避免假绿。（第六轮审查问题 8）
+            try:
+                import yaml as _y
+                _n_prov = len((_y.safe_load(open(p, encoding="utf-8")) or {})
+                              .get("rule-providers") or {})
+            except Exception:
+                _n_prov = -1
+            if _n_prov == 0:
+                print("  NG %s —— provider 数为 0：没有可核对的规则集"
+                      "（配置被清空或解析失败？空集不算通过）" % name)
+                total_bad += 1
+                continue
             print("  OK %s（全部 provider 的 behavior 与内容相符）" % name)
         for n in notes[:12]:
             print("       · %s" % n)
