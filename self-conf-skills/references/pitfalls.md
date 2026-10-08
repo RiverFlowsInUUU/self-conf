@@ -1751,7 +1751,7 @@ AD_CALIBER = {
 > 区别只在于触发者 —— 坑 1 是上游规则集改名，本坑是被引用的外部仓库改名。
 > **两者都只能靠主动扫描发现。**
 
-（实测：本仓 `icons/` 40 个图标 PNG + 1 个 SVG中 34 个同名文件整合时**内容字节完全一致**，零冲突 ——
+（实测：本仓 `icons/` 39 个图标 PNG + 1 个 SVG中 34 个同名文件整合时**内容字节完全一致**，零冲突 ——
 所以这件事做起来不痛苦，痛苦的是**没人去做**。现役 `routing.yaml` 里的图标 URL
 已全部指向 `raw.githubusercontent.com/RiverFlowsInUUU/self-conf/main/icons/`。）
 
