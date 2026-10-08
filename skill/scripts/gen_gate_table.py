@@ -55,7 +55,11 @@ def index_entries():
 
 
 def _dup_groups(ents):
-    """近重复闸门组 —— 同一脚本 + **至少审一个相同的 profile 文件**。
+    """近重复闸门组 —— 同一脚本 + **至少审一个相同的注册文件**（profile 或 .list）。
+
+    ⚠️ 第十轮问题 5：注释原写"profile 文件"，代码实际匹配任何
+       `.conf/.yaml/.yml/.list`（含 `rules/*.list`）⇒ 注释与代码不符。
+       现注释改为"注册文件"以如实描述；判据本身不变（按文件交集）。
 
     判据收窄的原因（一次做对，别来回）：
       · 只按脚本名 ⇒ 11 组（地区组判别力 ×3 也被算进去，但那是三个内核各查各的，
@@ -80,11 +84,35 @@ def _dup_groups(ents):
         # ⚠️ 不能用"跟已入组的比"的增量算法：第一个入组的若是 #7（Surge），
         #    后面 clash 的 #9/#41 与它无交集就都进不来 ⇒ 实测恒返回 0 组。
         #    （这是第九轮来回改了三次才定位的错，记在此）
-        grp = [it for it in items
-               if any(it[2] & other[2] for other in items if other is not it)]
+        # ⚠️ 第十轮问题 4：若**同一道闸门被列两次**（同脚本同文件、编号也相同），
+        #    会被当成"刻意保留的双档覆盖"，措辞不符（字面重复不叫刻意保留）。
+        #    ⇒ 先按 (编号, 名字) 去重，再看文件交集。
+        uniq = []
+        seen = set()
+        for it in items:
+            key = (it[0], it[1])
+            if key in seen:
+                continue
+            seen.add(key)
+            uniq.append(it)
+        grp = [it for it in uniq
+               if any(it[2] & other[2] for other in uniq if other is not it)]
         if len(grp) > 1:
             out[script] = grp
     return out
+
+
+def _where_of(name):
+    """「位置」列：CI 独立 step / 手动 —— 看该脚本是否出现在 ci.yml（不猜）。
+
+    ⚠️ 第十轮问题 6：此前位置列被写死成 "—"，丢了信息。
+    """
+    try:
+        ci = open(os.path.join(ROOT, ".github", "workflows", "ci.yml"),
+                  encoding="utf-8").read()
+    except Exception:
+        return "—"
+    return "CI 独立 step" if name in ci else "手动（不在任何闸门）"
 
 
 def _not_in_gates_rows():
@@ -131,7 +159,8 @@ def build_block():
 
     # 「不进闸门」表：真源是 check_gate_manifest.KNOWN_SEPARATE（第九轮问题 1）
     _sep = _not_in_gates_rows()
-    _sep_rows = chr(10).join("| `%s` | — | %s |" % (nm, why) for nm, why in _sep)
+    _sep_rows = chr(10).join(
+        "| `%s` | %s | %s |" % (nm, _where_of(nm), why) for nm, why in _sep)
     if not _sep_rows:
         _sep_rows = "| （读不到 KNOWN_SEPARATE） | — | — |"
     block = (

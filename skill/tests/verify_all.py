@@ -25,7 +25,7 @@
       断言不过走 1）——本脚本对 3 是全闸门通用判定，滥用 3 会被静默吞成假绿。
       SKIP 独立占用 3：2 已被全仓铁律占用为「环境不达标」，复用会让环境故障被吞成
       SKIP → 假绿（0930 二轮外部审查）。
-    · check_releases 需 GITHUB_TOKEN：缺省时自动回退 `gh auth token`。都没有、或 API
+    · check_releases 需 GITHUB_TOKEN：由 `verify_all._token()` 提供（读 GITHUB_TOKEN 环境变量）；本仓 Release 为公开仓，无 token 时 check_releases 走**匿名**公共读。都没有、或 API
       离线/限流/上游 5xx/非 JSON 时返回 3，本脚本以 ⚠️ 明示「未验证」并不计入失败
       （0929 一轮审查：原实现按输出文本嗅探、且被跳过仍 exit 1，提示与实际矛盾，
       现按退出码判定）。
@@ -47,6 +47,7 @@
 """
 
 import os
+import re
 import subprocess
 import sys
 import time
@@ -101,10 +102,14 @@ def _assert_allowlist_registered():
     if i < 0:
         raise SystemExit('❌ release-rules.md 里找不到「### 4.1 已知豁免」 —— '
                          'CI 豁免白名单无法校验，不放行')
-    # ⚠️ 第九轮问题 6：原为固定 `doc[i:i+4000]` 窗口 —— §4.1 变长或登记挪后
-    #    会误判失败。现改为：从 §4.1 起，到**下一个 `### ` 同级标题**为止（整节）。
-    nxt = doc.find(chr(10) + '### ', i + 10)
-    seg = doc[i:nxt] if nxt > 0 else doc[i:]
+    # ⚠️ 第九轮问题 6 / 第十轮问题 1（两次才改对）：
+    #    · 最初 `doc[i:i+4000]` 固定窗口 ⇒ §4.1 变长会误判
+    #    · 第九轮改成"找下一个 `### `" ⇒ **更松**：§4.1 是三级标题，它后面下一个
+    #      标题是 `## 5`（二级）⇒ find 返回 -1 ⇒ 走 doc[i:] ⇒ **吃到文件末尾**
+    #      ⇒ 闸门名只要在 §4.1 之后任何地方（§5/§6）出现就自动被接受 = 悄悄扩权。
+    #    现改为：找**级别 ≤ 3 的下一个标题**（`#{1,3} `），§4.1 整节到此为止。
+    m = re.search(r'\n#{1,3} ', doc[i + 10:])
+    seg = doc[i:i + 10 + m.start()] if m else doc[i:]
     missing = []
     for x in CI_ALLOWED_SKIP:
         # 精确登记标记：反引号包裹的闸门名（避免"被提到过"就算登记）
@@ -199,7 +204,8 @@ def build_gates():
         ('闸门清单对账', [PY, 'skill/tests/check_gate_manifest.py'], {}),
         # 2026-10-08：本仓已发布首个 Release ⇒ R1–R5 判据启用。
         # 需网络 + GITHUB_TOKEN（缺省回退 gh auth token）；不可达时走 SKIP(3)=未验证。
-        ('Release 断言', [PY, 'skill/tests/check_releases.py'], {}),
+        ('Release 断言', [PY, 'skill/tests/check_releases.py'],
+         {'GITHUB_TOKEN': _token() or ''}),
         # 2026-10-07 零信任自查补入：clash 侧凭据扫描此前**不在任何闸门里**
         # （pitfalls.md:1037 记为挂账，靠人记得跑）。本轮修好它的三个误报源
         # （ROOT 落在文档区 / 已放行 IP 被当主机重报 / 注释里的 IP 也报警）
@@ -209,10 +215,9 @@ def build_gates():
         ('min-pair 一致', [PY, 'skill/tests/check_min_pair.py'], _skip_v7),
         ('README 徽章', [PY, 'skill/tests/check_badges.py'], {}),
         ('markdown 链接', [PY, 'skill/tests/check_links.py', '.'], {}),
-        # ⚠️ self-conf 豁免：检查的是「原仓自己的 Release 发布纪律」，
-        #    整合仓没有对应的 Release，查也无意义。
-        # ('releases 方案', [PY, 'skill/tests/check_releases.py'],
-        #  {'GITHUB_TOKEN': _token() or ''}),
+        # ✅ 2026-10-08 起**已启用**（首个 Release v2026-10-08 已发布），不再是豁免。
+        #    token 由 _token() 提供（环境变量 → gh auth token）；本仓 Release 为公开仓，
+        #    无 token 时 check_releases 走匿名公共读（仍可读，故不判 SKIP）。
         ('Surge DNS lazy', [PY, 'skill/scripts/surge/check_surge_dns.py', 'surge/profiles/lazy.conf'], {}),
         ('Surge DNS routing', [PY, 'skill/scripts/surge/check_surge_dns.py', 'surge/profiles/routing.conf'], {}),
         ('Egern DNS 双份', [PY, 'skill/scripts/egern/check_egern_dns.py',

@@ -743,7 +743,7 @@ _skip_v7 = {'SKIP_V7': '1'}
 | 19 | 自托管清单·裸IP检测(emby) | `skill/scripts/egern/profile_ruleset.py --offline rules/emby.list` |
 | 20 | 闸门总览表同步 | `skill/scripts/gen_gate_table.py` |
 | 21 | 闸门清单对账 | `skill/tests/check_gate_manifest.py` |
-| 22 | Release 断言 | `skill/tests/check_releases.py` |
+| 22 | Release 断言  [需 GITHUB_TOKEN] | `skill/tests/check_releases.py` |
 | 23 | clash secrets 扫描 | `skill/tests/clash/check_secrets.py` |
 | 24 | portability | `skill/tests/check_portability.py` |
 | 25 | min-pair 一致 | `skill/tests/check_min_pair.py` |
@@ -774,10 +774,10 @@ _skip_v7 = {'SKIP_V7': '1'}
 
 | 项 | 位置 | 为什么不进 |
 |:---|:-----|:-----------|
-| `check_real_kernel.py` | — | 需真实 mihomo 内核二进制 + 真网络，CI 沙箱两者都没有，仅本地人工跑 |
-| `check_remote_urls.py` | — | CI 独立 step —— 需联网探测数十个 URL，慢，不适合与快门并行 |
-| `probe_dns_endpoints.py` | — | CI 独立 step —— 需联网实测加密 DNS 端点，网络抖动会假红 |
-| `verify_all.py` | — | 它自己就是总入口，不是被调的判据 |
+| `check_real_kernel.py` | 手动（不在任何闸门） | 需真实 mihomo 内核二进制 + 真网络，CI 沙箱两者都没有，仅本地人工跑 |
+| `check_remote_urls.py` | CI 独立 step | CI 独立 step —— 需联网探测数十个 URL，慢，不适合与快门并行 |
+| `probe_dns_endpoints.py` | CI 独立 step | CI 独立 step —— 需联网实测加密 DNS 端点，网络抖动会假红 |
+| `verify_all.py` | CI 独立 step | 它自己就是总入口，不是被调的判据 |
 ⚠️ `min-pair 一致` 一道含 V7「一天至多一版」两条断言；本仓以 `SKIP_V7=1` 豁免
 ⇒ 该两条记为 **未验证**（⚠️）而非通过，本道以 exit 3 结束，上层显示 ⚠️。
 详见 `release-rules.md` §4.1。
