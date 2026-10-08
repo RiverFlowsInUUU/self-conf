@@ -164,14 +164,28 @@ def _assert_allowlist_registered():
 
 
 def _collect_env_reads():
-    """抓 `skill/**/*.py` 里所有 `os.environ.get("NAME")` / `os.environ["NAME"]` 的名字。
+    """抓 `skill/**/*.py` 读取的环境变量名 —— 返回 {相对路径: [名字]}。
 
-    ⚠️ 不看 `os.environ` 出现在注释里 —— 只认 AST 里的真实读取。
+    ⚠️ 演进（每一轮都是被指出打脸后才补的，记下来防止再退化）：
+      · 第十二轮：只认 `b.value.id == 'os'` ⇒ `import os as _os` 写的 SKIP_V7 **整个消失**
+      · 第十二轮补：`import os as _os` 别名
+      · 第十三轮：仍漏 **整类**常见写法（逐个实测全部溜过去）：
+          `os.getenv("X")` / `from os import environ` 后 `environ.get("X")` /
+          `from os import getenv` 后 `getenv("X")` / `from os import environ as e` 后 `e.get("X")` /
+          `getattr(os.environ, "get")("X")` / 二次别名 `_oo = _o` /
+          **名字存在变量里** `_KEY="X"; os.environ.get(_KEY)`
+
+    本版做法：先按文件做**局部符号解析**（`os` 的别名、`environ`/`getenv` 的 from-import
+    别名、简单的 `_oo = _o` 赋值链），把所有能静态判定的形态都覆盖；
+    **剩下的动态形态（名字不是字面量）静态本质上判不出** ⇒ 不假装能抓，
+    改为 **fail-closed**：单独收集到 `dynamic`，由 `_assert_escapes_registered()`
+    要求其所在文件显式登记豁免（否则报错），把"看不见"变成"看得见的待办"。
     """
     skill = os.path.normpath(os.path.join(
         os.path.dirname(os.path.abspath(__file__)), '..'))
     pat = re.compile(r'^[A-Z_][A-Z0-9_]*$')
     names = {}
+    dynamic = {}
     for dp, dirs, files in os.walk(skill):
         dirs[:] = [d for d in dirs if d != '__pycache__']
         for fn in files:
@@ -179,49 +193,123 @@ def _collect_env_reads():
                 continue
             fp = os.path.join(dp, fn)
             try:
-                src = open(fp, encoding='utf-8').read()
-                tree = ast.parse(src)
+                tree = ast.parse(open(fp, encoding='utf-8').read())
             except Exception:
                 continue
+            rel = os.path.relpath(fp, skill)
             got = set()
-            # ⚠️ 第十二轮问题 3：`check_min_pair.py` 写的是
-            #   `import os as _os` ⇒ AST 里 `b.value.id == '_os'`，而这里硬编码
-            #   只认 'os' ⇒ **SKIP_V7 从扫描结果里消失**（两头都错：删登记不判负 +
-            #   反向自检常态化误报"登记了但代码不读"）。
-            #   现按每个文件收集 `os` 的别名（`import os` / `import os as _os` 都算）。
+            dyn = False
+
+            # ── ① 收集 os 模块的本地名：import os / import os as X ──
             os_names = {'os'}
+            # ── ② environ 的本地名：from os import environ [as X] ──
+            env_names = set()
+            # ── ③ getenv 的本地名：from os import getenv [as X] ──
+            getenv_names = set()
             for nd in ast.walk(tree):
                 if isinstance(nd, ast.Import):
                     for al in nd.names:
                         if al.name == 'os':
                             os_names.add(al.asname or 'os')
+                elif isinstance(nd, ast.ImportFrom) and nd.module == 'os':
+                    for al in nd.names:
+                        nm = al.asname or al.name
+                        if al.name == 'environ':
+                            env_names.add(nm)
+                        elif al.name == 'getenv':
+                            getenv_names.add(nm)
+            # ── ④ 简单别名赋值链 `_oo = _o`（一层，够挡住常见写法）──
+            for _ in range(3):
+                added = False
+                for nd in ast.walk(tree):
+                    if isinstance(nd, ast.Assign) and len(nd.targets) == 1 \
+                            and isinstance(nd.targets[0], ast.Name) \
+                            and isinstance(nd.value, ast.Name):
+                        src, dst = nd.value.id, nd.targets[0].id
+                        for grp in (os_names, env_names, getenv_names):
+                            if src in grp and dst not in grp:
+                                grp.add(dst)
+                                added = True
+                if not added:
+                    break
 
-            def _from_arg(node):
+            def _lit(node):
+                """取第一个参数的字符串字面量；拿不到返回 None。"""
                 if node.args and isinstance(node.args[0], ast.Constant) \
                         and isinstance(node.args[0].value, str) \
                         and pat.match(node.args[0].value):
-                    got.add(node.args[0].value)
+                    return node.args[0].value
+                return None
 
             for nd in ast.walk(tree):
-                # os.environ.get("X")
+                # 形态 A：X.environ.get("N") / X.environ["N"]
+                #   （X ∈ os 别名；含 getattr(os.environ, "get")("N") 的退化情况）
                 if isinstance(nd, ast.Call) and isinstance(nd.func, ast.Attribute) \
-                        and nd.func.attr == 'get':
-                    b = nd.func.value
-                    if isinstance(b, ast.Attribute) and b.attr == 'environ' \
-                            and isinstance(b.value, ast.Name) and b.value.id in os_names:
-                        _from_arg(nd)
-                # os.environ["X"]
+                        and nd.func.attr in ('get', 'pop', 'setdefault'):
+                    base = nd.func.value
+                    hit = False
+                    if isinstance(base, ast.Attribute) and base.attr == 'environ' \
+                            and isinstance(base.value, ast.Name) \
+                            and base.value.id in os_names:
+                        hit = True
+                    elif isinstance(base, ast.Name) and base.id in env_names:
+                        hit = True      # from os import environ → environ.get("N")
+                    if hit:
+                        v = _lit(nd)
+                        if v:
+                            got.add(v)
+                        else:
+                            dyn = True      # 名字不是字面量 ⇒ 静态判不出
                 if isinstance(nd, ast.Subscript):
-                    b = nd.value
-                    if isinstance(b, ast.Attribute) and b.attr == 'environ' \
-                            and isinstance(b.value, ast.Name) and b.value.id in os_names:
+                    base = nd.value
+                    hit = False
+                    if isinstance(base, ast.Attribute) and base.attr == 'environ' \
+                            and isinstance(base.value, ast.Name) \
+                            and base.value.id in os_names:
+                        hit = True
+                    elif isinstance(base, ast.Name) and base.id in env_names:
+                        hit = True
+                    if hit:
                         sl = nd.slice
                         if isinstance(sl, ast.Constant) and isinstance(sl.value, str) \
                                 and pat.match(sl.value):
                             got.add(sl.value)
+                        else:
+                            dyn = True
+                # 形态 B：os.getenv("N") / getenv("N")（from os import getenv [as X]）
+                if isinstance(nd, ast.Call):
+                    f = nd.func
+                    is_getenv = False
+                    if isinstance(f, ast.Attribute) and f.attr == 'getenv' \
+                            and isinstance(f.value, ast.Name) and f.value.id in os_names:
+                        is_getenv = True
+                    elif isinstance(f, ast.Name) and f.id in getenv_names:
+                        is_getenv = True
+                    if is_getenv:
+                        v = _lit(nd)
+                        if v:
+                            got.add(v)
+                        else:
+                            dyn = True
+                # 形态 C：os.environ 被以任何方式取出来（如 getattr(os.environ,"get")）
+                #   ⇒ 必然是动态，标记之
+                if isinstance(nd, ast.Attribute) and nd.attr == 'environ' \
+                        and isinstance(nd.value, ast.Name) and nd.value.id in os_names:
+                    # getattr(os.environ, ...) 这种会把 environ 当参数传走
+                    parent_is_plain = True
+                    for p in ast.walk(tree):
+                        if isinstance(p, ast.Call) and nd in ast.iter_child_nodes(p) \
+                                and isinstance(p.func, ast.Name) and p.func.id == 'getattr':
+                            parent_is_plain = False
+                    if not parent_is_plain:
+                        dyn = True
+
             if got:
-                names[os.path.relpath(fp, skill)] = sorted(got)
-    return names
+                names[rel] = sorted(got)
+            if dyn:
+                dynamic[rel] = True
+    return names, dynamic
+
 
 
 def _assert_escapes_registered():
@@ -267,7 +355,7 @@ def _assert_escapes_registered():
     #     —— 文档与实现不符，且恰好放过了这条护栏声称要防的事。
     #   现改为：**AST 抓到的全部名字 − §4.2.2 输入类白名单 = 放行类候选**，
     #   再与表格做差集 ⇒ 任何新后门都无处可藏。
-    found = _collect_env_reads()
+    found, dynamic_reads = _collect_env_reads()
     alive = set()
     for v in found.values():
         alive.update(v)
@@ -307,6 +395,37 @@ def _assert_escapes_registered():
             + '\n   —— 若为放行类逃生门：登记（写明默认安全与谁在用）；'
               '若只是输入类：加进 §4.2.2 白名单。不放行。')
     # 反向：登记了但代码已不再读 ⇒ 提醒（不报错，避免删代码被卡）
+    # ⚠️ 第十三轮问题 1：静态**判不出**的动态读取（名字存在变量里等）。
+    #    不假装能抓 ⇒ 要求所在文件显式登记豁免；否则报错。
+    #    （verify_all.py 自己第 ~77 行的 `os.environ.get(env)` 就是这种 —— 也必须登记。）
+    dyn_allow = set()
+    i3 = doc.find('#### 4.2.3')
+    if i3 > 0:
+        j3 = doc.find('\n### ', i3 + 10)
+        sec3 = doc[i3:j3] if j3 > 0 else doc[i3:]
+        for ln in sec3.splitlines():
+            st = ln.strip()
+            if not st.startswith('|'):
+                continue
+            cells = [c.strip() for c in st.strip('|').split('|')]
+            if cells and cells[0].startswith('`') and cells[0].endswith('`'):
+                raw = cells[0].strip('`').replace('\\', '/')
+                dyn_allow.add(raw)
+                if raw.startswith('skill/'):
+                    dyn_allow.add(raw[len('skill/'):])
+    unlisted = []
+    for rel in sorted(dynamic_reads):
+        norm = rel.replace('\\', '/')
+        if norm not in dyn_allow and ('skill/' + norm) not in dyn_allow:
+            unlisted.append(norm)
+    if unlisted:
+        raise SystemExit(
+            '❌ 这些文件用**动态名字**读环境变量（如 `os.environ.get(var)`），'
+            '静态判不出具体名字 ⇒ 无法确认是否夹带后门：\n'
+            + '\n'.join('     %s' % x for x in unlisted)
+            + '\n   —— 确认无放行类后门后，把路径加进 release-rules.md §4.2.3 白名单'
+              '（登记即表示人工看过）；否则改成字面量。不放行。')
+
     stale = sorted(x for x in registered if x not in alive)
     if stale:
         print('   ℹ️ §4.2.1 登记了但代码不再读取：%s（可选清理）' % '、'.join(stale))
@@ -393,6 +512,7 @@ def build_gates():
         ('闸门清单对账', [PY, 'skill/tests/check_gate_manifest.py'], {}),
         # 2026-10-08：本仓已发布首个 Release ⇒ R1–R5 判据启用。
         # 需网络 + GITHUB_TOKEN（缺省回退 gh auth token）；不可达时走 SKIP(3)=未验证。
+        ('CHANGELOG 漂移', [PY, 'skill/tests/check_changelog_drift.py'], {}),
         ('Release 断言', [PY, 'skill/tests/check_releases.py'],
          {'GITHUB_TOKEN': _token() or ''}),
         # 2026-10-07 零信任自查补入：clash 侧凭据扫描此前**不在任何闸门里**
@@ -490,7 +610,7 @@ def print_index():
         need = '  [需 GITHUB_TOKEN]' if 'GITHUB_TOKEN' in env else ''
         print(f'{i:>2}. {name}{need}')
         print(f'      {" ".join(argv[1:])}')
-    print(f'\nCI 侧为 5 个 step（Install deps / Gates / Encoding gate / Remote ruleset / Encrypted DNS）（Surge 双 profile 合并在同一 run 内）—— 其中第 2 个'
+    print(f'\nCI 侧为 5 个 step（Install deps / Gates / Encoding gate / Remote ruleset / Encrypted DNS）（Surge 双 profile 合并在同一 run 内）—— 其中第 3 个'
           f'「Encoding gate (cp936)」以本脚本为入口复跑一遍，故**不进 build_gates()**'
           f'（进去即递归）；与上表按 step 聚合后形状不同，属已知挂账，见本文件头注。')
     sys.exit(0)

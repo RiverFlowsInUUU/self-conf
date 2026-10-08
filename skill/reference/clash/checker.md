@@ -706,11 +706,11 @@ _skip_v7 = {'SKIP_V7': '1'}
 3. **豁免项要么进 `build_gates()` 带 SKIP 标记、要么显式注释掉**。
    绝不允许"跑一遍然后无视结果" —— 那是静默假绿。
 
-## 11 · 46 道总览表
+## 11 · 47 道总览表
 
 > ⚠️ **关于道数（含近重复，对外说数量时心里有数）**：
-> 46 道里有 2 组近重复 —— #9 与 #41（分流覆盖·mihomo|clash 分流覆盖）；#11 与 #45（规则集内容·mihomo|clash 规则集内容）。**刻意保留**：双档覆盖能让分流版与
-> 懒人版都查到；合并会让其中一档漏检。故这个数**含重复劳动**，不是 46 种独立检查。
+> 47 道里有 2 组近重复 —— #9 与 #42（分流覆盖·mihomo|clash 分流覆盖）；#11 与 #46（规则集内容·mihomo|clash 规则集内容）。**刻意保留**：双档覆盖能让分流版与
+> 懒人版都查到；合并会让其中一档漏检。故这个数**含重复劳动**，不是 47 种独立检查。
 >
 > ✅ **本表由 `python skill/scripts/gen_gate_table.py --apply` 生成**，
 > 真源是 `verify_all.py --index`，**不要手抄**。
@@ -743,31 +743,32 @@ _skip_v7 = {'SKIP_V7': '1'}
 | 19 | 自托管清单·裸IP检测(emby) | `skill/scripts/egern/profile_ruleset.py --offline rules/emby.list` |
 | 20 | 闸门总览表同步 | `skill/scripts/gen_gate_table.py` |
 | 21 | 闸门清单对账 | `skill/tests/check_gate_manifest.py` |
-| 22 | Release 断言  [需 GITHUB_TOKEN] | `skill/tests/check_releases.py` |
-| 23 | clash secrets 扫描 | `skill/tests/clash/check_secrets.py` |
-| 24 | portability | `skill/tests/check_portability.py` |
-| 25 | min-pair 一致 | `skill/tests/check_min_pair.py` |
-| 26 | README 徽章 | `skill/tests/check_badges.py` |
-| 27 | markdown 链接 | `skill/tests/check_links.py .` |
-| 28 | Surge DNS lazy | `skill/scripts/surge/check_surge_dns.py surge/profiles/lazy.conf` |
-| 29 | Surge DNS routing | `skill/scripts/surge/check_surge_dns.py surge/profiles/routing.conf` |
-| 30 | Egern DNS 双份 | `skill/scripts/egern/check_egern_dns.py egern/profiles/lazy.yaml egern/profiles/routing.yaml` |
-| 31 | mihomo DNS 双份 | `skill/scripts/clash/check_clash_dns.py clash/profiles/lazy.yaml clash/profiles/routing.yaml` |
-| 32 | .min 漂移 | `skill/tests/make_min.py --check` |
-| 33 | 地区组判别力 | `skill/tests/check_region_filters.py` |
-| 34 | profile 结构 | `skill/tests/check_structure.py` |
-| 35 | 文档 AUTO 同步 | `skill/tests/sync_docs.py --check` |
-| 36 | clash 结构 | `skill/tests/clash/check_structure.py` |
-| 37 | clash min 版一致 | `skill/tests/clash/check_min_pair.py` |
-| 38 | clash 脚本/静态对拍 | `skill/tests/clash/check_script_sync.py` |
-| 39 | clash 规则集生成物 | `skill/scripts/clash/build_rules.py --check` |
-| 40 | clash 头注数字新鲜度 | `skill/tests/clash/check_header_numbers.py` |
-| 41 | clash 分流覆盖 | `skill/scripts/clash/audit_routing_coverage.py clash/profiles/routing.yaml clash/profiles/lazy.yaml` |
-| 42 | 自洽性 | `skill/tests/check_selfcontained.py` |
-| 43 | smart 权重口径 | `skill/tests/check_priority_weight.py` |
-| 44 | 版本头注 | `skill/tests/clash/check_version_header.py` |
-| 45 | clash 规则集内容 | `skill/scripts/clash/audit_ruleset_content.py clash/profiles/routing.yaml clash/profiles/lazy.yaml` |
-| 46 | clash 静态 profile 新鲜度 | `skill/scripts/clash/build_profiles.py --check` |
+| 22 | CHANGELOG 漂移 | `skill/tests/check_changelog_drift.py` |
+| 23 | Release 断言  [需 GITHUB_TOKEN] | `skill/tests/check_releases.py` |
+| 24 | clash secrets 扫描 | `skill/tests/clash/check_secrets.py` |
+| 25 | portability | `skill/tests/check_portability.py` |
+| 26 | min-pair 一致 | `skill/tests/check_min_pair.py` |
+| 27 | README 徽章 | `skill/tests/check_badges.py` |
+| 28 | markdown 链接 | `skill/tests/check_links.py .` |
+| 29 | Surge DNS lazy | `skill/scripts/surge/check_surge_dns.py surge/profiles/lazy.conf` |
+| 30 | Surge DNS routing | `skill/scripts/surge/check_surge_dns.py surge/profiles/routing.conf` |
+| 31 | Egern DNS 双份 | `skill/scripts/egern/check_egern_dns.py egern/profiles/lazy.yaml egern/profiles/routing.yaml` |
+| 32 | mihomo DNS 双份 | `skill/scripts/clash/check_clash_dns.py clash/profiles/lazy.yaml clash/profiles/routing.yaml` |
+| 33 | .min 漂移 | `skill/tests/make_min.py --check` |
+| 34 | 地区组判别力 | `skill/tests/check_region_filters.py` |
+| 35 | profile 结构 | `skill/tests/check_structure.py` |
+| 36 | 文档 AUTO 同步 | `skill/tests/sync_docs.py --check` |
+| 37 | clash 结构 | `skill/tests/clash/check_structure.py` |
+| 38 | clash min 版一致 | `skill/tests/clash/check_min_pair.py` |
+| 39 | clash 脚本/静态对拍 | `skill/tests/clash/check_script_sync.py` |
+| 40 | clash 规则集生成物 | `skill/scripts/clash/build_rules.py --check` |
+| 41 | clash 头注数字新鲜度 | `skill/tests/clash/check_header_numbers.py` |
+| 42 | clash 分流覆盖 | `skill/scripts/clash/audit_routing_coverage.py clash/profiles/routing.yaml clash/profiles/lazy.yaml` |
+| 43 | 自洽性 | `skill/tests/check_selfcontained.py` |
+| 44 | smart 权重口径 | `skill/tests/check_priority_weight.py` |
+| 45 | 版本头注 | `skill/tests/clash/check_version_header.py` |
+| 46 | clash 规则集内容 | `skill/scripts/clash/audit_ruleset_content.py clash/profiles/routing.yaml clash/profiles/lazy.yaml` |
+| 47 | clash 静态 profile 新鲜度 | `skill/scripts/clash/build_profiles.py --check` |
 
 另有**不进闸门**的 4 项 —— 下表由 `check_gate_manifest.KNOWN_SEPARATE` **直接生成**，
 > 与它不会分叉（第九轮问题 1：此前硬编码且谎称对账，两边曾不一致）：
