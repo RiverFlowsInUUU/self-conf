@@ -54,18 +54,16 @@
 
 ## 🌐 隐私至上 · 无 DNS 泄露
 
-| | <div align="center"><img src="https://raw.githubusercontent.com/RiverFlowsInUUU/self-conf/main/icons/Surge-Icon.png" height="22" alt=""> Surge</div> | <div align="center"><img src="https://raw.githubusercontent.com/RiverFlowsInUUU/self-conf/main/icons/Egern-Icon.png" height="22" alt=""> Egern</div> | <div align="center"><img src="https://raw.githubusercontent.com/RiverFlowsInUUU/self-conf/main/icons/mihomo-Icon.png" height="22" alt=""> mihomo</div> |
-|:--|:--|:--|:--|
-| 🚫 旁路设备 | `hijack-dns` 接管明文 `:53`（六个知名解析器） | `hijack_dns` 接管明文 `:53`（全量） | 由客户端 TUN 或透明代理重定向接管 |
-| 🔐 加密通道 | 主解析走 DoH，主机名端点经裸 IP 受控引导 | 主解析走 DoH/DoT，四条端点全是 IP 字面量 | 主解析走 DoH，端点一律写 IP 字面量 |
-| 🛡️ 明文回退 | `dns-server` 全裸 IP，绝不写 `system` | `forward` 兜底只指加密组，绝不落明文 | `default-nameserver` 裸 IP（仅引导）+ `proxy-server-nameserver` 专用通道 |
-| 🧭 规则克制 | IP 类规则一律 `no-resolve`；零 IP 的规则集不写 | IP 类规则一律 `no_resolve`；该键对 `rule_set` 不生效 | IP 类规则一律 `no-resolve`；纯域名规则集不写 |
-| ✂️ 远端解析 | 代理域名交节点解析，本地不留答案 | 代理域名交节点解析（`proxy_nameservers` 专用通道） | `fake-ip` 只回假 IP，真实解析在落地侧 |
-| 🔎 IPv6 | `ipv6 = false` | `ipv6: false` | 顶层 + `dns.ipv6` 两处都关 |
-| 🛑 广告拦截 | `pre-matching REJECT` | `forward` → `reject` | DNS 层双条件（`rcode://success` 与 `fake-ip-filter` 成对） |
-| 📦 数据库依赖 | 内置系统集 | 引用共享 `.list` | 零 dat 依赖，用 `.mrs` 远程集 |
+五条底线，三内核各自落地 —— 换客户端，防护不打折。
 
-三内核共通的底线：**解析器全加密 · 明文入口收口 · 代理域名不给真答案 · IPv6 显式关闭 · 广告拦截前移**。
+- 🔐 **解析器全加密** —— 主解析走 DoH / DoT，端点只写 IP 字面量，不靠明文引导
+- 🚫 **明文入口收口** —— 连绕过内核的设备，查询也被接管回来；不回落系统解析
+- ✂️ **代理域名不给真答案** —— 交节点解析，本地不留答案
+- 🔎 **IPv6 显式关闭** —— 不产生 AAAA 泄露面
+- 🛑 **广告拦截前移** —— 在解析阶段就拦掉，不是连上再断
+
+三内核机制不同、写法不同（Surge 列举收口 · Egern 全量收口 · mihomo 交客户端 TUN），
+但**底线一致**。逐键对照与推导见 [`dns.md`](self-conf-skills/references/dns.md)。
 
 每一条都有判据守着 —— 全套闸门 + CI，不是文档里的一句话。
 
