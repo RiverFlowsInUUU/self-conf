@@ -1,116 +1,137 @@
-# self-conf 维护手册
+---
+name: self-conf
+description: Surge / Egern / mihomo（Clash Meta）三内核代理配置模板的维护与改动。改 profile、调分流规则、加规则集、防 DNS 泄露、排查拦截失效或分流异常、发版、跑门禁时使用。只要用户提到 self-conf、Surge 配置、Egern 配置、mihomo / Clash 配置、分流版 / 懒人版、规则集、DNS 泄露、审计脚本、闸门，或让你改这个仓库里的配置，就用这个技能——即使用户没明说仓库名。它给出「先读哪份、改完跑哪道门禁、什么算做完」。
+---
 
-三内核（Surge / Egern / mihomo）配置模板。
+# self-conf 维护
 
-原仓 `Self-Configuration` 与 `Clash` 保持不变；本仓用于验证
-「三内核共用一份资产」是否真的成立。折腾不成也不影响它们。
+三内核（Surge / Egern / mihomo）配置模板仓。**配置本身是给人读的**（注释写满了「为什么」）；
+本技能是给 AI 的操作规程。
 
 ---
 
-## 1 · 布局：目录并列，不重命名
+## 0 · 三条底线
+
+1. **改配置 = 改两份**。每份 profile 都有 `.conf`/`.yaml` 与 `.min` 两份形态，
+   **只差注释、内容必须逐字相同**。改完整版必须同步 `.min`（或跑 `make_min.py`）。
+   漂移由 `check_min_pair.py` 兜底。
+2. **`rules/*.yaml` 是生成物，不手改**。真源是 `rules/*.list`，跑
+   `python skill/scripts/clash/build_rules.py` 重生成。
+3. **改完必须跑门禁**。`python skill/tests/verify_all.py` —— 它是唯一入口，
+   与 CI 同源。**"我改对了"不算做完，门禁绿了才算。**
+
+---
+
+## 1 · 我要做什么 → 读哪份 → 跑哪道门禁
+
+| 你要做的事 | 先读 | 改完跑 |
+|:--|:--|:--|
+| 改 Surge 配置的某个键 | `reference/profiles/surge.md` + 该键在 `surge/profiles/*.conf` 里的注释 | `verify_all.py` |
+| 改 Egern 配置 | `reference/profiles/egern.md` + `egern/profiles/*.yaml` 注释 | `verify_all.py` |
+| 改 mihomo 配置 / 覆写脚本 | `reference/profiles/clash.md` | `verify_all.py` + `build_profiles.py --check` |
+| 动 DNS / 防泄露逻辑 | `reference/dns.md` | `verify_all.py`（含 3 道 DNS 审计） |
+| 加 / 换 / 删规则集 | `reference/rulesets.md` | `verify_all.py` |
+| 排查拦截失效、分流异常 | `reference/pitfalls.md` | 按该篇定位 |
+| 日常操作、发版、加固清单 | `reference/ops.md` | `verify_all.py` |
+| 改门禁脚本、改判据 | `reference/gates.md` | `verify_all.py` + 该篇「新增闸门自查清单」 |
+
+**reference/ 只有 8 篇**，全部在 `skill/reference/` 下：
 
 ```
-surge/  egern/  clash/      各内核一个顶层目录
-icons/  rules/              共享资产
-skill/tests/*.py            跨内核门禁（Surge / Egern 用）
-skill/tests/clash/*.py      mihomo 专属门禁
+profiles/{surge,egern,clash}.md   逐键语义 + 加固模板（改配置前查这里）
+dns.md                            DNS 泄露原理 + 三内核落地语法
+rulesets.md                       规则集选型、权重、跨内核差异
+pitfalls.md                       事故复盘（排查时查这里）
+ops.md                            日常操作 / 加固清单 / 发版规矩
+gates.md                          门禁判据与纪律（改判据前必读）
 ```
 
-**为什么并列而不是混在一起**：两仓的同名文件太多了
-（`check_structure.py` / `check_min_pair.py` / `check_secrets.py`），
-判据完全不同，混放会互相覆盖。按内核分目录 → **零重命名、零冲突**，
-原脚本可以一字不改地搬过来跑。
+---
 
-实测：`skill/tests/check_structure.py`（Surge/Egern 版）搬到新仓后
-**零改动直接通过**。
+## 2 · 目录结构
 
-## 2 · 共享资产：单一真源
-
-### rules/
-
-`AI.list` / `apple_system.list` / `emby.list` 是**唯一真源**（`.list`，Surge 原生）。
-mihomo 用的 `.yaml` 由脚本生成：
-
-```bash
-python skill/scripts/clash/build_rules.py           # 生成
-python skill/scripts/clash/build_rules.py --check   # CI 用：过期即判负
+```
+surge/profiles/    lazy.conf · lazy.min.conf · routing.conf · routing.min.conf
+egern/profiles/    同名 .yaml
+clash/profiles/    同名 .yaml（静态交付形态）
+clash/override/    my_clash.js · my_clash_lazy.js（覆写脚本形态，挂订阅上用）
+rules/             AI.list · apple_system.list · emby.list（唯一真源）
+icons/             策略组图标，三内核共用
+skill/
+  SKILL.md         本文件（AI 入口）
+  reference/       8 篇技术文档
+  scripts/         审计 / 生成脚本（<kernel>/ 分子目录）
+  tests/           门禁脚本 + verify_all.py（唯一入口）
 ```
 
-改内容只改 `.list`，重跑脚本。物理上不可能漂移。
+**三内核并列、不混放**：同名判据脚本判据完全不同，按内核分目录 ⇒ 零改名、零冲突。
 
-> 整合前两仓各存一份（emby 4 / apple_system 18 / AI 272 条，逐条相同），
-> 双份维护 —— 这是合并最直接的收益。
+---
 
-### icons/
-
-40 个图标 PNG + 1 个 SVG，三内核引用同一份。整合时 34 个同名文件**内容字节完全一致**，零冲突。
-
-## 3 · 分歧：内核机制决定，不要去"对齐"
+## 3 · 三内核的分歧（**不要去"对齐"**）
 
 | 项 | Surge / Egern | mihomo |
 |:--|:--|:--|
 | 地区组 | `smart` + filter | `url-test` + filter |
-| 订阅源 | `Airport` external 组 | proxy-provider |
-| 倍率分档 | `policy-priority` 权重 | 模板靠 `filter` 三档；**脚本做不到** |
+| 订阅源 | `Airport` external 组 | `proxy-provider` |
+| 倍率分档 | `policy-priority` 权重 | 模板靠 `filter` 分档；**脚本做不到**（生成期看不到节点名） |
 | 规则集格式 | `.list` | `.mrs` / `.yaml` |
+| `.min` 生成 | `make_min.py` | 无生成器，靠对拍兜底 |
 
-⚠️ 倍率分档这条最容易误判为漂移：
-mihomo 模板能用 `filter` 在运行时分档，脚本在订阅加载时执行一次、
-看不到 provider 节点名，故脚本侧是单组 fallback。
-`check_script_sync.py` 把它列为**已知差异**，打印提醒但不判负。
+⚠️ 倍率分档最容易被误判成漂移。`check_script_sync.py` 把它列为**已知差异**，
+打印提醒但不判负。
 
-## 4 · 已消弭的冲突（整合时实际遇到）
+---
 
-| 冲突 | 处理 |
-|:-----|:-----|
-| `check_structure.py` 等 3 个同名文件 | 按内核分目录 |
-| Surge/Egern 的路径相对仓库根，搬到子目录会失效 | 保留原位（不进子目录） |
-| mihomo 的 `198.18.0.1`（fake-ip 段）被 Surge 侧 secrets 扫描判为真实 IP | 给 `DOC_NETS` 加 `198.18.`（RFC 6815 保留段） |
+## 4 · 共享资产：单一真源
 
-第 3 条值得记：那是 mihomo 的**合法保留段**，但 Surge / Egern 侧不认识。
-不加白名单就会被误判 —— 整合必须处理这类"各内核的常识不同"。
-
-## 5 · 改配置的顺序
+`rules/*.list` 是唯一真源（Surge 原生格式），mihomo 用的 `.yaml` 由脚本生成：
 
 ```bash
-# Surge / Egern 侧
-python skill/tests/verify_all.py
-
-# mihomo 侧
-python skill/tests/clash/check_structure.py
-python skill/tests/clash/check_min_pair.py
-python skill/tests/clash/check_script_sync.py
-python skill/scripts/clash/build_rules.py --check   # 规则集生成物是否过期
-
-# 慢，按需
-python skill/tests/clash/check_remote_urls.py
+python skill/scripts/clash/build_rules.py           # 生成
+python skill/scripts/clash/build_rules.py --check   # 过期即判负（CI 用）
 ```
 
-## 6 · 门禁清册
+改内容只改 `.list`，重跑脚本 —— **物理上不可能漂移**。
 
-**跨内核**（`skill/tests/`）
-`verify_all.py`（总入口）· `check_structure` · `check_min_pair` ·
-`check_secrets` · `check_badges` · `check_links` · `check_portability` ·
-`check_region_filters` · `check_releases` · `make_min` · `sync_docs`
+---
 
-**mihomo 专属**（`skill/tests/clash/`）
-`check_structure` · `check_min_pair` · `check_script_sync` ·
-`check_remote_urls` · `check_secrets`
+## 5 · 已知陷阱（CI 暴露过、本地全绿也没用的）
 
-## 7 · 踩过的坑（CI 暴露，本地全绿也没用）
+| 现象 | 根因 | 处置 |
+|:--|:--|:--|
+| Linux CI 报「缺文件」，本地全过 | `_default_root()` 靠 `__file__` 推算，Actions 下算错 | 已改 CWD 优先 + 逐级向上探测 |
+| `198.18.0.1` 被判真实 IP | 那是 mihomo 的 fake-ip 段（RFC 6815），Surge/Egern 侧不认 | 已加 `DOC_NETS` 白名单 |
+| CRLF 判负 | Clash 侧曾混入 CRLF | 已转 LF + `.gitattributes` 钉 `eol=lf` |
+| 子进程输出 UnicodeDecodeError | 中文 Windows 管道默认 GBK，而内容是 UTF-8 | 一律显式 `encoding='utf-8'` |
+| 联网探测偶发超时 → CI 红 | 冷连接 / 丢包，不是端点失效 | 已加重试（`RETRIES=3`） |
 
-| 现象 | 根因 | 处理 |
-|:-----|:-----|:-----|
-| Linux CI 上 clash 门禁报「缺文件」，本地全过 | `_default_root()` 基于 `__file__` 向上推算，在 Actions 的调用方式下算错目录 | 改为 CWD 优先 + 逐级向上探测，找到同时含 `profiles/` 与 `override/` 的目录 |
-| V7「一天一版」判负：一天升了 21 个版本 | 复制文件时 mtime 丢失，历史归档全变成复制当天 | `cp -p` 保留 mtime；另加 `SKIP_V7` 开关应对"本就不继承 git 历史" |
-| `198.18.0.1` 被判为真实 IP | 那是 mihomo 的 fake-ip 段（RFC 6815），Surge/Egern 侧不认识 | 加入 `DOC_NETS` 白名单 |
-| CRLF 判负 | Clash 侧 3 个文件是 CRLF | 转 LF + 搬入 `.gitattributes` |
+**最重要的一条：本地全绿 ≠ 线上能跑。** 路径探测、编码、网络这类环境相关的东西，
+必须让 CI 跑一遍才算数。
 
-第一条最值得记：**本地全绿 ≠ 线上能跑**。路径探测这类环境相关的东西，
-一定要让 CI 跑一遍才算数。
+---
 
-## 8 · 红线
+## 6 · 门禁（唯一入口 `verify_all.py`）
 
-- ❌ 不改 `Self-Configuration` 与 `Clash` 两个原仓
+```bash
+python skill/tests/verify_all.py          # 全跑，出汇总表
+python skill/tests/verify_all.py -v       # 带详细输出
+python skill/tests/verify_all.py --index  # 只列清单（现抓，勿手抄）
+```
+
+退出码：**0 = 全过 · 1 = 判负 · 2 = 环境不达标（先修环境，别读判据）· 3 = 未验证**。
+
+⚠️ **3 不是绿**。汇总表里显示 ⚠️ 且不计入 passed。
+分界线只有一条：**没读到远端真值 = 3；读到了但不过 = 1。**
+
+判据要改？先读 `reference/gates.md` 的「新增闸门自查清单」——
+**一道从不判红的闸门比没有更糟**，它给虚假的安全感。
+
+---
+
+## 7 · 红线
+
 - ❌ 不手工编辑 `rules/*.yaml`（生成物，改真源 `.list`）
-- ⚠️ 结构性调整需先补判据，不靠"再跑一遍"
+- ❌ 不让 `.min` 与完整版漂移（改一份必须同步另一份）
+- ❌ 不为让门禁变绿而改判据 —— 改判据需要先说明「原判据错在哪」
+- ⚠️ 结构性调整先补判据，不靠"再跑一遍"

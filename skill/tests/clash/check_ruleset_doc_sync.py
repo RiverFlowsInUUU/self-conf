@@ -3,7 +3,7 @@
 """规则集来源文档同步 —— 配置改了 URL，文档表必须跟着改。
 
 为什么需要
-    `ruleset-sources.md` 的「全部规则集」表写着每份规则集的**来源**（仓库 + 路径）。
+    `reference/rulesets.md` 的「全部规则集」表写着每份规则集的**来源**（仓库 + 路径）。
     它是人读的对照表，但改配置里的 `rule-providers.*.url` 时**没有机器逼着同步** ——
     `check_remote_urls.py` 扫的是配置里的 URL（不管文档），
     `check_selfcontained.py` 也不扫 `.md`。
@@ -42,7 +42,7 @@ HERE = os.path.dirname(os.path.abspath(__file__))
 ROOT = sys.argv[1] if len(sys.argv) > 1 else os.path.dirname(
     os.path.dirname(os.path.dirname(HERE)))
 
-DOC = os.path.join(ROOT, "skill", "reference", "clash", "ruleset-sources.md")
+DOC = os.path.join(ROOT, "skill", "reference", "rulesets.md")
 ROUTING = os.path.join(ROOT, "clash", "profiles", "routing.yaml")
 LAZY = os.path.join(ROOT, "clash", "profiles", "lazy.yaml")
 

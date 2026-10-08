@@ -9,7 +9,7 @@
     这个维度不是多余的 —— 姊妹仓的 f7 事故正是它缺席的代价：
     给 `geoip: CN` 补 `no_resolve` 后，两个 DNS 审计**双双全绿**，
     国内域名却整片落到 `default → Proxy`。补上第三个维度（分流覆盖审计）
-    才兜住。详见 [`no-resolve-pairing.md`](../../../skill/reference/shared/no-resolve-pairing.md)。
+    才兜住。详见 [`reference/dns.md`](../../../skill/reference/dns.md)。
 
 ============================================================================
 两档：离线档（默认 · CI 用）与联网档（--online）

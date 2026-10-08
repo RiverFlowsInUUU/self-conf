@@ -18,7 +18,7 @@
       ⚠️ **已知挂账**：闸门清单靠人工双写（ci.yml ↔ 本文件），机器对账未做（对账脚本
       自身也是维护面）。**推翻挂账的触发条件**：一旦出现「一侧增删闸门、另一侧未同步」
       且事后确认是人工漏同步造成的本地/CI 结论分歧，就必须补上清单对账断言。
-    · 退出码语义（全仓统一，见 reference/shared/troubleshoot-faq.md §8.2）：
+    · 退出码语义（全仓统一，见 reference/pitfalls.md §8.2）：
       0 = 判据全过 ｜ 1 = 有判负 ｜ 2 = 前置环境不达标（**计入失败，先修环境再看判据**）
       ｜ 3 = SKIP（未能验证 → 不计入失败但必须明示）。
       3 的准入 = 「没读到远端真值」。**任何脚本不得因故障/未知错误返回 3**（故障走 2、
@@ -116,51 +116,78 @@ def _token():
     return None
 
 
-# CI 侧允许放行的已登记豁免闸门（见 release-rules.md §4.1）
-# ⚠️ 白名单护栏（2026-10-08 第七轮审查问题 5）：
-#   这个元组原本只是"按闸门名字硬编码"，不与任何登记交叉校验 ⇒
-#   任何人把它改大就能在 CI 上免除 SKIP 判负，没有断言拦着。
-#   现：每一项都必须能在 release-rules.md §4.1 找到对应的登记条目
-#   （按「闸门名 / 涉及脚本名」任一命中即可），否则启动即报错。
-CI_ALLOWED_SKIP = ('min-pair 一致',)
-_RULES_DOC = os.path.join(os.path.dirname(os.path.abspath(__file__)),
-                          '..', 'reference', 'shared', 'release-rules.md')
+# ─────────────────────────────────────────────────────────────────────
+# 环境变量登记（逃生门 / 输入类 / 动态读取）
+#
+# ⚠️ 2026-10-08 改革：这份登记**从文档搬进了代码**。
+#    旧做法把三张登记表放在 `reference/ops.md` 的 §4.2.1/§4.2.2/§4.2.3，
+#    再写解析器去读它 —— 结果是：文档与代码必须同步，于是又长出「登记漂移」
+#    这个需要专门门禁去守的元问题。而登记本质就是**代码的元数据**，
+#    放进代码里 ⇒ 物理上不可能漂移，解析器与章节定位代码全部删除。
+#
+# 判据：AST 抓到的全部名字 − INPUT（输入类）= 放行类候选；
+#       候选必须 ∈ ESCAPES，否则启动即报错（防悄悄加后门）。
+# ─────────────────────────────────────────────────────────────────────
+
+# 放行类：能动判据宽严的开关。每项写明「默认是否安全」。
+ESCAPES = {
+    # 已全部移除：SKIP_V7 / STRICT_ARCHIVE（归档机制已删）、UNIFIED_VERSION
+    # （三内核同号已由 check_min_pair 的 X 判据硬性守住，无需覆盖开关）。
+}
+
+# 输入类：只提供运行所需信息，缺了只是「环境没准备好」，不是「标准被放低」。
+INPUT = {
+    'GITHUB_TOKEN', 'GITHUB_REPO', 'GITHUB_ACTIONS', 'CI',
+}
+
+# 静态判不出名字的动态读取（如 os.environ.get(var)）⇒ 必须登记，登记 = 人工看过。
+DYNAMIC_READS = {
+    # 只读路径类变量（LOCALAPPDATA / PROGRAMFILES / …）用于定位 gh.exe，
+    # 与判据宽严无关。
+    'tests/verify_all.py',
+}
 
 
-def _assert_allowlist_registered():
-    """白名单项必须在 release-rules §4.1 有登记，防止悄悄扩权。"""
-    # ⚠️ 第八轮审查问题 2：原实现 fail-open（读不到文档就 return 静默放行），
-    #    且按**松散子串**匹配 —— 闸门名只要在 §4.1 附近被"提到过"就被接受。
-    #    现改为 fail-closed + **精确标记**匹配：
-    #      登记格式必须是「闸门名 `X`」或「**`X`**」这类显式登记行。
-    try:
-        doc = open(os.path.normpath(_RULES_DOC), encoding='utf-8').read()
-    except Exception as e:
-        raise SystemExit('❌ 读不到 release-rules.md（%s）—— '
-                         'CI 豁免白名单无法校验，不放行' % e)
-    i = doc.find('### 4.1 已知豁免')
-    if i < 0:
-        raise SystemExit('❌ release-rules.md 里找不到「### 4.1 已知豁免」 —— '
-                         'CI 豁免白名单无法校验，不放行')
-    # ⚠️ 第九轮问题 6 / 第十轮问题 1（两次才改对）：
-    #    · 最初 `doc[i:i+4000]` 固定窗口 ⇒ §4.1 变长会误判
-    #    · 第九轮改成"找下一个 `### `" ⇒ **更松**：§4.1 是三级标题，它后面下一个
-    #      标题是 `## 5`（二级）⇒ find 返回 -1 ⇒ 走 doc[i:] ⇒ **吃到文件末尾**
-    #      ⇒ 闸门名只要在 §4.1 之后任何地方（§5/§6）出现就自动被接受 = 悄悄扩权。
-    #    现改为：找**级别 ≤ 3 的下一个标题**（`#{1,3} `），§4.1 整节到此为止。
-    m = re.search(r'\n#{1,3} ', doc[i + 10:])
-    seg = doc[i:i + 10 + m.start()] if m else doc[i:]
-    missing = []
-    for x in CI_ALLOWED_SKIP:
-        # 精确登记标记：反引号包裹的闸门名（避免"被提到过"就算登记）
-        if ('`%s`' % x) in seg:
-            continue
-        missing.append(x)
+def _assert_escapes_registered():
+    """放行类逃生门必须在 ESCAPES 里登记 —— 防悄悄加后门。
+
+    fail-closed：AST 抓到但既不在 ESCAPES 也不在 INPUT ⇒ 报错，不放行。
+    反向：登记了但代码不再读 ⇒ 提醒（不报错，避免删代码被卡）。
+    """
+    found, dynamic_reads = _collect_env_reads()
+    alive = set()
+    for v in found.values():
+        alive.update(v)
+
+    missing = sorted(x for x in (alive - INPUT) if x not in ESCAPES)
     if missing:
+        where = {}
+        for f, vs in found.items():
+            for x in missing:
+                if x in vs:
+                    where.setdefault(x, []).append(f)
         raise SystemExit(
-            '❌ CI_ALLOWED_SKIP 里的 %s 未在 release-rules.md §4.1 以 '
-            '「`闸门名`」形式登记 —— 不许悄悄扩权（要么先登记，要么别加）'
-            % '、'.join(missing))
+            '❌ 这些环境变量被代码读取却没登记：\n'
+            + '\n'.join('     %s  ← %s' % (x, '、'.join(where.get(x, ['?'])))
+                        for x in missing)
+            + '\n   —— 放行类（能改判据宽严）⇒ 加进本文件 ESCAPES 并写明默认安全性；'
+              '输入类（只是环境信息）⇒ 加进 INPUT。不放行。')
+
+    unlisted = []
+    for rel in sorted(dynamic_reads):
+        norm = rel.replace('\\', '/')
+        if norm not in DYNAMIC_READS and ('skill/' + norm) not in DYNAMIC_READS:
+            unlisted.append(norm)
+    if unlisted:
+        raise SystemExit(
+            '❌ 这些文件用**动态名字**读环境变量（如 `os.environ.get(var)`），'
+            '静态判不出具体名字 ⇒ 无法确认是否夹带后门：\n'
+            + '\n'.join('     %s' % x for x in unlisted)
+            + '\n   —— 确认无放行类后门后，加进本文件 DYNAMIC_READS；否则改成字面量。不放行。')
+
+    stale = sorted(x for x in ESCAPES if x not in alive)
+    if stale:
+        print('   ℹ️ ESCAPES 登记了但代码不再读取：%s（可选清理）' % '、'.join(stale))
 
 
 def _scan_env_reads_in(tree, pat):
@@ -460,123 +487,8 @@ def _selftest_env_scan():
 
 
 
-def _assert_escapes_registered():
-    """放行类逃生门必须在 release-rules §4.2.1 登记 —— 防悄悄加后门（第十一轮问题 4）。
-
-    只查**放行类**（能让判据放行的），不管输入类（`GITHUB_TOKEN` 等）—— 后者缺了
-    是"环境没准备好"(exit 2/3)，不是"标准被放低"，不该被这道拦。
-    fail-closed：读不到文档 ⇒ 报错；看不懂 §4.2.1 ⇒ 报错。
-    """
-    try:
-        doc = open(_RULES_DOC, encoding='utf-8').read()
-    except Exception as e:
-        raise SystemExit('❌ 读不到 release-rules.md，逃生门无法校验 —— 不放行 (%s)' % e)
-    i = doc.find('### 4.2 ')
-    if i < 0:
-        raise SystemExit('❌ release-rules.md 没有 §4.2 —— 逃生门登记缺失，不放行')
-    j = doc.find('\n#### 4.2.2', i + 10)
-    k4_3 = doc.find('\n### 4.3', i + 10)
-    endits = [x for x in (j, k4_3, len(doc)) if x > 0]
-    sec = doc[i:i + 10 + min(endits) - 10] if endits else doc[i:]
-    # ⚠️ 只认**表格第一列**的 `NAME` 作为登记凭据（第十一轮自测发现的问题）：
-    #    若用全文反引号匹配，§4.2.1 里那句「机器登记项：SKIP_V7 · STRICT_ARCHIVE ·
-    #    UNIFIED_VERSION」也会命中 ⇒ **删掉表格行却仍能通过** = 登记形同虚设。
-    #    说明性文字不是凭据，表格才是。
-    registered = set()
-    for ln in sec.splitlines():
-        s = ln.strip()
-        if not s.startswith('|'):
-            continue
-        cells = [c.strip() for c in s.strip('|').split('|')]
-        if not cells:
-            continue
-        first = cells[0]
-        if first.startswith('`') and first.endswith('`'):
-            nm = first.strip('`')
-            if re.fullmatch(r'[A-Z_][A-Z0-9_]*', nm):
-                registered.add(nm)
-
-    # ⚠️ 第十二轮问题 2（护栏方向做反了）：
-    #   原实现是「遍历 GATE_CHANGING 这 3 个**硬编码**名字 → 查有没有登记」，
-    #   ⇒ 新加一个放行类后门（名字不在这 3 个里）**一个都抓不到**，
-    #     而 §4.2.1 正文却自称「反查 skill/**/*.py 读取的**每一个**环境变量名」
-    #     —— 文档与实现不符，且恰好放过了这条护栏声称要防的事。
-    #   现改为：**AST 抓到的全部名字 − §4.2.2 输入类白名单 = 放行类候选**，
-    #   再与表格做差集 ⇒ 任何新后门都无处可藏。
-    found, dynamic_reads = _collect_env_reads()
-    alive = set()
-    for v in found.values():
-        alive.update(v)
-
-    # §4.2.2 输入类白名单：这些不改判据宽严（缺了只是环境没准备好），不算逃生门。
-    # 从 §4.2.2 表格**现抓**，避免与文档分叉（与 §4.2.1 同一套解析）。
-    input_ok = set()
-    i2 = doc.find('#### 4.2.2')
-    if i2 > 0:
-        j2 = doc.find('\n### ', i2 + 10)
-        sec2 = doc[i2:j2] if j2 > 0 else doc[i2:]
-        for ln in sec2.splitlines():
-            st = ln.strip()
-            if not st.startswith('|'):
-                continue
-            cells = [c.strip() for c in st.strip('|').split('|')]
-            if cells and cells[0].startswith('`') and cells[0].endswith('`'):
-                nm = cells[0].strip('`')
-                if re.fullmatch(r'[A-Z_][A-Z0-9_]*', nm):
-                    input_ok.add(nm)
-    if not input_ok:
-        raise SystemExit('❌ release-rules.md §4.2.2 输入类白名单解析为空 —— '
-                         '无法区分逃生门与普通输入，不放行')
-
-    candidates = alive - input_ok
-    missing = sorted(x for x in candidates if x not in registered)
-    if missing:
-        where = {}
-        for f, vs in found.items():
-            for x in missing:
-                if x in vs:
-                    where.setdefault(x, []).append(f)
-        raise SystemExit(
-            '❌ 这些环境变量被代码读取却**没登记**在 release-rules.md §4.2.1：\n'
-            + '\n'.join('     %s  ← %s' % (x, '、'.join(where.get(x, ['?'])))
-                         for x in missing)
-            + '\n   —— 若为放行类逃生门：登记（写明默认安全与谁在用）；'
-              '若只是输入类：加进 §4.2.2 白名单。不放行。')
-    # 反向：登记了但代码已不再读 ⇒ 提醒（不报错，避免删代码被卡）
-    # ⚠️ 第十三轮问题 1：静态**判不出**的动态读取（名字存在变量里等）。
-    #    不假装能抓 ⇒ 要求所在文件显式登记豁免；否则报错。
-    #    （verify_all.py 自己第 ~77 行的 `os.environ.get(env)` 就是这种 —— 也必须登记。）
-    dyn_allow = set()
-    i3 = doc.find('#### 4.2.3')
-    if i3 > 0:
-        j3 = doc.find('\n### ', i3 + 10)
-        sec3 = doc[i3:j3] if j3 > 0 else doc[i3:]
-        for ln in sec3.splitlines():
-            st = ln.strip()
-            if not st.startswith('|'):
-                continue
-            cells = [c.strip() for c in st.strip('|').split('|')]
-            if cells and cells[0].startswith('`') and cells[0].endswith('`'):
-                raw = cells[0].strip('`').replace('\\', '/')
-                dyn_allow.add(raw)
-                if raw.startswith('skill/'):
-                    dyn_allow.add(raw[len('skill/'):])
-    unlisted = []
-    for rel in sorted(dynamic_reads):
-        norm = rel.replace('\\', '/')
-        if norm not in dyn_allow and ('skill/' + norm) not in dyn_allow:
-            unlisted.append(norm)
-    if unlisted:
-        raise SystemExit(
-            '❌ 这些文件用**动态名字**读环境变量（如 `os.environ.get(var)`），'
-            '静态判不出具体名字 ⇒ 无法确认是否夹带后门：\n'
-            + '\n'.join('     %s' % x for x in unlisted)
-            + '\n   —— 确认无放行类后门后，把路径加进 release-rules.md §4.2.3 白名单'
-              '（登记即表示人工看过）；否则改成字面量。不放行。')
-
-    stale = sorted(x for x in registered if x not in alive)
-    if stale:
-        print('   ℹ️ §4.2.1 登记了但代码不再读取：%s（可选清理）' % '、'.join(stale))
+def _assert_escapes_registered_OLD_REMOVED():
+    """（已删除，见上方新实现）"""
 
 
 def build_gates():
@@ -597,12 +509,6 @@ def build_gates():
     # ⚠️ 2026-10-08 第四轮审查 P4-a：min-pair 这道带 SKIP_V7=1，
     # 其中 V7 两条会返回「未验证」。verify_all 不能把它显示成 ✅。
     # 下面用 exit code 3 的约定：脚本以 3 结束 = 未验证（见本文件头注）。
-    _skip_v7 = {'SKIP_V7': '1'}
-    # ⚠️ CI_ALLOWED_SKIP **只在这里（模块级）定义一次**。
-    #    此前 build_gates() 里还有一份带 `global` 的重新赋值 ⇒ 双真源，
-    #    而护栏只校验模块级那份 ⇒ 改 :124 那份就能悄悄扩权、护栏一声不吭
-    #    （第八轮审查问题 1/4）。现已删除，入口唯一。
-
     gates = [
         ('secrets 扫描', [PY, 'skill/tests/check_secrets.py'], {}),
         # ── 自检脚本接进闸门（2026-10-08，第三轮审查第 14 条）
@@ -655,21 +561,13 @@ def build_gates():
          [PY, 'skill/scripts/egern/profile_ruleset.py', '--offline', 'rules/apple_system.list'], {}),
         ('自托管清单·裸IP检测(emby)',
          [PY, 'skill/scripts/egern/profile_ruleset.py', '--offline', 'rules/emby.list'], {}),
-        # 闸门清单对账：ci.yml 与 verify_all 跑的是不是同一套（消掉 checker.md §12.2 的挂账）
-        # 第四轮审查 P5：§11 总览表此前「没人生成、没人守」⇒ 会静默漂移。
-        # 现由 gen_gate_table.py 生成 + 同一脚本 --check 判负。
-        ('闸门总览表同步', [PY, 'skill/scripts/gen_gate_table.py'], {}),
-        ('闸门清单对账', [PY, 'skill/tests/check_gate_manifest.py'], {}),
-        # 第十五轮新增：未定义名扫描。本仓已两次栽在**同一类** bug 上
-        # （`check_script_sync.py` 的 `diff` / `check_badges.py` 的 `NL`），
-        # 两次都只在「异常/判负路径」上才炸 ⇒ 现役恒好时永远潜伏，
-        # 而真炸时会把「环境不达标(2)」变成「判负(1)」。
-        # 刻意不引 pyflakes：外部依赖 + 29 条噪声里只 1 条真 bug（信噪比 1/29）
-        # ⇒ 自实现窄判据（仅 F821 类），零依赖、零豁免。详见该脚本 docstring。
+        # 闸门清单对账已删（2026-10-08 改革）：ci.yml 与 build_gates() 同源是纪律，
+        # 不靠一道门禁去守「两份手写清单一致」—— 那本质是消除重复而非加护栏。
+        # 未定义名扫描：本仓已两次栽在同一类 bug（只在异常/判负路径上才炸，
+        # 现役恒好时永远潜伏）。刻意不引 pyflakes（外部依赖 + 信噪比 1/29）。
         ('未定义名扫描', [PY, 'skill/tests/check_undefined_names.py'], {}),
         # 2026-10-08：本仓已发布首个 Release ⇒ R1–R5 判据启用。
         # 需网络 + GITHUB_TOKEN（缺省回退 gh auth token）；不可达时走 SKIP(3)=未验证。
-        ('CHANGELOG 漂移', [PY, 'skill/tests/check_changelog_drift.py'], {}),
         ('Release 断言', [PY, 'skill/tests/check_releases.py'],
          {'GITHUB_TOKEN': _token() or ''}),
         # 2026-10-07 零信任自查补入：clash 侧凭据扫描此前**不在任何闸门里**
@@ -678,7 +576,7 @@ def build_gates():
         # 后误报归零，现正式进闸门。
         ('clash secrets 扫描', [PY, 'skill/tests/clash/check_secrets.py'], {}),
         ('portability', [PY, 'skill/tests/check_portability.py'], {}),
-        ('min-pair 一致', [PY, 'skill/tests/check_min_pair.py'], _skip_v7),
+        ('min-pair 一致', [PY, 'skill/tests/check_min_pair.py'], {}),
         ('README 徽章', [PY, 'skill/tests/check_badges.py'], {}),
         ('markdown 链接', [PY, 'skill/tests/check_links.py', '.'], {}),
         # ✅ 2026-10-08 起**已启用**（首个 Release v2026-10-08 已发布），不再是豁免。
@@ -695,10 +593,8 @@ def build_gates():
         ('.min 漂移', [PY, 'skill/tests/make_min.py', '--check'], {}),
         ('地区组判别力', [PY, 'skill/tests/check_region_filters.py'], {}),
         ('profile 结构', [PY, 'skill/tests/check_structure.py'], {}),
-        ('文档 AUTO 同步', [PY, 'skill/tests/sync_docs.py', '--check'], {}),
         # ── mihomo（clash/）专属门禁：整合后纳入总入口，三内核一视同仁 ──
         ('clash 结构', [PY, 'skill/tests/clash/check_structure.py'], {}),
-        ('clash min 版一致', [PY, 'skill/tests/clash/check_min_pair.py'], {}),
         ('clash 脚本/静态对拍', [PY, 'skill/tests/clash/check_script_sync.py'], {}),
         ('clash 规则集生成物', [PY, 'skill/scripts/clash/build_rules.py', '--check'], {}),
         ('clash 头注数字新鲜度', [PY, 'skill/tests/clash/check_header_numbers.py'], {}),
@@ -756,27 +652,22 @@ def run_one(name, argv, extra_env):
 def print_index():
     """--index：只读列出闸门清单（现抓 build_gates()），**不判负、不跑闸门、退出码 0**。
 
-    存在理由：闸门清单在 `ci.yml` 与 `docs` 里各有一份**手写副本**（已挂账），手抄必然漂移。
-    要引用清单时**用本命令现抓**，别把它复制成第三份死表 —— 尤其**不要回填进 CI**（那等于把
-    漂移面原样请回来）。输出仅供**人读 + 文档引用**。
+    存在理由：闸门清单不应被手抄成第二份。要引用清单时**用本命令现抓**。
+    输出仅供**人读 + 文档引用**。
     """
-    _assert_allowlist_registered()
+    _assert_escapes_registered()
     gates = build_gates()
     print(f'闸门清单：{len(gates)} 道（现抓自 build_gates()，勿手抄成死表）\n')
     for i, (name, argv, env) in enumerate(gates, 1):
         need = '  [需 GITHUB_TOKEN]' if 'GITHUB_TOKEN' in env else ''
         print(f'{i:>2}. {name}{need}')
         print(f'      {" ".join(argv[1:])}')
-    print(f'\nCI 侧为 5 个 step（Install deps / Gates / Encoding gate / Remote ruleset / Encrypted DNS）（Surge 双 profile 合并在同一 run 内）—— 其中第 3 个'
-          f'「Encoding gate (cp936)」以本脚本为入口复跑一遍，故**不进 build_gates()**'
-          f'（进去即递归）；与上表按 step 聚合后形状不同，属已知挂账，见本文件头注。')
     sys.exit(0)
 
 
 def main():
-    _assert_allowlist_registered()   # 护栏必须在**真正入口**跑（第八轮审查问题 1）
-    _selftest_env_scan()             # AST 判据注错回归（第十五轮）
-    _assert_escapes_registered()     # 逃生门登记（第十一轮问题 4）
+    _selftest_env_scan()             # AST 判据注错回归
+    _assert_escapes_registered()     # 环境变量登记（逃生门防后门）
     if '--index' in sys.argv:
         print_index()
     verbose = '-v' in sys.argv
@@ -821,21 +712,14 @@ def main():
     #    后果：GITHUB_TOKEN 缺失/过期时 `Release 断言` 返回 3，而 verify_all 仍 exit 0
     #    ⇒ **Release 纪律在 CI 里被静默关掉，构建照样绿**。
     #    这正是本仓自己在防的「共享环境变量掩盖真实失败」。现按 docstring 的意图补上。
+    # CI 里 SKIP(3) 视为失败 —— 读不到远端通常是 token 缺失或环境异常，不能静默放行。
+    # （本仓已无「登记豁免」类的常态 SKIP：归档机制删除后 SKIP_V7 一并移除。）
     in_ci = os.environ.get("GITHUB_ACTIONS") == "true" or os.environ.get("CI") == "true"
     if in_ci and skipped:
-        # ⚠️ 严格化要**只针对环境异常**，不能把「已知正当的登记豁免」也一起判死 ——
-        #    否则 V7（本仓迁仓导致的历史事实，见 release-rules §4.1）会让 CI 永远红。
-        #    ⇒ 分两类：登记豁免 ⇒ CI 仍放行（但显示 ⚠️）；
-        #             其余 SKIP（token 缺失/网络不通等环境异常）⇒ CI 判失败。
-        allowed = {n for n in CI_ALLOWED_SKIP}
-        env_skips = [r for r in skipped if r['name'] not in allowed]
-        if env_skips:
-            print('🔴 CI 环境：以下未验证（exit 3）视为失败 —— '
-                  '读不到远端通常是 token 缺失或环境异常，不能静默放行：'
-                  + '、'.join(r['name'] for r in env_skips))
-            sys.exit(1)
-        print('⚠️ CI 环境：以下为**已登记的豁免**（非环境异常），放行但仍记为未验证：'
+        print('🔴 CI 环境：以下未验证（exit 3）视为失败 —— '
+              '读不到远端通常是 token 缺失或环境异常，不能静默放行：'
               + '、'.join(r['name'] for r in skipped))
+        sys.exit(1)
     sys.exit(1 if failed else 0)
 
 

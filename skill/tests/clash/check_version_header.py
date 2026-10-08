@@ -2,7 +2,7 @@
 # -*- coding: utf-8 -*-
 """三内核 `#! version=` 头注规范检查。
 
-守的规矩（见 skill/reference/shared/release-rules.md）：
+守的规矩（见 skill/reference/ops.md）：
   V1 头注格式 `#! version=<产品线>_v<X.Y.Z>`（产品线 ∈ routing / lazy）
   V2 Surge 与 Egern 同一产品线**必须同号**（跨内核对拍的前提）
   V3 `.min` 版必须带与完整版**同一行**头注（对拍要求逐字节一致）
@@ -114,8 +114,11 @@ def main():
     print("合规 —— 三内核版本头注格式一致，Surge / Egern 同号，`.min` 与完整版一致")
     # ── V5：三内核版本统一（2026-10-08 起）
     #    Surge / Egern / mihomo 现役必须同号。此前无人守 ⇒ 改 mihomo 头注无人发现。
-    expect = os.environ.get("UNIFIED_VERSION", "v1.0.0")
-    unified_bad = []
+    # ⚠️ 2026-10-08 改革：原有一个 `UNIFIED_VERSION` 环境变量可覆盖这里的期望值
+    #    —— 那是一个**多余的放行类后门**：三内核同号已由 check_min_pair 的 X1/X2
+    #    硬性守住，无需一个可改期望值的开关。已删除，期望值写死为“三内核必须同号”。
+    #    判据改为：读六个文件的头注，**彼此相等**即过（不再对着一个硬编码号比）。
+    seen = {}
     for kern, path, key in (
         ("surge", "surge/profiles/routing.conf", "routing"),
         ("surge", "surge/profiles/lazy.conf", "lazy"),
@@ -130,15 +133,22 @@ def main():
         with open(fp, encoding="utf-8") as fh:
             first = fh.readline().strip()
         m = re.match(r"^#!\s*version=\s*\S+?_v(.+?)\s*$", first)
-        ver = ("v" + m.group(1)) if m else None
-        if ver != expect:
-            unified_bad.append("%s/%s 是 %s，期望 %s" % (kern, key, ver or "无头注", expect))
+        seen[(kern, key)] = ("v" + m.group(1)) if m else None
+
+    unified_bad = []
+    for fam in ("routing", "lazy"):
+        vals = {kern: seen.get((kern, fam)) for kern in ("surge", "egern", "mihomo")}
+        uniq = set(vals.values())
+        if len(uniq) != 1 or None in uniq:
+            unified_bad.append("%s：%s" % (fam, " / ".join(
+                "%s=%s" % (k, v) for k, v in vals.items())))
     if unified_bad:
         print("  NG V5 三内核版本未统一：")
         for b in unified_bad:
             print("       %s" % b)
         return 1
-    print("  OK V5 三内核版本统一（均为 %s）" % expect)
+    print("  OK V5 三内核版本统一（routing=%s · lazy=%s）"
+          % (seen.get(("surge", "routing")), seen.get(("surge", "lazy"))))
     return 0
 
 

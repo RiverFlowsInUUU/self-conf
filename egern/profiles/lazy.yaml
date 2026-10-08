@@ -14,7 +14,7 @@
 #
 # 📌 本文件是长期沿用的「懒人版」入口，文件名不带版本号（`lazy.yaml`），
 #     版本号写在首行 `#! version=lazy_v…`。分流版是另一条线（`routing.yaml`），
-#     历代版本各自保留以备对照，演变过程看 git 历史与 profiles/config_old/ 归档。
+#     历史版本看 git 历史（仓内不再保留归档快照）。
 #
 # ⚠️ 导入前必读：本文件带 1 个**占位订阅**（`Airport` 的 `urls`）—— 填它即可，
 #     节点全部来自订阅。不填时兜底那一跳（`Proxy` 组本身）是断的，
@@ -43,7 +43,7 @@ real_ip_domains:
 #   ① 端点全写 IP 字面量 ⇒ 没有主机名需要解析；
 #   ② forward 有一条 catch-all 兜底，且兜底组不依赖代理也活着 ⇒ 永不触发。
 #      它前面还有三层（白名单 → 两条广告清单 reject），都不新增解析器。
-# 完整推导见 skill/reference/egern/profile-anatomy.md。
+# 完整推导见 skill/reference/profiles/egern.md。
 # ============================================================================
 dns:
   # 启动 DNS：唯一无法消除的明文通路，只能约束它。
@@ -120,7 +120,7 @@ policy_groups:
     - https://sub.example.com/api/v1/client/subscribe?token=REPLACE_WITH_YOUR_TOKEN
     # 订阅刷新间隔（与 Surge 侧 `update-interval=86400` 对齐）。
     # ⚠️ Egern 官方未文档化该键的缺省值 ⇒ 显式写死，避免「刷新行为交给未知」
-    #    （仓规见 skill/reference/shared/troubleshoot-faq.md「规则集刷新统一一周」）。
+    #    （仓规见 skill/reference/pitfalls.md「规则集刷新统一一周」）。
     interval: 86400
     hidden: true
     icon: https://raw.githubusercontent.com/RiverFlowsInUUU/self-conf/main/icons/Airport.png
