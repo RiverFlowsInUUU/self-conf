@@ -16,7 +16,7 @@
   历史并强制推送，仍无法收回已被拉取的 clone、fork、缓存或日志。因此一旦泄露，应先撤销、
   轮换凭据和订阅 token，再处理历史，不能把“删文件”当作回收。
 - **不要破坏仓库自洽性。** Surge / Egern / mihomo 自有的图标、共享规则与派生资产必须引用
-  本仓，不得借用其他仓库中同名的在线资源；[`check_selfcontained.py`](skill/tests/check_selfcontained.py)
+  本仓，不得借用其他仓库中同名的在线资源；[`check_selfcontained.py`](tools/gates/check_selfcontained.py)
   会对此判负。明确列出的第三方规则上游不属于本仓自有资产，按下节单独管理。
 - **不要在公开 issue、评论、日志或截图中留下敏感信息。** 订阅 token、节点凭据、真实节点地址、
   内网地址、设备名与可识别请求参数都应先打码；无法确认是否敏感时，按敏感信息处理。
@@ -27,8 +27,8 @@
 vulnerability），不要公开发 issue：
 
 - Surge / Egern / mihomo 任一配置、脚本、文档或历史中出现真实地址、凭据或订阅 token；
-- [`check_secrets.py`](skill/tests/check_secrets.py)、
-  [`check_selfcontained.py`](skill/tests/check_selfcontained.py) 或任一内核判据存在“结果全绿但实际未检查”
+- [`check_secrets.py`](tools/gates/check_secrets.py)、
+  [`check_selfcontained.py`](tools/gates/check_selfcontained.py) 或任一内核判据存在“结果全绿但实际未检查”
   的路径；
 - 第三方规则集 URL 被替换为不可控镜像、内容疑似被投毒，或规则更新导致泄露防线失效。
 
@@ -57,12 +57,12 @@ vulnerability），不要公开发 issue：
 
 | 判据 | 守什么 |
 |:--|:--|
-| [`skill/tests/check_secrets.py`](skill/tests/check_secrets.py) | 扫描 Surge / Egern / mihomo 的配置，阻止非文档地址、真实凭据、非 `REPLACE_WITH_YOUR_*` 值与订阅 token 进入公开仓库。 |
-| [`skill/tests/check_selfcontained.py`](skill/tests/check_selfcontained.py) | 扫描三内核配置与脚本中的在线引用，阻止本仓自有图标、规则和派生资产回指其他仓库。 |
+| [`tools/gates/check_secrets.py`](tools/gates/check_secrets.py) | 扫描 Surge / Egern / mihomo 的配置，阻止非文档地址、真实凭据、非 `REPLACE_WITH_YOUR_*` 值与订阅 token 进入公开仓库。 |
+| [`tools/gates/check_selfcontained.py`](tools/gates/check_selfcontained.py) | 扫描三内核配置与脚本中的在线引用，阻止本仓自有图标、规则和派生资产回指其他仓库。 |
 
 ### Surge
 
-[`skill/scripts/surge/check_surge_dns.py`](skill/scripts/surge/check_surge_dns.py) 对 Surge profile
+[`tools/gates/surge/check_surge_dns.py`](tools/gates/surge/check_surge_dns.py) 对 Surge profile
 执行 12 项防 DNS 泄露与结构检查：
 
 1. 加密 DNS 端点使用 IP 字面量，避免主机名引导解析；
@@ -80,7 +80,7 @@ vulnerability），不要公开发 issue：
 
 ### Egern
 
-[`skill/scripts/egern/check_egern_dns.py`](skill/scripts/egern/check_egern_dns.py) 守 Egern profile
+[`tools/gates/egern/check_egern_dns.py`](tools/gates/egern/check_egern_dns.py) 守 Egern profile
 的 DNS 链与规则可达性：策略引用必须存在；加密端点不得依赖未受控的 bootstrap 解析；
 `proxy_nameservers`、`bootstrap` 与 `forward` 的回退关系明确；`forward` 必须有捕获全部域名且
 直连可达的加密兜底，不能混入明文出口；IP 类规则使用 `no_resolve`；DNS 端点有正确路由；
@@ -92,7 +92,7 @@ vulnerability），不要公开发 issue：
 mihomo 同时覆盖 `clash/profiles/` 静态配置与 `clash/override/` 覆写脚本；两种形态分开判，
 不能把客户端负责的 TUN 设置强塞进覆写脚本，也不能让静态 profile 缺少 TUN（流量接管与 :53 劫持）。
 
-[`skill/tests/clash/check_structure.py`](skill/tests/clash/check_structure.py) 守 8 项结构红线：
+[`tools/gates/clash/check_structure.py`](tools/gates/clash/check_structure.py) 守 8 项结构红线：
 
 | 项 | 守什么 |
 |:--|:--|
@@ -105,7 +105,7 @@ mihomo 同时覆盖 `clash/profiles/` 静态配置与 `clash/override/` 覆写�
 | ⑦ | 零 dat 依赖：禁用 `geox-url`、自动更新键、原生 `GEOSITE` / `GEOIP` 规则及 `geosite:` policy 键；独立 `.mrs` 不在禁用范围。 |
 | ⑧ | 顶层 `ipv6` 与 `dns.ipv6` 两处均显式关闭。 |
 
-[`skill/scripts/clash/check_clash_dns.py`](skill/scripts/clash/check_clash_dns.py) 再执行 14 项
+[`tools/gates/clash/check_clash_dns.py`](tools/gates/clash/check_clash_dns.py) 再执行 14 项
 DNS 防泄露审计：
 
 1. DNS 已启用；

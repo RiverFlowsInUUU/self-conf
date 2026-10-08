@@ -9,7 +9,7 @@
 # 条数：4（**本行为唯一真源**，改内容时同步改这里）
 #
 # ⚠️ 纯域名集、零 IP 条目 ⇒ 引用方**不写**规则级 no-resolve
-#    （判据见 skill/reference/shared/rulesets.md §4 的 4b）。
+#    （判据见 tools/reference/shared/rulesets.md §4 的 4b）。
 #
 # 维护：新增域名直接往下加 `DOMAIN-SUFFIX,<域>`，并同步上面的条数。
 #########################################

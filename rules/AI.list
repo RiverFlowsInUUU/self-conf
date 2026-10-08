@@ -1,6 +1,6 @@
 # NAME: AI_Domains (AI 全量整合集 · Surge ruleset)
 # 生成: 2026-10-01（dler-io 源 + 归并器补全：同值 + 父域）· 本仓自托管静态整合快照
-# 生成脚本: skill/scripts/ai_domains_build.py（源目录: skill/scripts/ai_sources/）
+# 生成脚本: tools/run/ai_domains_build.py（源目录: tools/run/ai_sources/）
 # 合计: 272 条规则 —— 本行为条数唯一真源（自动统计，勿手抄到别处）
 #
 # ============ 上游来源详细信息 ============
