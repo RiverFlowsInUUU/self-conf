@@ -29,7 +29,7 @@ license: MIT
 ## 先读哪一个
 
 ```bash
-# ① 定位：grep 关键词拿行号与节标题（references/ 每篇 45~135 KB，别整篇读）
+# ① 定位：grep 关键词拿行号与节标题（references/ 每篇几十 KB，别整篇读）
 grep -n "include-all" references/profiles/clash.md
 # ② 只读那一节：从命中行往上找最近标题，往下读到下一个同级标题（通常 2~5 KB）
 ```
