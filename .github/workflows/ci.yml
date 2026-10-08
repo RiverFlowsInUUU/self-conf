@@ -18,7 +18,9 @@ jobs:
     steps:
       - uses: actions/checkout@v4
         with:
-          fetch-depth: 0   # min-pair 的归档判据需要历史；整合仓虽豁免 V7 仍保留完整历史
+          # 需 tag：release_publish 从「上一个 tag..HEAD」汇总发布说明。
+          # （归档判据已删，不再需要完整历史。）
+          fetch-depth: 0
 
       - uses: actions/setup-python@v5
         with:
