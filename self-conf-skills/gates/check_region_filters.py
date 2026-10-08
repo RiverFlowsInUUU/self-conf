@@ -22,7 +22,7 @@ fixture 喂进去，**期望它们被报错并判负**；再拿现役配置做�
   Egern  `self-conf-skills/run/egern/audit_region_filters.py`  + egern/fixtures/
   clash  `self-conf-skills/run/clash/audit_region_filters.py`  + clash/fixtures/
     └─ mihomo 侧 2026-10-07 补入：此前它的 6 个地区组**完全无人管**
-       （`reference/profiles/clash.md` §8.3 明确记着"mihomo 侧目前没有这个比对器"）。
+       （`references/profiles/clash.md` 的 §8.3 明确记着"mihomo 侧目前没有这个比对器"）。
 
 ⚠️ 为什么不能只断言退出码
 ────────────────────────

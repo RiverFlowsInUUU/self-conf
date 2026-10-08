@@ -389,7 +389,7 @@ def check_3_main_endpoints(dns, hosts):
                         "这一问只能用 default-nameserver（明文 UDP:53）完成："
                         "加密通道要先知道端点 IP 才能建立。改成 IP 字面量 "
                         f"（`https://1.1.1.1/dns-query`）即可消除 —— 详见 "
-                        "reference/profiles/clash.md §5。")
+                        "references/profiles/clash.md 的 §5。")
                 continue
             if not enc:
                 lvl = LOW if is_private_ip(h) else HIGH
@@ -579,7 +579,7 @@ def check_7_tun(doc, override_form):
     if not has_tcp:
         add(LOW, 7, "dns-hijack 未接管 TCP:53（不写协议前缀时默认 udp://）",
             "本仓已知取舍：明文 TCP 查询在现代客户端里罕见，加 `tcp://any:53` 才覆盖。"
-            "见 profile-anatomy §16.6。")
+            "见 references/profiles/clash.md 的 §16.6。")
 
 
 def check_8_adblock(dns, providers):
@@ -659,7 +659,7 @@ def check_9_policy_order(dns):
     dom = [i for i, k in enumerate(keys) if _is_domestic_key(k)]
     if ads and dom and min(ads) > min(dom):
         add(HIGH, 9, "广告 policy 排在 cn/private 之后 ⇒ 会先命中 cn 而拿不到空回答",
-            f"当前顺序：{keys}。广告项必须排在最前（hardening-template §6）。")
+            f"当前顺序：{keys}。广告项必须排在最前（references/profiles/clash.md 的 §6）。")
     elif ads:
         add(OK, 9, f"广告 policy 排在 cn/private 之前（{len(ads)} 条广告项）")
     else:
@@ -747,7 +747,7 @@ def check_11_zero_dat(doc, dns, providers):
         t = r.split(",")[0].strip()
         if t in ("GEOSITE", "GEOIP"):
             add(HIGH, 11, f"规则用了原生 `{t}` ⇒ 直接查 dat 数据库：`{r}`",
-                "改用 `RULE-SET,<provider>,<policy>` 引用远程集（profile-anatomy §10.2）。")
+                "改用 `RULE-SET,<provider>,<policy>` 引用远程集（references/profiles/clash.md 的 §10.2）。")
     if dns:
         for k in (dns.get("nameserver-policy") or {}):
             if str(k).startswith("geosite:"):
@@ -829,7 +829,7 @@ def check_14_misc_switches(dns):
     if dns.get("respect-rules") is not True:
         add(LOW, 14, "respect-rules 未开启 ⇒ DNS 查询自己不按路由规则走",
             "发往境外 DoH 端点的查询不会被判给代理 ⇒ 国内线路上直连境外 :443 常被阻断。"
-            "见 hardening-template §3.2。")
+            "见 references/profiles/clash.md 的 §3.2。")
     else:
         add(OK, 14, "respect-rules: true（DNS 查询也受路由规则管辖）")
     if dns.get("use-system-hosts"):

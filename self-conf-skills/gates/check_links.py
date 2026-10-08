@@ -40,7 +40,7 @@
     只判「命令行（行内含 python / python3 / bash / sh / PYTHONIOENCODING=utf-8 触发词）里
     以 `.py` / `.sh` 结尾、且含 `/` 的完整路径 token」，按**仓根**解析、与 `git ls-files`
     跟踪件对拍（无 git 环境退回文件系统 walk）。三类东西一律**不判**：
-      · 沿革层整篇排除：`CHANGELOG.md`、`*文件版本沿革*`、`日志旧版原文`、`_archive`、
+      · 沿革层整篇排除：`*文件版本沿革*`、`日志旧版原文`、`_archive`、
         `DetailsReadme` —— 它们记录的是当时的历史事实，不该被今天的树形倒着改；
       · 变量拼接形：`bash $S/go.sh`（`$` 不是路径字符，正则会从 `S` 起截出残片 ——
         靠「token 前一位必须是空白/引号/` 等起始位」挡掉，见 _CMD_OK_BEFORE）；

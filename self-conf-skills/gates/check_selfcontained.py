@@ -39,6 +39,8 @@ FORBIDDEN_REPOS = ("Self-Configuration", "RiverFlowsInUUU/Clash")
 COMMENT_PREFIX = ("#", "//", ";")
 
 EXTS = (".yaml", ".conf", ".js", ".list", ".txt", ".json", ".yml", ".py")
+# ⚠️ `config_old` 已于 2026-10-08 删除（历史交给 git）；仍列在此处是**防御性**的
+#    —— 万一有人重新建了归档目录，它同样不该进扫描面。
 SKIP_DIRS = {".git", "__pycache__", "icons", "config_old"}
 
 URL_RE = re.compile(r"https?://[^\s\"'`,)\]]+")

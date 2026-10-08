@@ -153,7 +153,7 @@ def _token():
 # 环境变量登记（逃生门 / 输入类 / 动态读取）
 #
 # ⚠️ 2026-10-08 改革：这份登记**从文档搬进了代码**。
-#    旧做法把三张登记表放在 `reference/ops.md` 的 §4.2.1/§4.2.2/§4.2.3，
+#    旧做法把三张登记表放在 `references/ops.md` 的 §4.2.1/§4.2.2/§4.2.3，
 #    再写解析器去读它 —— 结果是：文档与代码必须同步，于是又长出「登记漂移」
 #    这个需要专门门禁去守的元问题。而登记本质就是**代码的元数据**，
 #    放进代码里 ⇒ 物理上不可能漂移，解析器与章节定位代码全部删除。
@@ -706,7 +706,7 @@ def main():
         print(f"{r['name']:<{width}}  {mark}   {r['dt']:.1f}s")
     print()
 
-    # 退出码语义（全仓统一，troubleshoot-faq.md §8.2）：
+    # 退出码语义（全仓统一，见 references/pitfalls.md 的退出码节）：
     #   0 = 判据全过；1 = 有判负；2 = 前置环境不达标（计入失败）；3 = SKIP（未验证）
     failed = [r for r in results if r['code'] not in (0, 3)]
     env_fail = [r for r in results if r['code'] == 2]

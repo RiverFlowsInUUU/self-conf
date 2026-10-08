@@ -4,8 +4,8 @@
 为什么需要它
 ────────────
 「凡 smart 组都必须带低倍率权重（系数 0.15）、且七个组同值同正则」这条不变量
-在本仓写进了三处**散文**（`ops.md` §6.9 区、`surge/profile-anatomy.md` §13、
-`egern/profile-anatomy.md` §3），却**没有任何脚本读 `policy-priority`**。
+在本仓写进了三处**散文**（`ops.md` 「发版规矩」区、`references/profiles/surge.md` 的 §13、
+`references/profiles/egern.md` 的 §3），却**没有任何脚本读 `policy-priority`**。
 
 后果（2026-10-07 实测确认）：删掉任意一个 smart 组的 `policy-priority`，
 13 道闸门**全绿** —— 权重口径静默丢失，低倍率优先这个产品卖点无声失效。

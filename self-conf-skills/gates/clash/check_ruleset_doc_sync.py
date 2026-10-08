@@ -3,7 +3,7 @@
 """规则集来源文档同步 —— 配置改了 URL，文档表必须跟着改。
 
 为什么需要
-    `reference/rulesets.md` 的「全部规则集」表写着每份规则集的**来源**（仓库 + 路径）。
+    `references/rulesets.md` 的「全部规则集」表写着每份规则集的**来源**（仓库 + 路径）。
     它是人读的对照表，但改配置里的 `rule-providers.*.url` 时**没有机器逼着同步** ——
     `check_remote_urls.py` 扫的是配置里的 URL（不管文档），
     `check_selfcontained.py` 也不扫 `.md`。

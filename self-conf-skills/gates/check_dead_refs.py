@@ -44,17 +44,17 @@ SKILL = os.path.dirname(HERE)
 
 # 已删机制（只允许出现在「说明它不存在」的句子里）
 DEAD = {
-    "config_old": ["已删除", "已删", "不再", "改革前", "曾经", "历史副本"],
-    "CHANGELOG.md": ["不再保留", "不在仓内保留", "已删", "未删", "git 记录", "历史看"],
+    "config_old": ["已删除", "已删", "删除", "不再", "改革前", "曾经", "历史副本", "防御性"],
+    "CHANGELOG.md": ['从来不在', '旧版原文', '沿革'] + ["不再保留", "不在仓内保留", "已删", "未删", "git 记录", "历史看"],
     "boundaries.md": ["已删", "不再", "改革前", "并入"],
     "check_gate_manifest.py": ["已删", "一并删除", "改革前", "不再"],
     "gen_gate_table.py": ["已删", "一并删除", "改革前", "不再"],
     "check_changelog_drift.py": ["已删", "改革前", "不再"],
     "sync_docs.py": ["已删", "改革前", "不再"],
-    "skill/": ["改革前", "改成", "改名", "重组前", "并入", "原名"],
-    "tools/": ["改革前", "改成", "改名", "重组前", "原名"],
+    "skill/": ['从来不在', '早先'] + ["改革前", "改成", "改名", "重组前", "并入", "原名"],
+    "tools/": ['从来不在', '早先'] + ["改革前", "改成", "改名", "重组前", "原名"],
     # 合并文档时删掉的旧文件名（2026-10-08 实测发现仍被引用）
-    "profile-anatomy": ["改革前", "并入", "原名", "已删"],
+    "profile-anatomy": ['从来不在', '早先'] + ["改革前", "并入", "原名", "已删"],
     "hardening-template": ["改革前", "并入", "原名", "已删"],
     "leak-localization": ["改革前", "并入", "原名", "已删"],
     "ruleset-weight": ["改革前", "并入", "原名", "已删"],
@@ -105,6 +105,13 @@ def main():
         return 2
 
     scan = glob.glob(os.path.join(SKILL, "references", "**", "*.md"), recursive=True)
+    # ⚠️ 也扫脚本：docstring 里的过时引用同样会误导 AI
+    #    （2026-10-08 实测在 3 个脚本里发现 `reference/xxx` 与 `profile-anatomy` 残留）
+    # ⚠️ **排除本文件自己** —— 它的 DEAD 表天然写着这些名字（自指，非残留）。
+    #    同类情形：`check_links.py` 的 fixture 与「曾经不存在的脚本」说明。
+    #    处置：把这类文件列入 SELF_EXEMPT，并在各自行内带「不存在/从未」等词。
+    scan += [p for p in glob.glob(os.path.join(SKILL, "**", "*.py"), recursive=True)
+             if "__pycache__" not in p and os.path.basename(p) != "check_dead_refs.py"]
     scan.append(os.path.join(ROOT, "AGENTS.md"))
 
     bad = []
@@ -113,11 +120,16 @@ def main():
             continue
         rel = os.path.relpath(f, ROOT).replace(os.sep, "/")
         base = os.path.dirname(f)
-        for i, ln in enumerate(io.open(f, encoding="utf-8"), 1):
+        lines = io.open(f, encoding="utf-8").read().split(chr(10))
+        for i, ln in enumerate(lines, 1):
+            # ⚠️ 上下文窗口 ±2 行：允许词可能写在**相邻的注释行**里
+            #    （实测误报：`check_selfcontained.py` 把「已删除」写在上一行，
+            #     而 `config_old` 在 SKIP_DIRS 那行 ⇒ 单行判定会误报）
+            ctx = chr(10).join(lines[max(0, i - 3):i + 2])
             # ① 已删机制的裸提及（不看路径形态）
             for dead, allow in DEAD.items():
                 if dead in ln:
-                    if not any(a in ln for a in allow):
+                    if not any(a in ctx for a in allow):
                         # 文件确实不在 ⇒ 报
                         if not os.path.exists(os.path.join(ROOT, dead.rstrip("/"))):
                             bad.append((rel, i, dead, "已删机制，但本行没说明它不存在"))
