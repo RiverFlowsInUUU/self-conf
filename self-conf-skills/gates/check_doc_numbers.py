@@ -40,14 +40,31 @@ ROOT = os.path.dirname(os.path.dirname(HERE))
 SCAN = ["README.md", "SECURITY.md", "AGENTS.md",
         "self-conf-skills/SKILL.md", "clash/AGENTS.md"]
 
-# 能现算的量：(正则, 现算函数, 量的名字)
+# 能现算的量：正则 → (现算函数, 量的名字)
 ICON_N = re.compile(r"(\d+)\s*个\s*图标")
 GATE_N = re.compile(r"(\d+)\s*道\s*(?:判据|闸门|门禁)")
+# 「N 处头注」—— 实测漂过（文档写 6，实际 12：三内核 × 两产品线 × 两形态）
+HEADER_N = re.compile(r"(\d+)\s*处\s*头注")
 
 
 def real_icons():
     d = os.path.join(ROOT, "icons")
     return len([f for f in os.listdir(d) if not f.startswith(".")]) if os.path.isdir(d) else None
+
+
+def real_headers():
+    """现算版本头注总数（`#! version=` 出现的次数）。"""
+    import glob as _g
+    n = 0
+    for pat in ("surge/profiles/*", "egern/profiles/*", "clash/profiles/*"):
+        for p in _g.glob(os.path.join(ROOT, pat)):
+            if os.path.isfile(p):
+                try:
+                    if io.open(p, encoding="utf-8").readline().startswith("#! version="):
+                        n += 1
+                except Exception:
+                    pass
+    return n
 
 
 def real_gates():
@@ -67,7 +84,7 @@ def main():
         print("❌ 不在仓库根 —— 环境不达标")
         return 2
 
-    icons, gates = real_icons(), real_gates()
+    icons, gates, headers = real_icons(), real_gates(), real_headers()
     bad, checked = [], 0
 
     for rel in SCAN:
@@ -88,8 +105,15 @@ def main():
                 if int(m.group(1)) != gates:
                     bad.append("%s:%d 写「%s 道」，实际 **%d**"
                                % (rel, i, m.group(1), gates))
+            m = HEADER_N.search(ln)
+            if m and headers:
+                checked += 1
+                if int(m.group(1)) != headers:
+                    bad.append("%s:%d 写「%s 处头注」，实际 **%d**"
+                               % (rel, i, m.group(1), headers))
 
-    print("写死数字的新鲜度（现算：图标 %s · 判据 %s 道）" % (icons, gates))
+    print("写死数字的新鲜度（现算：图标 %s · 判据 %s 道 · 头注 %s 处）"
+          % (icons, gates, headers))
     print("-" * 78)
     if bad:
         for b in bad:

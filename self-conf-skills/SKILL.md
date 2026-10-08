@@ -83,6 +83,63 @@ python self-conf-skills/gates/verify_all.py
 
 ---
 
+## 常见任务：完整步骤
+
+### 加 / 换 / 删一份规则集
+
+```bash
+# ① 定来源与格式（三内核语法不同，见 references/rulesets.md）
+#    Surge / Egern：.list 或远程 .list/.txt；mihomo：.mrs 或 .yaml
+# ② 改配置（注意哪侧是生成物）
+#    Surge   → surge/profiles/routing.conf 的 [Rule] 段加 RULE-SET,<名>,<策略>
+#    Egern   → egern/profiles/routing.yaml 的 rules: 加 rule_set:
+#    mihomo  → clash/override/my_clash.js 的 rule-providers + rules
+# ③ 同步派生
+python self-conf-skills/run/make_min.py --apply           # Surge/Egern 的 .min
+python self-conf-skills/run/clash/build_profiles.py       # mihomo 的 profile
+# ④ 登记到文档表（**会被判据拦**，见下）
+#    self-conf-skills/references/profiles/clash.md 的「全部规则集」表
+# ⑤ 验证
+python self-conf-skills/gates/verify_all.py
+```
+
+⚠️ **会被判据拦的两处**：
+· `gates/clash/check_ruleset_doc_sync.py` —— 配置里的 URL 必须在文档表登记（反之亦然）
+· `gates/check_priority_weight.py` —— 规则顺序/权重口径
+
+⚠️ **自托管清单**（`rules/*.list`）是**唯一真源**；`rules/*.yaml` 与
+`rules/AI.list` 是**生成物**（见根 AGENTS.md 的生成链）。
+
+### 升版（三个内核同时）
+
+```bash
+# ① 改 12 处头注（三内核 × 两产品线 × 完整版/.min）
+#    ⚠️ clash 的头注要**手改 profile** —— 它虽由脚本生成，但头注是**保留**而非生成的
+#    数量现抓：grep -c "^#! version=" */profiles/*
+# ② 同步派生
+python self-conf-skills/run/make_min.py --apply
+python self-conf-skills/run/clash/build_profiles.py
+# ③ 验证（版本头注 / 三内核同号由判据守）
+python self-conf-skills/gates/verify_all.py
+# ④ 发布
+python self-conf-skills/run/repo_state.py                 # 看现状
+python self-conf-skills/run/release_publish.py            # 计划模式（预览，不发）
+python self-conf-skills/run/release_publish.py --apply    # 真发（需 GITHUB_TOKEN）
+```
+
+### 加一道新闸门
+
+**先读 `references/gates.md` 的「新增闸门自查清单」**（§5）。核心两条：
+
+1. **一道从不判红的闸门比没有更糟** —— 新判据必须**注错验证**过（故意改坏，看它红不红）
+2. **注错要落在判据的扫描面上** —— 「改了没红」时先怀疑自己的注错
+
+⚠️ 本仓已三次栽在「判据过严」上（`dict(os.environ)` 假红、
+mihomo 的 `dns` 段整体比对、`default-nameserver` 误报）
+⇒ 新判据**必须同时验证「不误报」**：拿现役配置跑一遍，必须绿。
+
+---
+
 ## 改判据时
 
 先读 `references/gates.md` 的「新增闸门自查清单」。两条铁律：

@@ -1,6 +1,60 @@
 # 规则集 · 选型、权重与跨内核差异
 
 
+
+## 🚀 新增一份规则集：完整步骤（**照这个做**）
+
+> 2026-10-08 补：此前文档反复说「加规则集之前读本篇」，但本篇是**选型知识库**，
+> 不是 SOP —— 用「全新 AI 实测」发现新手要跨 5+ 处自己拼步骤。现补成清单。
+
+```bash
+# ① 定体系：这份规则集给哪个（些）内核用？
+#    Surge / Egern → 远程 .list/.txt 或自托管 rules/*.list
+#    mihomo        → .mrs 或 .yaml（见「为什么 mihomo 那份是 .mrs」）
+#    三内核都要用   → 优先自托管（见「本仓的选择：自托管」）
+
+# ② 定落点：挂到哪个策略组？
+#    看「匹配顺序（Surge / Egern 基准序）」—— 应用规则在国内直连之前，IP 类排最后
+#    新规则集要不要**新建策略组**？—— 见「排序与选材约束」
+
+# ③ 改配置（⚠️ 注意哪侧是生成物，见根 AGENTS.md）
+#    Surge   → surge/profiles/routing.conf   [Rule] 段加 RULE-SET,<url>,<策略>
+#    Egern   → egern/profiles/routing.yaml   rules: 加 rule_set: 条目
+#    mihomo  → clash/override/my_clash.js    rule-providers + rules（改 JS！）
+
+# ④ 同步派生
+python self-conf-skills/run/make_min.py --apply         # Surge/Egern 的 .min
+python self-conf-skills/run/clash/build_profiles.py     # mihomo 的 profile
+#    自托管清单：改 rules/*.list 后（自托管判据见「本仓的选择：自托管」）
+python self-conf-skills/run/clash/build_rules.py        # 生成 rules/*.yaml
+
+# ⑤ ⚠️ 登记到文档表（**隐藏的强制点**，不做会判负且报错难懂）
+#    改 self-conf-skills/references/profiles/clash.md 的「全部规则集」表
+#    判据：gates/clash/check_ruleset_doc_sync.py
+
+# ⑥ 验证
+python self-conf-skills/gates/verify_all.py
+```
+
+### 会被哪些判据拦（逐个知道就不慌）
+
+| 判据 | 拦什么 |
+|:--|:--|
+| `gates/clash/check_ruleset_doc_sync.py` | 配置里的 URL **必须**在文档表登记（反之亦然） |
+| `gates/clash/check_remote_urls.py` | 远程 URL 必须可达（慢，联网） |
+| `gates/check_priority_weight.py` | 规则顺序 / 权重口径 |
+| `gates/{surge,egern}/audit_ruleset_*.py` | 含 IP 条目的规则集必须带 `no-resolve` |
+| `gates/*/audit_routing_coverage.py` | 应用段「组顺序 ↔ 规则顺序」不许乱序 |
+
+### 自托管 vs 跨仓引用（§8.1 的判据）
+
+- **自托管**（放 `rules/*.list`）：需跨内核共用、要人工过审、低频更新
+- **跨仓引用**：单内核消费、整份接收、高频更新（上游自己维护）
+
+⚠️ 自托管清单改完要跑 `build_rules.py` 生成 `rules/*.yaml`；
+`rules/AI.list` 由 `run/ai_domains_build.py` 从 `run/ai_sources/` 合并生成。
+
+
 ## 规则集与来源
 
 > 这一页是组件清单：用了哪些规则集、各自从哪来、按什么顺序生效。

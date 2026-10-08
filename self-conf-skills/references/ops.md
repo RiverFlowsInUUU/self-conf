@@ -512,8 +512,20 @@ python self-conf-skills/gates/clash/check_remote_urls.py          # 慢，联网
 
 mihomo 静态 profile **由脚本生成**（`build_profiles.py`），也带 `#! version=` 头注，
 与 Surge / Egern **同号**（三内核统一，见 §6.1）。
-⚠️ 改版本号要改**脚本**（`clash/override/*.js` 不直接写版本头 —— 由生成器保留并写入），
-直接改 profile 会在重新生成时被覆盖。
+
+⚠️ **头注是「生成物」的例外 —— 必须手改 profile**（2026-10-08 更正）：
+`clash/override/*.js` 里**没有**任何 `version=` 字符串（实测 `grep -c version= ` 为 0）；
+`build_profiles.py` 的逻辑是**从磁盘上现有 profile 读第一行并保留**它
+（源码注释：「保留 `#! version=` 头……若生成时丢掉，重生成一次就没了」）。
+⇒ 版本真值在 **`clash/profiles/*.yaml` 的第一行**，所以：
+
+| 要改 | 改哪 | 会不会被覆盖 |
+|:--|:--|:--|
+| mihomo 的**配置内容** | `clash/override/my_clash*.js` | 会 —— 必须改 JS |
+| mihomo 的**版本号** | `clash/profiles/*.yaml` 第 1 行（**手改**） | **不会** —— 生成器保留它 |
+
+> 本节此前写「改版本号要改脚本」，那是**错的**（脚本里没有这个字符串，
+> 照做会无效）。2026-10-08 用「全新 AI 实测」发现并更正。
 
 #### 相关页面
 
@@ -538,7 +550,8 @@ mihomo 静态 profile **由脚本生成**（`build_profiles.py`），也带 `#! 
 
 - 顶层永远只有四个固定名 × 三内核（`.conf` / `.yaml` 各一对）：`routing` / `lazy` 的完整版与 `.min` 版。它们是永久订阅地址的落点，**不随版本改名**。
 - "当前是哪一版"只写在文件头注 `#! version=…`。
-- **升号规则**：配置键有变动 ⇒ 升号（改三内核 × 两产品线共 6 处头注）；
+- **升号规则**：配置键有变动 ⇒ 升号（改**三内核 × 两产品线 × 两形态 = 12 处**头注；
+  数量现抓：`grep -rc "^#! version=" */profiles/ | ...`）；
   只改注释 / 文案 / 排版 ⇒ **不升号**（配置行为没变，号是**功能**的刻度）。
 - **一天一版**：同一个自然日内同一产品线只升一次号；当天后续改动沿用同号。
   ⚠️ 此条**靠纪律**，仓内无归档可判，也没有专门的节奏判据（改革前有 V7 断言，
@@ -1060,7 +1073,8 @@ python self-conf-skills/gates/clash/check_structure.py
 - 版本号写在 profile **头注第一行**：`#! version=routing_vX.Y.Z`。
 - **三内核同号**（由 X 判据与 V5 硬守）。
 - `.min` 必须带**同一行**头注（对拍要求逐字节一致）。
-- 升号只改头注 6 处（三内核 × 两产品线），改完跑 `verify_all.py`。
+- 升号改**全部 12 处**头注（三内核 × 两产品线 × 完整版/`.min`），改完跑 `verify_all.py`。
+  ⚠️ **clash 的头注要手改** —— 它的 profile 虽由脚本生成，但头注是**保留**而非生成的。
 - **历史版本不再在仓内归档** —— 要看历史用 `git log`；要下载历史版本去 Releases。
 
 

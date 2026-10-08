@@ -60,8 +60,9 @@ python self-conf-skills/run/repo_state.py                    # 一屏现状：�
 | Egern 配置 | `egern/profiles/*.yaml` | **不是**生成物，直接改 |
 | mihomo 配置 | `clash/override/my_clash*.js` | ⚠️ **是**生成物 ⇒ 改 JS 再 build |
 | 远程规则集内容 | `rules/*.list` | ⚠️ `.yaml` 是生成的 |
+| **版本号** | ⚠️ **12 处头注**（见下） | 不是 6 处 —— 每份文件都有自己的头注 |
 
-**四个生成链**（改左边，跑右边重生成）：
+**五个生成链**（改左边，跑右边重生成）：
 
 ```
 surge|egern/profiles/*.conf|yaml   ──make_min.py──▶        *.min.*
@@ -74,6 +75,13 @@ self-conf-skills/run/ai_sources/*  ──ai_domains_build.py──▶ rules/AI.l
 改它要改 `self-conf-skills/run/ai_sources/` 下的源文件，再跑
 `python self-conf-skills/run/ai_domains_build.py`。
 （它的头部注释写明了生成脚本；`rules/*.yaml` 同理。）
+
+⚠️ **版本头注是「生成物」的例外**：`clash/profiles/*.yaml` 虽由脚本生成，
+但头注 `#! version=` **是脚本保留而非生成的** ⇒ **升版时要手改 clash 的 profile**
+（只改 JS 不会改版本号）。升版共 **12 处**头注：
+三内核 × 两产品线 × （完整版 + `.min`）。
+Surge / Egern 改完整版后跑 `make_min.py --apply` 会同步 `.min`；
+clash 的 `.min` 跑 `build_profiles.py` 时保留。
 
 **三内核机制差异**（看起来不一致 ≠ 漂移）：地区组 Surge/Egern 用 `smart`、mihomo 用
 `url-test`；订阅源前者是 external 组、后者是 `proxy-provider`；倍率分档 mihomo 的
