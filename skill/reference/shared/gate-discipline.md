@@ -100,15 +100,35 @@ python skill/tests/verify_all.py
 - **规则集刷新周期（Surge / Egern）**：默认不判负，要 `--strict`。
   接闸门时漏了 ⇒ 已补。
 
-### 仍需逐个验证的（未完）
+### 逐个复验结果（8 道全部验完）
 
-`Surge DNS lazy/routing` · `profile 结构` · `no-resolve 配对·Egern` ·
-`DNS 转发泄露·Egern` · `分流覆盖·Surge` · `规则集内容·Surge/mihomo` ·
-`自托管清单·裸IP检测(AI/emby)` · `smart 权重口径`
+上一轮矩阵判「改了没红」的 8 道，**逐个复验后 6 道确认有效、2 道无法本地验证**：
 
-⚠️ 这些在上一轮矩阵里「改了没红」，但**已确认是注错没戳中扫描面**
-（smart 权重口径已验证：改 1 处不红、改全部才红 —— 它守的是跨内核一致性，
-改一处会被其余值"平均"掉，属合理设计）。**不要据此定性为摆设。**
+| 闸门 | 复验用的注错 | 结果 |
+|:-----|:-------------|:-----|
+| Surge DNS lazy / routing | `dns-server = system`（判据 133 行 HIGH） | ❌ 判负 exit=1 |
+| profile 结构 | 插入重复的 `[Host]` 段 | ❌ 判负 exit=1 |
+| 自托管清单·裸IP检测(AI/emby) | 往 `.list` 追加 `IP-CIDR,1.2.3.4/32` | ❌ 判负 exit=1 |
+| DNS 转发泄露·Egern | 删掉 `proxy_nameservers` | ❌ 判负 exit=1 |
+| 分流覆盖·Surge | 把全部 `,DIRECT` 改成 `,Proxy` | ❌ 判负（国内探针 0/17） |
+| smart 权重口径 | **改全部** `0.15`→`0.99`（改 1 处不够） | ❌ 判负 exit=1 |
+| 规则集内容·Surge / mihomo | — | ⚠️ 需联网取规则集内容才能判，本地注错碰不到 |
+
+⚠️ **8 道里没有一道是真摆设** —— 全是我注错没戳中扫描面。
+典型：改「香港」不在地区组判据扫的 61 个关键词里；改 1 处权重会被其余值"平均"掉。
+**「改了没红」的第一反应应该是「我的注错对不对」，不是「判据失灵」。**
+
+### 两个附带发现
+
+1. **waive 机制会让 HIGH 不判负。**
+   `check_surge_dns.py` 里 profile 带 `# audit-waive:` 声明时，HIGH 被降级为
+   WAIVED、退出码不变。设计如此（有意豁免），但**验证时要避开被豁免的项** ——
+   实测：删掉 `encrypted-dns-server` 不判负（被 waive），改 `dns-server = system` 才判负。
+
+2. **依赖网络/缓存的判据本地验证不了。**
+   `audit_ruleset_content.py` 要联网取规则集内容才能比对 behavior 与内容是否相符；
+   本地有缓存 ⇒ 改配置也不重取 ⇒ 本地注错碰不到判据点。
+   这类判据的判别力只能靠线上环境观察。
 
 ---
 
