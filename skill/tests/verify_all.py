@@ -89,6 +89,11 @@ def build_gates():
     _skip_v7 = {'SKIP_V7': '1'}
     gates = [
         ('secrets 扫描', [PY, 'skill/tests/check_secrets.py'], {}),
+        # ── 自检脚本接进闸门（2026-10-08，第三轮审查第 14 条）
+        #    这两个 --selftest / --self-test 写了但 verify_all 与 ci.yml 里都零命中
+        #    ⇒ 写了不跑 = 会腐。现纳入，让它们真正被执行。
+        ('make_min 自检', [PY, 'skill/tests/make_min.py', '--selftest'], {}),
+        ('脚本对拍 diff 自检', [PY, 'skill/tests/clash/check_script_sync.py', '--self-test'], {}),
         # ── 审计工具进闸门（2026-10-08）
         # 此前这 12 项**从未被任何闸门或 CI 调用**（只在 ops.md §6.8.2 登记，
         # 靠人记得跑）。原以为它们是「度量/诊断性质，不适合硬套判据」——

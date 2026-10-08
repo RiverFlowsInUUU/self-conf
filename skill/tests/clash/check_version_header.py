@@ -10,6 +10,13 @@
 
 mihomo 是独立版本线，不参与 V2（不与 Surge/Egern 同号），但必须满足 V1 / V3 / V4。
 
+⚠️ 2026-10-08 起（第三轮审查第 3 条）：三内核现役版本**统一为 v1.0.0**，
+   这条不再适用 —— mihomo 的号必须与 Surge / Egern 一致。
+   此前把 mihomo 头注改成 v9.9.9 后，本脚本、check_min_pair、
+   clash/check_min_pair、build_profiles --check **全部 exit 0**（因为
+   build_profiles 直接继承盘上头注）⇒ 「统一 v1.0.0」这个说法无人看守。
+   现新增 V5 断言守它。
+
 退出码：0 = 全部合规 · 1 = 有违规 · 2 = 环境/文件缺失（未验证，不是通过）
 用法：python skill/tests/clash/check_version_header.py [仓库根]
 """
@@ -105,6 +112,33 @@ def main():
         print("版本头注违规 %d 处" % bad)
         return 1
     print("合规 —— 三内核版本头注格式一致，Surge / Egern 同号，`.min` 与完整版一致")
+    # ── V5：三内核版本统一（2026-10-08 起）
+    #    Surge / Egern / mihomo 现役必须同号。此前无人守 ⇒ 改 mihomo 头注无人发现。
+    expect = os.environ.get("UNIFIED_VERSION", "v1.0.0")
+    unified_bad = []
+    for kern, path, key in (
+        ("surge", "surge/profiles/routing.conf", "routing"),
+        ("surge", "surge/profiles/lazy.conf", "lazy"),
+        ("egern", "egern/profiles/routing.yaml", "routing"),
+        ("egern", "egern/profiles/lazy.yaml", "lazy"),
+        ("mihomo", "clash/profiles/routing.yaml", "routing"),
+        ("mihomo", "clash/profiles/lazy.yaml", "lazy"),
+    ):
+        fp = os.path.join(ROOT, path.replace("/", os.sep))
+        if not os.path.isfile(fp):
+            continue
+        with open(fp, encoding="utf-8") as fh:
+            first = fh.readline().strip()
+        m = re.match(r"^#!\s*version=\s*\S+?_v(.+?)\s*$", first)
+        ver = ("v" + m.group(1)) if m else None
+        if ver != expect:
+            unified_bad.append("%s/%s 是 %s，期望 %s" % (kern, key, ver or "无头注", expect))
+    if unified_bad:
+        print("  NG V5 三内核版本未统一：")
+        for b in unified_bad:
+            print("       %s" % b)
+        return 1
+    print("  OK V5 三内核版本统一（均为 %s）" % expect)
     return 0
 
 

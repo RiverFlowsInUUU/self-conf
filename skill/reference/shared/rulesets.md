@@ -214,7 +214,7 @@ Egern 的规则集**内联在 `rules` 段的 `rule_set` 条目里**，没有独�
    但将来若两条规则引用同一份集就会失效。
 2. **「20 份 MRS」≠「20 份 MetaCubeX」**。严格拆分是 **MetaCubeX 19 份 + AWAvenue 1 份 = 20 份 MRS**。
    评估上游可用性、写事故报告时 `AWAvenue-Ads` 要**单独算**。
-3. **`lazy.yaml` 头注写「5 份 MRS + 5 份 yaml」是错的**，实际 6 + 4（见
+3. **`my_clash_lazy.js` 头注曾写「5 份 MRS + 5 份 yaml」（**已改为 6 + 4**）是错的**，实际 6 + 4（见
    [`../clash/profile-anatomy.md`](../clash/profile-anatomy.md) §18.4）。
    ⇒ 凡是可由解析算出的数字，别手抄进注释。
 

@@ -185,7 +185,7 @@ python skill/tests/clash/check_structure.py
    消灭面①（引导解析）与面②（明文回退链）。
 3. `proxy-server-nameserver` **存在**（节点域名有独立出口，不依赖代理）—— 消灭面③ 的鸡蛋问题；
    另 `direct-nameserver` 存在 ⇒ 直连域名不碰境外解析器。
-4. `tun` 收口：`enable` + `auto-route` + `strict-route` + `dns-hijack` 覆盖 `:53` **整个**地址空间（`any:53`）
+4. ~~`tun` 收口~~ ⇒ **2026-10-08 起本仓不带 `tun` 段**（见下条与代码）；TUN 由客户端接管，配置不写。
    —— 消灭面③（旁路设备）。⚠️ 覆写脚本形态下这一条换成"客户端自己管 TUN"，用 `--override` 审。
 5. 顶层 `ipv6: false` **与** `dns.ipv6: false` —— 两处，少一处都不算完（面③′）。
 6. ⭐⭐ **分流仍然正确：国内域名仍判给 `DIRECT`** —— `RULE-SET,cn,DIRECT` 必须在 `MATCH,Proxy` **之前**，
@@ -200,7 +200,7 @@ python skill/tests/clash/check_structure.py
 | 脚本 | 看哪一层 | 关键点 |
 |---|---|---|
 | `check_clash_dns.py`（`skill/scripts/clash/`） | **profile 文本 + provider 语义** | 14 项防泄露判据，分级（🔴/🟠/🟡/✅）。判据是**实测推导**而非字符串匹配；**不做网络探测**；豁免写在**被审对象**里（`# audit-waive: <判据号> <理由>`） |
-| `check_structure.py`（`skill/tests/clash/`） | **结构 / 引用 / 形态** | 8 项：① 无悬空引用 ② 规则指向的 provider 与策略组存在 ③ 广告双条件 + 广告项排在 `cn` 之前 ④ `tun` 四键齐全（**仅静态 profile**）⑤ `geoip-*` 规则带 `no-resolve` ⑥ `nameserver` 必须 IP 字面量 ⑦ 零 dat 依赖 ⑧ IPv6 两处显式关闭 |
+| `check_structure.py`（`skill/tests/clash/`） | **结构 / 引用 / 形态** | 8 项：① 无悬空引用 ② 规则指向的 provider 与策略组存在 ③ 广告双条件 + 广告项排在 `cn` 之前 ④ **禁止** `tun` 段（4c4bc56 起反转；原为「要求四键」，文档曾长期说反）⑤ `geoip-*` 规则带 `no-resolve` ⑥ `nameserver` 必须 IP 字面量 ⑦ 零 dat 依赖 ⑧ IPv6 两处显式关闭 |
 | `check_min_pair.py`（`skill/tests/clash/`） | **`.min` ↔ 完整版** | 去掉注释后配置本体必须逐字相同 |
 | `check_script_sync.py`（`skill/tests/clash/`） | **脚本输出 ↔ 静态 profile** | 同一套配置的两种交付形态必须逐位一致（需 node）；Smart 三档是**已知差异**，打印提醒不判负 |
 | `build_profiles.py --check`（`skill/scripts/clash/`） | **生成物新鲜度** | 改了 `override/*.js` 没重生成 ⇒ 判负；内含自检（防"纵向堆叠 7 份"那类畸形） |

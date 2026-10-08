@@ -54,15 +54,15 @@ self-conf/                                    # 三内核整合仓
 │   │   ├── my_clash_lazy.js                  # → 懒人版结构
 │   │   └── README.md                         # 与静态模板的差别、用法、实测
 │   ├── ruleset-sources.md                # 规则集清单与选型（门面层）
-│   └── （文档已并入 skill/reference/clash/）
-│   └── CHANGELOG.md
+│   ├── （文档已并入 skill/reference/clash/）
+│   ├── CHANGELOG.md
 ├── rules/                                    # 共享规则集真源（.list）+ 生成物（.yaml）
-├── icons/                                    # 39 个图标 PNG + 1 个 SVG，三内核共用
+├── icons/                                    # 40 个图标 PNG + 1 个 SVG，三内核共用
 └── skill/                                    # AI 知识库
     ├── SKILL.md                              # 维护手册（分歧 / 踩过的坑）
     ├── reference/shared/ · surge/ · egern/ · clash/（本文）
     ├── scripts/clash/build_rules.py          # .list → .yaml 生成器
-    └── tests/clash/                          # mihomo 专属门禁 8 个
+    └── tests/clash/                          # mihomo 专属门禁 9 个
 ```
 
 **两份 profile 是分工关系，不是版本关系**：

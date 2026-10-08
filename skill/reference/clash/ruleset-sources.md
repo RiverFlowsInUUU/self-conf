@@ -185,7 +185,7 @@ Apple 则由 `GEOSITE,apple`（1792 条）做**全量直连**（懒人版只要�
 
 | 素材 | 用途 | 来源 |
 |:-----|:-----|:-----|
-| 策略组图标 | 面板图标（引用本仓 `icons/`，38 个，与各内核组名一一对应） | [icons](https://github.com/RiverFlowsInUUU/self-conf/tree/main/icons) |
+| 策略组图标 | 面板图标（引用本仓 `icons/`，40 个，与各内核组名一一对应） | [icons](https://github.com/RiverFlowsInUUU/self-conf/tree/main/icons) |
 | 微信规则集 | `WeChat` 组的域名清单（30 条） | [Lanlan13-14/Rules](https://github.com/Lanlan13-14/Rules) · `rules/Domain/WeChat.mrs` |
 | `GEOIP` / `GEOSITE` 数据库 | 原生规则的地域判定 | [MetaCubeX/meta-rules-dat](https://github.com/MetaCubeX/meta-rules-dat) |
 | 许可 | 本仓库 | MIT · 见 [`../LICENSE`](../../../LICENSE) |

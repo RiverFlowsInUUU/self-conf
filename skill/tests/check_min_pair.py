@@ -31,11 +31,19 @@
 
 import os
 
-# ── 前代版本线（2026-10-08 起）
+# ── 前代版本线（2026-10-08 起，2026-10-08 晚修订）
+#
 # 三内核现役统一为 v1.0.0，而 Surge / Egern 的 config_old/ 保留**原仓
-# Self-Configuration 的历史版本**（最高 v4.0.4）—— 那条线已完结，是本仓的沿革。
-# 因此「归档版本号高于现役」在此情形**不判负**，但由 V10 显式报出（不许静默吞掉）。
-# 想彻底重编归档时，设 STRICT_ARCHIVE=1 恢复严格判定。
+# Self-Configuration 的历史版本**（最高 v4.0.4）—— 那条线已完结，是本仓的**沿革**。
+#
+# ⚠️ 2026-10-08 修订（第三轮审查第 2 条）：
+#    原实现是「只要归档版本号 > 现役版就算前代」⇒ **无差别放行**。
+#    实测：造一份头注正确的假归档 routing_v9.9.9.conf 放进 config_old/，
+#    它被当成前代版本线收编，V6/V10 全绿 —— 等于给伪造归档开了后门。
+#
+#    现改为**白名单已知旧号区间**：只有版本号落在 (现役版, LEGACY_MAX] 之内
+#    才认作前代；**超出 LEGACY_MAX 的一律判负**（那不是沿革，是伪造）。
+LEGACY_MAX = (4, 0, 4)      # 原仓最后一条版本线的最大号
 _LEGACY_ARCHIVE_OK = (os.environ.get("STRICT_ARCHIVE", "") != "1")
 import re
 import sys
@@ -196,10 +204,17 @@ def version_checks(root):
                 #    历史版本**（最高 v4.0.4），那条版本线已完结 —— 它们是沿革，
                 #    不是「本仓归档了一个没发布过的号」。
                 #    ⇒ 归档版本号高于现役，在此情形**不判负**，但必须显式报出（见下方 V10）。
-                if _LEGACY_ARCHIVE_OK:
+                # 白名单：只放行「高于现役、但不超过原仓最后一条线」的号。
+                # 超过 LEGACY_MAX ⇒ 不是沿革，是伪造 ⇒ 判负（第三轮审查第 2 条）。
+                if _LEGACY_ARCHIVE_OK and ver_tuple(m.group(2)) <= LEGACY_MAX:
                     legacy_higher.append(n)
                     continue
-                v6_bad.append("%s 版本号高于当前版 v%s" % (n, hv[1]))
+                v6_bad.append("%s 版本号高于当前版 v%s%s" % (
+                    n, hv[1],
+                    "" if _LEGACY_ARCHIVE_OK else ""
+                    if ver_tuple(m.group(2)) <= LEGACY_MAX
+                    else "（且超出前代版本线上界 v%s，不属沿革 ⇒ 判负）"
+                         % ".".join(str(x) for x in LEGACY_MAX)))
             elif m.group(2) == hv[1]:
                 p_old = os.path.join(old_dir, n)
                 p_live = os.path.join(dirpath, "%s%s.%s" % (m.group(1), m.group(3) or "", ext))
@@ -271,10 +286,15 @@ def version_checks(root):
     # 但会明确输出「未验证」而非冒充通过。
     import os as _os
     if _os.environ.get("SKIP_V7") == "1":
+        # ⚠️ 2026-10-08 修正（第三轮审查第 1 条）：
+        #    此前豁免时返回 True ⇒ 汇总表显示 ✅ 绿，把「未验证」伪装成「通过」，
+        #    这正是本仓自己在防的「共享环境变量掩盖真实失败」。
+        #    现返回 None = 未验证：显示 ⚠️、说明必显示、且**不计入 passed**。
         for fam in ("routing", "lazy"):
-            out.append(("V7 %s 一天一版" % fam, True,
-                        "已跳过（SKIP_V7=1）：本仓无原仓 git 历史，日期分组不成立 "
-                        "⇒ 未验证，不是通过"))
+            out.append(("V7 %s 一天一版" % fam, None,
+                        "已跳过（SKIP_V7=1）：整合仓把全部版本号的首现日塌缩成同一天 "
+                        "⇒ 日期分组不成立 ⇒ **未验证，不是通过**。"
+                        "该豁免是否正当见 release-rules.md §4.1"))
         return out
     dv = day_versions(root)
     for fam in ("routing", "lazy"):
@@ -333,7 +353,14 @@ def main():
     v_out = version_checks(root)
     v_bad = 0
     print("\n固定名与归档序列（判据条数不随归档文件数增长）：")
+    v_unver = 0
     for name, ok_, note in v_out:
+        # ⚠️ ok_ 为 None = **未验证**（SKIP_V7 豁免等）：显示 ⚠️、说明必显示、
+        #    且**既不计入 passed 也不计入 failed** —— 不许把未验证伪装成通过。
+        if ok_ is None:
+            v_unver += 1
+            print("   ⚠️  %s%s" % (name, ("   " + note) if note else ""))
+            continue
         # V7 的说明在**通过时也要显示**：它承载的是「判了几个更新日 / 有多少分组因历史不全
         # 而没验证」这类信息 —— 只挂在失败上，浅克隆下就会显示成一条干净的绿。其余判据维持
         # 原样（失败才打印说明），免得把输出变吵。
@@ -342,10 +369,14 @@ def main():
                               ("   " + note) if (show_note and note) else ""))
         if not ok_:
             v_bad += 1
-    v_pass = len(v_out) - v_bad
+    v_pass = len(v_out) - v_bad - v_unver
     # 与两侧 runner 同一口径的合计行，便于 all.sh / 文档按断言数对账。
-    print("\n共 %d 对形态相同 · 归档判据 %d/%d 过" % (pairs - bad, v_pass, len(v_out)))
-    print("TOTAL: %d passed, %d failed" % (pairs - bad + v_pass, bad + v_bad))
+    print("\n共 %d 对形态相同 · 归档判据 %d/%d 过%s"
+          % (pairs - bad, v_pass, len(v_out) - v_unver,
+             (" · 未验证 %d" % v_unver) if v_unver else ""))
+    print("TOTAL: %d passed, %d failed%s"
+          % (pairs - bad + v_pass, bad + v_bad,
+             (", %d unverified" % v_unver) if v_unver else ""))
     return 1 if (bad or v_bad) else 0
 
 

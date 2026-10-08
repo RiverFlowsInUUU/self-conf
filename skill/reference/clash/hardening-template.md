@@ -341,7 +341,7 @@ proxy-providers:
 
 | 加固项 | 用什么验证 |
 |:--|:--|
-| tun 四键齐全（**仅静态 profile**）| `python skill/tests/clash/check_structure.py` |
+| **禁止** `tun` 段（4c4bc56 起反转；原为「要求四键」，文档曾长期说反）| `python skill/tests/clash/check_structure.py` |
 | IPv6 两处关闭 | 同上 |
 | 广告拦截双条件 + 顺序 | 同上 |
 | 无悬空引用、规则指向存在 | 同上 |
@@ -351,7 +351,7 @@ proxy-providers:
 | 无真实凭据 | `python skill/tests/clash/check_secrets.py` |
 | 不引用外部仓库资源 | `python skill/tests/check_selfcontained.py` |
 | 生成物未过期 | `python skill/scripts/clash/build_rules.py --check`<br>`python skill/scripts/clash/build_profiles.py --check` |
-| 全跑 | `python skill/tests/verify_all.py`（17 道） |
+| 全跑 | `python skill/tests/verify_all.py`（44 道） |
 
 ## 12 · FAQ
 

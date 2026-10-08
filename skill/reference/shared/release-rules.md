@@ -9,7 +9,7 @@
 版本号写在 profile 的**头注第一行**，格式 `#! version=<产品线>_v<X.Y.Z>`：
 
 ```
-#! version=routing_v4.0.5
+#! version=routing_v1.0.0
 ```
 
 | 内核 | 产品线 | 头注 |
@@ -19,7 +19,7 @@
 | mihomo | 分流版 / 懒人版 | `#! version=routing_vX.Y.Z` / `#! version=lazy_vX.Y.Z` |
 
 - Surge 与 Egern 同一产品线**必须同号**（跨内核对拍的前提，由 `check_min_pair.py` 的 X 判据守着）。
-- mihomo 是**独立版本线**（配置由脚本生成，不是另两个内核的变体），从 `v1.0` 起。
+- mihomo **2026-10-08 起与 Surge / Egern 同号**（三内核统一 `v1.0.0`）；此前是独立版本线，该说法已作废。由 `check_version_header.py` 的 V5 断言守着。
 - `.min` 版必须带**同一行**头注（对拍判据要求逐字节一致）。
 
 ## 2 · 什么时候升号
@@ -103,7 +103,7 @@
 
 
 ✅ `check_releases.py`（远端 Release 断言 R1–R5）**已于 2026-10-08 启用** ——
-本仓首个 Release `v2026-10-08`（三内核统一 v1.0.0）已发布，判据已进 42 道闸门。
+本仓首个 Release `v2026-10-08`（三内核统一 v1.0.0）已发布，判据已进 44 道闸门。
 判据如下：
 
 - R1 tag 匹配 `^v\d{4}-\d{2}-\d{2}$` 且无重复

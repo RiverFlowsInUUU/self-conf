@@ -221,7 +221,8 @@ def rewrite(text, vals, apply_):
 
 TARGETS = [
     "skill/reference/shared/cross-kernel-diff.md",
-    "README.md",
+    # ⚠️ README.md 曾在此列但**没有任何 AUTO 段** ⇒ 每次跑都只打印「无 AUTO 段」，
+    #    长期空转（2026-10-08 第三轮审查第 17 条）。等它真正加了 AUTO 标记再放回。
     "skill/reference/shared/rulesets.md",
     # clash 文档：mihomo 规模此前手抄 ⇒ 改配置会静默说谎，纳入 AUTO 同步
     "skill/reference/clash/branch.md",
@@ -335,7 +336,7 @@ def main():
             print("   ⏭  %-46s 无 AUTO 段" % rel)
             continue
         new, changed = rewrite(text, vals, a.apply)
-        mark = "�’" if changed else "✅"
+        mark = "✏️ " if changed else "✅"   # 2026-10-08：原为乱码字面量（�’）
         print("   %s %-46s %d 段 %s" % (mark, rel, len(segs),
                                         ("（变了：%s）" % "、".join(changed)) if changed else ""))
         if changed:
