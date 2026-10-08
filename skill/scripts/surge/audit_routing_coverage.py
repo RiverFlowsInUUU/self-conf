@@ -47,10 +47,14 @@ from _surge_common import (  # noqa: E402
 )
 from audit_ruleset_content import fetch  # noqa: E402
 
+# 仓库定位：靠标志物上溯，不依赖目录层数（见 tools/lib/paths.py）
+import sys as _sys, os as _os
+_sys.path.insert(0, _os.path.join(_os.path.dirname(_os.path.abspath(__file__)), '../../lib'))
+from paths import repo_root as _repo_root  # noqa: E402
+
+
 # 本文件位于 <仓库根>/skill/scripts/surge/ ⇒ 上溯三级即仓库根（不假设 cwd，也不出本仓取文件）
-REPO_ROOT = os.path.dirname(os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__)))))
-
-
+REPO_ROOT = _repo_root()
 # ── 探针清单 ────────────────────────────────────────────────────────────────
 # ⭐ 国内探针刻意混入**非 .cn** 的域名 —— 这是本脚本的核心判据之一。
 #    只靠 `DOMAIN-SUFFIX,cn` 兜住的配置会在这些域名上暴露。

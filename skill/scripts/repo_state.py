@@ -17,13 +17,19 @@ import re
 import subprocess
 import sys
 
+# 仓库定位：靠标志物上溯，不依赖目录层数（见 tools/lib/paths.py）
+import sys as _sys, os as _os
+_sys.path.insert(0, _os.path.join(_os.path.dirname(_os.path.abspath(__file__)), '../lib'))
+from paths import repo_root as _repo_root  # noqa: E402
+
+
 for _stream in (sys.stdout, sys.stderr):
     try:
         _stream.reconfigure(encoding="utf-8", errors="replace")
     except Exception:
         pass
 
-ROOT = os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
+ROOT = _repo_root()
 ACTIVE = {
     ("surge", "lazy"): "surge/profiles/lazy.conf",
     ("surge", "routing"): "surge/profiles/routing.conf",

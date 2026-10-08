@@ -18,14 +18,19 @@ import os
 import re
 import sys
 
+# 仓库定位：靠标志物上溯，不依赖目录层数（见 tools/lib/paths.py）
+import sys as _sys, os as _os
+_sys.path.insert(0, _os.path.join(_os.path.dirname(_os.path.abspath(__file__)), '../lib'))
+from paths import repo_root as _repo_root  # noqa: E402
+
+
 try:
     for _s in (sys.stdout, sys.stderr):
         _s.reconfigure(encoding="utf-8", errors="replace")
 except Exception:
     pass
 
-ROOT = os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
-
+ROOT = _repo_root()
 # RFC 5737 文档段 + mihomo 的 fake-ip 保留段（198.18.0.0/15，RFC 6815）。
 # 后者是整合 mihomo 内核后新增的：fake-ip-range 默认 198.18.0.1/16，
 # 对 Surge / Egern 而言是陌生段，不加入就会被误判成真实 IP。
