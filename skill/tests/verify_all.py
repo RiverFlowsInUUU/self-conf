@@ -49,6 +49,8 @@
 import os
 import re
 import subprocess
+import ast
+import shutil
 import sys
 import time
 from concurrent.futures import ThreadPoolExecutor
@@ -63,12 +65,43 @@ ROOT = os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__)
 PY = sys.executable or 'python'
 
 
+def _gh_exe():
+    """找 gh 可执行文件 —— **不能只靠 PATH**（第十一轮问题 1）。
+
+    实测本机：`shutil.which('gh')` 返回 None，`subprocess.run(['gh', 'auth', 'token'])`
+    抛 FileNotFoundError(WinError 2)，而 Git-Bash 里 `gh` 却能跑 ⇒ Git-Bash 的 PATH
+    与 Python 进程拿到的 PATH **不是同一套**。所以除了 PATH，还得显式找常见安装位置。
+    """
+    cands = [shutil.which('gh'), shutil.which('gh.exe')]
+    for env in ('LOCALAPPDATA', 'PROGRAMFILES', 'PROGRAMFILES(X86)'):
+        base = os.environ.get(env)
+        if base:
+            cands.append(os.path.join(base, 'Programs', 'GitHub CLI', 'bin', 'gh.exe'))
+            cands.append(os.path.join(base, 'GitHub CLI', 'bin', 'gh.exe'))
+    for c in ('/usr/bin/gh', '/usr/local/bin/gh', '/opt/homebrew/bin/gh',
+              os.path.expanduser('~/.local/bin/gh')):
+        cands.append(c)
+    for c in cands:
+        if c and os.path.isfile(c) and os.access(c, os.X_OK):
+            return c
+    return None
+
+
 def _token():
-    """check_releases 用：环境变量 → gh auth token → None。"""
+    """check_releases 用：环境变量 → `gh auth token` → None（匿名）。
+
+    ⚠️ 第十一轮问题 1：此前只有 `subprocess.run(['gh', ...])`，异常被 `except Exception: pass`
+       吞掉 ⇒ **本机实际永远返回 None**，而 docstring 却写着"自动回退 gh auth token"
+       ⇒ 文档在为**不存在的回落**背书。现改为先用 `_gh_exe()` 定位 gh；仍找不到才 None。
+    """
     if os.environ.get('GITHUB_TOKEN'):
         return os.environ['GITHUB_TOKEN']
+    gh = _gh_exe()
+    if not gh:
+        return None
     try:
-        r = subprocess.run(['gh', 'auth', 'token'], capture_output=True, text=True, timeout=15)
+        r = subprocess.run([gh, 'auth', 'token'],
+                           capture_output=True, text=True, timeout=15)
         if r.returncode == 0 and r.stdout.strip():
             return r.stdout.strip()
     except Exception:
@@ -121,6 +154,110 @@ def _assert_allowlist_registered():
             '❌ CI_ALLOWED_SKIP 里的 %s 未在 release-rules.md §4.1 以 '
             '「`闸门名`」形式登记 —— 不许悄悄扩权（要么先登记，要么别加）'
             % '、'.join(missing))
+
+
+def _collect_env_reads():
+    """抓 `skill/**/*.py` 里所有 `os.environ.get("NAME")` / `os.environ["NAME"]` 的名字。
+
+    ⚠️ 不看 `os.environ` 出现在注释里 —— 只认 AST 里的真实读取。
+    """
+    skill = os.path.normpath(os.path.join(
+        os.path.dirname(os.path.abspath(__file__)), '..'))
+    pat = re.compile(r'^[A-Z_][A-Z0-9_]*$')
+    names = {}
+    for dp, dirs, files in os.walk(skill):
+        dirs[:] = [d for d in dirs if d != '__pycache__']
+        for fn in files:
+            if not fn.endswith('.py'):
+                continue
+            fp = os.path.join(dp, fn)
+            try:
+                src = open(fp, encoding='utf-8').read()
+                tree = ast.parse(src)
+            except Exception:
+                continue
+            got = set()
+
+            def _from_arg(node):
+                if node.args and isinstance(node.args[0], ast.Constant) \
+                        and isinstance(node.args[0].value, str) \
+                        and pat.match(node.args[0].value):
+                    got.add(node.args[0].value)
+
+            for nd in ast.walk(tree):
+                # os.environ.get("X")
+                if isinstance(nd, ast.Call) and isinstance(nd.func, ast.Attribute) \
+                        and nd.func.attr == 'get':
+                    b = nd.func.value
+                    if isinstance(b, ast.Attribute) and b.attr == 'environ' \
+                            and isinstance(b.value, ast.Name) and b.value.id == 'os':
+                        _from_arg(nd)
+                # os.environ["X"]
+                if isinstance(nd, ast.Subscript):
+                    b = nd.value
+                    if isinstance(b, ast.Attribute) and b.attr == 'environ' \
+                            and isinstance(b.value, ast.Name) and b.value.id == 'os':
+                        sl = nd.slice
+                        if isinstance(sl, ast.Constant) and isinstance(sl.value, str) \
+                                and pat.match(sl.value):
+                            got.add(sl.value)
+            if got:
+                names[os.path.relpath(fp, skill)] = sorted(got)
+    return names
+
+
+def _assert_escapes_registered():
+    """放行类逃生门必须在 release-rules §4.2.1 登记 —— 防悄悄加后门（第十一轮问题 4）。
+
+    只查**放行类**（能让判据放行的），不管输入类（`GITHUB_TOKEN` 等）—— 后者缺了
+    是"环境没准备好"(exit 2/3)，不是"标准被放低"，不该被这道拦。
+    fail-closed：读不到文档 ⇒ 报错；看不懂 §4.2.1 ⇒ 报错。
+    """
+    try:
+        doc = open(_RULES_DOC, encoding='utf-8').read()
+    except Exception as e:
+        raise SystemExit('❌ 读不到 release-rules.md，逃生门无法校验 —— 不放行 (%s)' % e)
+    i = doc.find('### 4.2 ')
+    if i < 0:
+        raise SystemExit('❌ release-rules.md 没有 §4.2 —— 逃生门登记缺失，不放行')
+    j = doc.find('\n#### 4.2.2', i + 10)
+    k4_3 = doc.find('\n### 4.3', i + 10)
+    endits = [x for x in (j, k4_3, len(doc)) if x > 0]
+    sec = doc[i:i + 10 + min(endits) - 10] if endits else doc[i:]
+    # ⚠️ 只认**表格第一列**的 `NAME` 作为登记凭据（第十一轮自测发现的问题）：
+    #    若用全文反引号匹配，§4.2.1 里那句「机器登记项：SKIP_V7 · STRICT_ARCHIVE ·
+    #    UNIFIED_VERSION」也会命中 ⇒ **删掉表格行却仍能通过** = 登记形同虚设。
+    #    说明性文字不是凭据，表格才是。
+    registered = set()
+    for ln in sec.splitlines():
+        s = ln.strip()
+        if not s.startswith('|'):
+            continue
+        cells = [c.strip() for c in s.strip('|').split('|')]
+        if not cells:
+            continue
+        first = cells[0]
+        if first.startswith('`') and first.endswith('`'):
+            nm = first.strip('`')
+            if re.fullmatch(r'[A-Z_][A-Z0-9_]*', nm):
+                registered.add(nm)
+
+    # 只看真机读过的名字里，**确实能改判据宽严**的那些 —— 由一张显式清单定义。
+    GATE_CHANGING = ('SKIP_V7', 'STRICT_ARCHIVE', 'UNIFIED_VERSION')
+    found = _collect_env_reads()
+    alive = set()
+    for v in found.values():
+        alive.update(v)
+    missing = [x for x in GATE_CHANGING if x in alive and x not in registered]
+    if missing:
+        raise SystemExit(
+            '❌ 这些**放行类逃生门**读进了代码却没登记在 release-rules.md §4.2.1：%s\n'
+            '   —— 要么登记（说明默认安全与谁在用），要么别写进代码。不放行。'
+            % '、'.join(missing))
+    # 反向：登记了但代码已不再用 ⇒ 提醒（不报错，避免删代码被卡）
+    stale = [x for x in GATE_CHANGING if x in registered and x not in alive]
+    if stale:
+        print('   ℹ️ §4.2.1 登记了但代码不再读取：%s（可选清理）' % '、'.join(stale))
 
 
 def build_gates():
@@ -309,6 +446,7 @@ def print_index():
 
 def main():
     _assert_allowlist_registered()   # 护栏必须在**真正入口**跑（第八轮审查问题 1）
+    _assert_escapes_registered()     # 逃生门登记（第十一轮问题 4）
     if '--index' in sys.argv:
         print_index()
     verbose = '-v' in sys.argv

@@ -103,16 +103,30 @@ def _dup_groups(ents):
 
 
 def _where_of(name):
-    """「位置」列：CI 独立 step / 手动 —— 看该脚本是否出现在 ci.yml（不猜）。
+    """「位置」列：CI 独立 step / 手动 —— 由该脚本是否**真正被调用**决定（不猜）。
 
-    ⚠️ 第十轮问题 6：此前位置列被写死成 "—"，丢了信息。
+    ⚠️ 第十轮问题 6：位置列曾被写死成 "—"。
+    ⚠️ 第十一轮问题 5：改成 `name in ci` 后仍是**裸子串** —— ci.yml 的注释或 echo
+       里只要提到这个名字，该列就会从"手动"翻成"CI 独立 step"。
+       现改为：只看**非注释行**、且要求脚本名前面是空白/斜杠/引号（`.../xxx.py`），
+       即真正的调用形态。另：`verify_all.py` 单独说明它是总入口本身。
     """
     try:
         ci = open(os.path.join(ROOT, ".github", "workflows", "ci.yml"),
                   encoding="utf-8").read()
     except Exception:
         return "—"
-    return "CI 独立 step" if name in ci else "手动（不在任何闸门）"
+    if name == "verify_all.py":
+        return "CI 独立 step（总入口本身）"
+    base = re.escape(name[:-3] if name.endswith(".py") else name)
+    pat = re.compile(r"[\s/\\'\"]" + base + r"\.py\b")
+    for line in ci.splitlines():
+        if line.strip().startswith("#"):
+            continue                      # 注释行不算
+        if pat.search(" " + line):
+            return "CI 独立 step"
+    return "手动（不在任何闸门）"
+
 
 
 def _not_in_gates_rows():
@@ -126,16 +140,12 @@ def _not_in_gates_rows():
         import check_gate_manifest as m
     except Exception:
         return []
-    reasons = {
-        "check_remote_urls.py": "CI 独立 step —— 需联网探测数十个 URL，慢，不适合与快门并行",
-        "probe_dns_endpoints.py": "CI 独立 step —— 需联网实测加密 DNS 端点，网络抖动会假红",
-        "check_real_kernel.py": "需真实 mihomo 内核二进制 + 真网络，CI 沙箱两者都没有，仅本地人工跑",
-        "verify_all.py": "它自己就是总入口，不是被调的判据",
-    }
     out = []
     for name in sorted(m.KNOWN_SEPARATE):
         why = m.KNOWN_SEPARATE[name]
-        out.append((name, reasons.get(name, why if isinstance(why, str) else str(why))))
+        if not isinstance(why, str):
+            why = str(why)
+        out.append((name, why))
     return out
 
 

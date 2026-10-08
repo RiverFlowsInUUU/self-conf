@@ -243,14 +243,17 @@ secrets 扫描发现新的主机或 IP 时，只有两种正确处理：
 - CI 读取的是提交后的仓库，抓不到未提交的本地私密文件；
 - 所有门禁都可能只有“绿样例”，若没有坏样例证明判负能力，绿色可信度有限。
 
-~~因此公开发布前仍要显式补跑~~ ⇒ 该项已进闸门，无需再单独补跑；下面这条列出的是**仍在闸门之外**的项：
+~~因此公开发布前仍要显式补跑~~ ⇒ **下面这两项也都已进闸门**（第十一轮问题 2：
+此处原写“仍在闸门之外”，但代码块里两项**当时就已经在跑**了 —— 我只改了上半句、
+没动代码块和末句 ⇒ 标题、代码块、结语三者自相矛盾）：
 
-```bash
-python skill/tests/check_selfcontained.py .
-python skill/tests/clash/check_secrets.py clash
-```
+| 命令 | 闸门 | 编号 |
+|:-----|:----:|:----:|
+| `python skill/tests/check_selfcontained.py .` | 自洽性 | **#42** |
+| `python skill/tests/clash/check_secrets.py clash` | clash secrets 扫描 | **#23** |
 
-如果以后把它们接入总入口，文档应同步改为“CI 强制”；在此之前不得声称 CI 已覆盖。
+⇒ 二者均由 CI **强制**执行，无需人工补跑；本地既然是同一个 `verify_all.py`，
+  也不用单独手敲。编号以 `python skill/tests/verify_all.py --index` 现抓为准。
 
 ## 7 · Issue、日志与截图纪律
 

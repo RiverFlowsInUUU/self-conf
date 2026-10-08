@@ -774,10 +774,10 @@ _skip_v7 = {'SKIP_V7': '1'}
 
 | 项 | 位置 | 为什么不进 |
 |:---|:-----|:-----------|
-| `check_real_kernel.py` | 手动（不在任何闸门） | 需真实 mihomo 内核二进制 + 真网络，CI 沙箱两者都没有，仅本地人工跑 |
-| `check_remote_urls.py` | CI 独立 step | CI 独立 step —— 需联网探测数十个 URL，慢，不适合与快门并行 |
-| `probe_dns_endpoints.py` | CI 独立 step | CI 独立 step —— 需联网实测加密 DNS 端点，网络抖动会假红 |
-| `verify_all.py` | CI 独立 step | 它自己就是总入口，不是被调的判据 |
+| `check_real_kernel.py` | 手动（不在任何闸门） | 需真内核 + 真网络，仅本地人工跑（ops.md §6.8.1） |
+| `check_remote_urls.py` | CI 独立 step | CI 独立 step（慢，需联网探测数十个 URL） |
+| `probe_dns_endpoints.py` | CI 独立 step | CI 独立 step —— 需联网实测加密 DNS 端点，有判负语义但抖动会假红，故不进 46 道 |
+| `verify_all.py` | CI 独立 step（总入口本身） | 它自己就是总入口，不是被调的判据 |
 ⚠️ `min-pair 一致` 一道含 V7「一天至多一版」两条断言；本仓以 `SKIP_V7=1` 豁免
 ⇒ 该两条记为 **未验证**（⚠️）而非通过，本道以 exit 3 结束，上层显示 ⚠️。
 详见 `release-rules.md` §4.1。
@@ -829,6 +829,7 @@ on:
 | 5 | **Gates (Surge + Egern + mihomo)** | `python skill/tests/verify_all.py` |
 | 6 | **Encoding gate (cp936)** | 同上命令，但 `PYTHONIOENCODING: cp936` |
 | 7 | **Remote ruleset reachability (mihomo)** | `check_remote_urls.py --timeout 20`，PR 时 `continue-on-error: true` |
+| 8 | **Encrypted DNS endpoints reachability (Egern)** | `probe_dns_endpoints.py`；需联网，PR 时 `continue-on-error: true` |
 
 ### 12.1 两处必须理解的设计
 
