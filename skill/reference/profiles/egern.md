@@ -685,7 +685,7 @@ rules:
 | # | 事实 | 对改配置的直接推论 |
 |:-:|:-----|:-------------------|
 | 1 | **代理 DNS 强制直连**；国内直连去问境外解析器（`8.8.8.8:443` 之类）基本不通 | 代理侧的任何解析只有两条出路：**国内解析器**，或**明文 `bootstrap`**（还可能回落 `system` = 运营商）。这条路径**无法加密**，只能靠「让它不需要解析」（节点写 IP）或「给它确定的可达解析器」收口 |
-| 2 | **`proxies[].server` 是域名的节点必然产生一次「本机 + 直连 + 明文」解析**——整份配置里唯一**必定发生**的国内解析，不取决于访问什么网站，只取决于连哪个节点 | 动手前先统计节点形式：`python -c "import yaml;d=yaml.safe_load(open('Profile.yaml',encoding='utf-8'));print([(list(p.values())[0].get('name'),list(p.values())[0].get('server')) for p in d['proxies']])"` |
+| 2 | **`proxies[].server` 是域名的节点必然产生一次「本机 + 直连 + 明文」解析**——整份配置里唯一**必定发生**的国内解析，不取决于访问什么网站，只取决于连哪个节点 | 动手前先统计节点形式：`python -c "import yaml;d=yaml.safe_load(open('Profile.yaml',encoding='utf-8'));print([(list(p.values)[0].get('name'),list(p.values)[0].get('server')) for p in d['proxies']])"` |
 | 3 | **进代理的域名由节点远端解析**（官方语义 + 社区事实标准 Repcz 原话：「已经匹配到走节点的规则交由节点 dns 查询，dns 设置仅对需要本地解析的域名进行查询」） | 本地 `dns:` 段只服务三类名字：**直连域名 · 节点自己的域名（走 `proxy_nameservers`）· profile 自身依赖**。改哪里才有意义由此决定 |
 | 4 | **回退链**（"泄露到运营商"的唯一来源）：选中上游解析失败 → `bootstrap` → 再失败 → `system`。官方原文：bootstrap「仅支持传统 UDP 协议（端口 53），且不遵循代理规则——**流量直连**」，用途「① 解析 `upstreams` 中加密 DNS 服务器的主机名；② 作为最终的 DNS 回退」，且「未配置或解析失败时，自动使用系统 DNS 服务器」 | 🚨 国内运营商普遍对第三方明文 :53 做 DNS 重定向/调度 ⇒ 任何查询落到 bootstrap / system，最终应答者就可能变成**运营商自己的服务器**（用户看到「DNS 泄露到中国 ISP」）。**这条路无法加密，唯一办法是让它永不触发** |
 

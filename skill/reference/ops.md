@@ -354,7 +354,7 @@ clash/
 |:-----|:-----|:-----|
 | 静态 profile 新鲜度 | `skill/scripts/clash/build_profiles.py --check` | 脚本输出 ≠ 静态文件即判负（闸门 #46） |
 | 规则集生成物新鲜度 | `skill/scripts/clash/build_rules.py --check` | `.yaml` 与 `.list` 真源不一致即判负 |
-| 脚本 ↔ 静态对拍 | `skill/tests/clash/check_script_sync.py` | 需 **node**（Windows 下由 `_clash_common.find_node()` 显式探测；Git Bash 的 PATH 不继承给 subprocess） |
+| 脚本 ↔ 静态对拍 | `skill/tests/clash/check_script_sync.py` | 需 **node**（Windows 下由 `_clash_common.find_node` 显式探测；Git Bash 的 PATH 不继承给 subprocess） |
 
 #### 5.3 不要手工改 `profiles/*.yaml`
 
@@ -474,7 +474,7 @@ python skill/tests/clash/check_remote_urls.py          # 慢，按需
   脚本自动从 `include-all-proxies` 切到 `include-all`，避免 provider 里的节点成为孤儿）。
 - 运行门禁需要 **Python 3 + PyYAML**（本仓唯一第三方依赖）；`check_script_sync.py` 与
   `build_profiles.py` 另需 **node**（跑 `override/*.js` 取输出）。
-- 从**仓库根**调用门禁。四个 clash 门禁的 `_default_root()` 都是「当前工作目录 → 逐级向上 + `/clash`」，
+- 从**仓库根**调用门禁。四个 clash 门禁的 `_default_root` 都是「当前工作目录 → 逐级向上 + `/clash`」，
   找到同时含 `profiles/` 与 `override/` 的目录为止 —— CWD 优先是刻意设计
   （CI 上基于 `__file__` 探测会算错目录，报"缺文件"而本地全过）。
 
@@ -643,7 +643,7 @@ python skill/tests/check_portability.py
 登记了事、靠人记得跑。**实测推翻了这判断** —— 它们都给出明确的过/不过（exit 0/1）。
 现 **12** 项已进闸门（地区组判别力 ×3、分流覆盖 **×3**、规则集内容 ×2、
 刷新周期 ×2、DNS 转发泄露、no-resolve 配对），不再需要人记得跑。
-📌 计数订正（2026-10-08 第五轮）：分流覆盖是 **×3**（Surge / Egern / mihomo），合计 **12 项**审计工具已进闸门（此前误写 ×2 / 11 项）。
+📌 计数订正：分流覆盖是 **×3**（Surge / Egern / mihomo），合计 **12 项**审计工具已进闸门（此前误写 ×2 / 11 项）。
 
 ⚠️ **又一次校准（同日）**：`profile_ruleset.py` 实测输出
 「✅ 没有裸 IP 条目」+ 明确退出码 ⇒ 也可进闸门，已作为 **#17–19** 道接入（离线、快）。
@@ -782,7 +782,7 @@ config_old 相邻快照的逐行 diff —— 「维护性更新」「早期演�
 ⚠️ 同一句里**不得**把「内核」写两遍，也**不得**加「两者的」这类同义回指：
 反例「Surge 内核与 Egern 内核同步支持该策略，两者的取值一致。」／
 正例「Surge / Egern 内核同步支持该策略，取值一致。」。
-下载按钮用 shields.io 在线徽章（`badge_url()`），不落仓库静态文件。
+下载按钮用 shields.io 在线徽章（`badge_url`），不落仓库静态文件。
 
 **说明是面向公众的产品更新日志，不是内部 commit 记录**：变更摘要一律取自
 `release_publish.py` 的 `PUBLIC_NOTES` 表（公众向措辞），**禁止**把内部 commit subject
@@ -890,7 +890,7 @@ python skill/tests/check_releases.py                         # 断言：tag 形�
 | 2 | ⭐ `proxies[].server` 是**域名**的节点，**代理 DNS 那条路**有没有落在国内加密组上 | 没有 → 代理 DNS 强制直连、问不到境外解析器 → 回退明文 `bootstrap`（国内解析器）→ **节点域名明文暴露**。判据看 `proxy_nameservers` **或** `forward` 兜底（二者任一即可，见 2b）；根治手段是把节点 `server` 改写成 IP 字面量。⚠️ **"在 `forward` 里为节点域名加一条 `domain_suffix`"是错的查法/修法** —— 设了 `proxy_nameservers` 后代理 DNS **跳过** `forward`，该规则永不命中（f7 起即为死代码） | **高** |
 | 2b | `proxy_nameservers` 是否存在 | 它是**硬覆盖**：一设就跳过 `forward`、强制直连。**两种写法都成立，但必须二选一、不要叠加**：① **不设置** —— 代理 DNS 与默认 DNS 共用 `forward`，靠兜底接住节点域名；② **设置** —— 把"未命中回退 `bootstrap`"这条分支从结构上消掉，且强制直连 ⇒ 不依赖代理就绪。**本模板采用 ②，理由即此。** ⚠️ 设置后 `forward` 对节点域名失效 | 中（设了要说明理由 —— 本模板已在 `dns` 段注释里说明） |
 | 3 | ⭐ DNS 端点是否有**显式路由** | `geoip` 加了 `no_resolve` 就**不再匹配域名**；主机名形式的端点会落到 `default` → 国内端点被绕到境外出口 / 境外端点直连被阻断。**国内端点必须显式 → `DIRECT`，境外端点必须显式 → `Proxy`** | **高** |
-| 4 | ⭐ `forward` 里是否存在「捕获一切」的兜底，**且该兜底组「直连可达」** | 兜底存在的意义只有一个：让未命中的域名不回退 `bootstrap` 明文。**判据是「这组在代理没起来时能不能工作」** —— 组内端点必须全是 IP 字面量，**且满足下面两条之一**：<br>**判据 A** 至少一个端点在 `rules` 里被判给 `DIRECT`；<br>**判据 B** 至少一个是已知的**国内**公共解析器 IP（`223.5.5.5` / `223.6.6.6` / `119.29.29.29` / `1.12.12.12` / `120.53.53.53` …）—— 其归属与服务商是公开事实，在国内任何链路上都直连可达，与"在 `rules` 里判给 `DIRECT`"等价，且不需要在配置里写装饰性规则。<br>⚠️ 判据 B 是 f10 引入的：模板删掉那 15 条 DNS 端点路由规则后，正是靠它通过验收。脚本 [`check_egern_dns.py`](../scripts/egern/check_egern_dns.py) 的 `group_reach()` 同时实现了 A 与 B。<br>只判给 `Proxy` 的组 = 依赖代理 = 启动期会掉进明文。**写法要认全**：`domain_wildcard: '*'` **和** `domain_regex: '.'`（官方 PCRE2 find 式）都算兜底 —— 推荐**两条都写** | **高** |
+| 4 | ⭐ `forward` 里是否存在「捕获一切」的兜底，**且该兜底组「直连可达」** | 兜底存在的意义只有一个：让未命中的域名不回退 `bootstrap` 明文。**判据是「这组在代理没起来时能不能工作」** —— 组内端点必须全是 IP 字面量，**且满足下面两条之一**：<br>**判据 A** 至少一个端点在 `rules` 里被判给 `DIRECT`；<br>**判据 B** 至少一个是已知的**国内**公共解析器 IP（`223.5.5.5` / `223.6.6.6` / `119.29.29.29` / `1.12.12.12` / `120.53.53.53` …）—— 其归属与服务商是公开事实，在国内任何链路上都直连可达，与"在 `rules` 里判给 `DIRECT`"等价，且不需要在配置里写装饰性规则。<br>⚠️ 判据 B 是 f10 引入的：模板删掉那 15 条 DNS 端点路由规则后，正是靠它通过验收。脚本 [`check_egern_dns.py`](../scripts/egern/check_egern_dns.py) 的 `group_reach` 同时实现了 A 与 B。<br>只判给 `Proxy` 的组 = 依赖代理 = 启动期会掉进明文。**写法要认全**：`domain_wildcard: '*'` **和** `domain_regex: '.'`（官方 PCRE2 find 式）都算兜底 —— 推荐**两条都写** | **高** |
 | 5 | `geoip` / `ip_cidr` / `ip_cidr6` / `asn` 是否带 `no_resolve` | 官方：`no_resolve` **仅适用这四类**；不加则规则会**触发解析** | **高** |
 | 6 | ⭐ 规则引用的**策略名能否解析** | `policy` 嵌在类型字典里（`{domain: {match, policy}}`）—— 要读 `r[type]['policy']`。抓 `负载均衡` 这类笔误 | **高** |
 | 7 | 硬编码 DoH IP（`8.8.8.8` / `1.1.1.1` / `9.9.9.9` / OpenDNS…）是否有**启用**的规则 → 代理 | `hijack_dns` 只覆盖 **:53**，App 自带 DoH on **:443** 会绕过 | 中 |
@@ -1024,7 +1024,7 @@ python skill/tests/clash/check_structure.py
 | `check_remote_urls.py`（`skill/tests/clash/`） | **远程集可达性**（联网，慢） | 死链不是报错，是**静默降级** —— provider 拉不到就变空集，广告全进兜底出口而配置看着跑得挺好 |
 
 > ⭐ **审计通过 ≠ 配置可用**（三侧共通的母题）。mihomo 侧**已有**分流覆盖审计脚本（闸门 #9），但审计通过仍不等于真机可用 —— 这句母题对三侧都成立。
-> （三内核均有 `audit_routing_coverage.py`，闸门 #7/#8/#9）—— 第 6 条验收标准**先跑它们**，但注意离线档按规则集名推演、不读实际策略（第五轮审查问题 7），**仍需实测兜底**，别把闸门绿当充分条件。
+> （三内核均有 `audit_routing_coverage.py`，闸门 #7/#8/#9）—— 第 6 条验收标准**先跑它们**，但注意离线档按规则集名推演、不读实际策略，**仍需实测兜底**，别把闸门绿当充分条件。
 > 这正是 `no-resolve-pairing.md` 要跨内核保留下来的教训：**不得因为两道静态门禁全绿就跳过它。**
 
 #### 已知取舍（LOW 不是缺陷）
@@ -1119,158 +1119,57 @@ python skill/tests/clash/check_structure.py
 
 | 规矩 | 判据 |
 |:--|:--|
-| 头注版本格式合法、`.min` 一致 | `skill/tests/check_min_pair.py`（V1 / X 判据） |
-| **三内核跨内核同号（统一 v1.0.0）** | `skill/tests/clash/check_version_header.py`（**V5** 断言，2026-10-08 新增） |
-| 一天一版 | `skill/tests/check_min_pair.py`（V7）—— **本仓以 `SKIP_V7=1` 豁免，见下 |
-| 现役版本与归档序列一致 | `skill/tests/check_min_pair.py`（V3–V6） |
-| 徽章承诺的组数 / 规则数与实际一致 | `skill/tests/check_badges.py` |
+| 头注版本格式合法、`.min` 与完整版一致 | `check_min_pair.py`（V1 / V2） |
+| 三内核版本同号 | `check_min_pair.py`（X 判据）+ `clash/check_version_header.py`（V5） |
+| 徽章承诺的组数 / 规则数与实际一致 | `check_badges.py` |
+| 线上 Release 与当前版本一致 | `check_releases.py`（R1–R5） |
 
-#### 4.1 已知豁免（豁免 ≠ 通过，输出会明写「未验证」）
+**没有豁免项。** 43 道闸门全部对现役判，不存在「已登记的跳过」。
+（改革前有 `SKIP_V7` / `STRICT_ARCHIVE` 两个逃生门 —— 它们只服务于已删除的归档机制，
+随归档一并移除。现在 verify_all 在 CI 里对任何 SKIP 一律判失败。）
 
-- **V7「一天至多一版」在本仓以 `SKIP_V7=1` 豁免**（`verify_all.py` 传该环境变量）。
+### 5 · 环境变量
 
-  **定性（回答第三轮审查第 18 条）：这是「迁仓导致的历史事实」，不是违反节奏。**
+分三类，登记**写在代码里**（`skill/tests/verify_all.py` 的 `ESCAPES` / `INPUT` /
+`DYNAMIC_READS` 三个常量），不写在文档里 —— 文档与代码分居两处就必须同步，
+那是漂移的来源。判据：AST 抓到的全部环境变量名 − `INPUT` 必须是 `ESCAPES` 的子集，
+否则启动即报错（防悄悄加后门）。
 
-  🔧 **机器登记项**（供 `verify_all.py` 的 `CI_ALLOWED_SKIP` 交叉校验）：
-  闸门名 **`min-pair 一致`** —— 这是它在 CI 上被允许放行 SKIP 的**唯一凭据**。
-  若将来改名或新增其它 CI 豁免，必须**同步改这一行**，否则 verify_all 启动即报错
-  （护栏见 `_assert_allowlist_registered()`，防的是"悄悄扩权"）。
+⚠️ **改判据宽严的开关（放行类）当前为空** —— 本仓刻意不留这类后门。
+需要加时：写进 `ESCAPES` 并注明「默认是否安全、谁在用」。
 
-  🔴 **但豁免是「无条件」的 —— 这点必须说清**（第六轮审查指出）：
-  `verify_all.py` 里 `SKIP_V7=1` 是**写死**的，不带任何条件判断。
-  ⇒ **本仓将来真出现「同一天连升两个号」，V7 也抓不到**。
-  别让后人以为它还能兜底 —— 它现在的作用只是让当前那堆塌缩的历史版本不误报。
-  本仓把三条版本线（Surge / Egern / mihomo）与全部历史一次性并进来，
-  所有版本号的「首现日」都塌缩成同一天 ⇒ 判据读成「一天升了 21 个版本」，
-  那是**迁仓的假象**，不是真的在同一天发了 21 版。
+### 6 · 版本号怎么升
 
-  ⇒ 所以该豁免**正当**，但有一条铁律：
-  **豁免 ≠ 通过。** 2026-10-08 起该两条记为 `unverified`（⚠️）而非 `passed`（✅），
-  汇总行显示 `34 passed, 0 failed, 2 unverified`。
-  （此前返回 True ⇒ 显示全绿，把未验证伪装成通过 —— 第三轮审查第 1 条。）
-
-  ⚠️ 其余判据（V1 头注格式 / V2 跨内核同号 / V3–V6 归档序列 / X 版本一致）**仍然生效**。
-
-- **归档序列（V3–V6）对 mihomo 不适用** —— clash 侧尚无 `config_old`，
-  它的版本一致性由 `check_version_header.py` 守着，归档待建立后启用。
-
-- **V6「归档不高于当前版」对前代版本线豁免**（2026-10-08 起）
-  背景：三内核现役版本**统一为 `v1.0.0`**（本仓作为整合仓重新计数）。
-  但 Surge / Egern 的 `config_old/` 里存的是**原仓 Self-Configuration 的历史版本**
-  （最高 `v4.0.4`）—— 那条版本线已完结，是本仓的**沿革**，不是「归档了没发布过的号」。
-
-  ⇒ 归档版本号高于现役，在此情形**不判负**。
-  ⚠️ 但**不许静默吞掉**：新增 **V10** 判据把它显式报出 ——
-  `✅ surge V10 前代版本线归档已登记（56 份，最高 v4.0.4）`。
-
-  **定位（回答第三轮审查第 19 条）：`STRICT_ARCHIVE=1` 是「给维护者手动用的严格模式」，
-  默认关闭。** 它精确报出 122 份高于现役的归档，用于想彻底重编归档（把前代号
-  重新编到 v1.0.0 之下）的场景。**日常不默认开** —— 那会让 122 份沿革归档全部判负，
-  而它们本就该保留。
-
-  ⚠️ 2026-10-08 晚修订（第三轮审查第 2 条）：豁免已从「无差别放行」改为
-  **白名单已知旧号区间**（上界 `LEGACY_MAX = (4,0,4)`）。
-
-#### 4.2 环境变量逃生门（必须登记）
-
-纪律：**任何能让判据放行的环境变量，必须在此登记并说明"谁用、为什么默认是安全的"**。
-背景见第二轮审查：逃生门不写明 ⇒ 后人不知道有后门，等于悄悄降标准。
-
-> 第十一轮问题 4 发现 `UNIFIED_VERSION` 是**未登记**的逃生门（能改判据的期望值），
-> 与 `SKIP_V7` / `STRICT_ARCHIVE` 都登记了的自律不一致。本节就此建立，
-> 并加了机器校验（见下）。
-
-##### 4.2.1 放行类逃生门（**必须登记，缺失即判负**）
-
-这类变量会让**本该判负的改判放行**，或抬高/降低判据的期望值 —— 动它等于改标准。
-
-| 变量 | 作用 | 默认值 | 默认是否安全 | 谁会用 |
-|:-----|:-----|:-------|:------------|:-------|
-| `SKIP_V7` | 跳过 V7「一天至多一版」两条断言 | 不设 ⇒ 不跳 | ✅ 默认不跳 | 迁移到新寄主时（git 历史不可继承，判据不成立） |
-| `STRICT_ARCHIVE` | 归档版本号不得高于现役（严格模式） | 不设 ⇒ 关闭 | ✅ 默认放宽（前代版本线是沿革） | 想彻底重编归档时，手动开一次看清全貌 |
-| `UNIFIED_VERSION` | 覆盖三内核版本统一断言（V5）的目标版本号 | `v1.0.0` | ✅ 默认守现役 | **三内核协同升版**时，把期望值一次性抬到新号 |
-
-🔧 **机器登记项 —— 逃生门**：`SKIP_V7` · `STRICT_ARCHIVE` · `UNIFIED_VERSION`
-—— 这是它们被允许存在的**唯一凭据**。`verify_all.py` 会反查 `skill/**/*.py`
-里读取的每一个环境变量名，**出现在这里没登记的"放行类"名字 ⇒ 启动即报错**。
-
-> 2026-10-08 第十五轮：上面那句「反查**每一个**」此前**名不副实** ——
-> 判据挂在语法位置上（只认 `os.environ.get(...)` 这种直接成员访问），
-> 把对象搬到另一个名字上就整类失明。第十三轮修了 10 种、第十四轮又发现 7 种
-> （`E = os.environ` / `getattr(os,'getenv')` / `from os import *` …），
-> 当时重写版**因过宽假红被整体回滚，7 种继续溜过、只记账未修**。
-> 第十五轮改为**按名字 + 污点传播**判定，7 种与第十三轮那批用同一套判据覆盖，
-> 且注错用例（23 条，含 6 条防过宽的反例）**已固化进 `verify_all.py`**，
-> 判据失效当场报错 —— 不再靠「改完手测一遍」。
-
-##### 4.2.2 输入类环境变量（列出备查，不视为逃生门）
-
-这类**不改判据宽严**，只提供运行所需的信息（目标仓库、凭据、是否 CI）。
-缺了它们通常是"环境没准备好"（exit 2/3），不是"标准被放低" —— 因此**不强制登记**，
-但在此列全，避免后人以为是隐藏后门。
-
-| 变量 | 用途 | 读它的地方 |
-|:-----|:-----|:-----------|
-| `GITHUB_TOKEN` | API 凭据（无则匿名读公开仓） | `verify_all.py`、`check_releases.py`、`release_publish.py` |
-| `GITHUB_REPO` | 目标仓库 `owner/repo`（默认 `RiverFlowsInUUU/self-conf`） | `check_releases.py`、`release_publish.py` |
-| `GITHUB_ACTIONS` | GitHub Actions 环境标记 | `verify_all.py` |
-| `CI` | 通用 CI 环境标记（`CI=true`） | `verify_all.py` |
-
-判定分界问责到一句话：**动它是否会改变"该判负还是判通过"** —— 会 ⇒ 4.2.1；不会 ⇒ 4.2.2。
-
-##### 4.2.3 动态读取白名单（静态判不出名字者，登记 = 人工看过）
-
-有些读法**名字不是字面量**（如 `os.environ.get(var)`、`os.environ[key]`），
-静态分析**本质上判不出**具体名字 —— 不加处理就等于给后门留一条暗道。
-所以这类要看地理：**必须在此登记**，登记即表示**有人逐行看过并确认无放行类后门**。
-未登记 ⇒ 启动即报错（fail-closed）。
-
-| 文件 | 动态读法 | 人工核验结论 |
-|:-----|:---------|:-------------|
-| `skill/tests/verify_all.py` | `os.environ.get(env)`（`env` 取自 `('LOCALAPPDATA','PROGRAMFILES','PROGRAMFILES(X86)')`） | 只读**路径类**环境变量，用于定位 `gh.exe`；与判据宽严无关 ⇒ 无需进 4.2.1 |
-
-⚠️ 这条白名单是**自我豁免**：`verify_all.py` 既是执行者又是被检查者。
-因此规矩更严 —— 一旦有人往这里加新的动态读取，必须在此说明它读的是什么、
-为什么不会成为后门，**不能只写一句"已确认"。**
-
-##### 4.2.3.1 判据边界：什么叫「读取」，什么叫「整体搬走」
-
-**判据的分界不是语法形状，而是「有没有从 environ 里取出某个键」。**
-
-| 写法 | 算不算读取 | 理由 |
-|:-----|:----------:|:-----|
-| `os.environ.get("X")` / `environ["X"]` / `os.getenv("X")` | ✅ 算 | 取出了具体键 |
-| `E = os.environ` 后再 `E.get("X")` | ✅ 算 | 污点经赋值传播，取值点照抓 |
-| `getattr(os, 'environ')["X"]` / `globals()['os'].environ.get("X")` | ✅ 算 | 取值点照抓 |
-| `from os import *` 后 `environ.get("X")` | ✅ 算 | 星号导入 ⇒ 三个家族名全部入场 |
-| `dict(os.environ)` / `os.environ.copy()` / `env = os.environ` | ❌ 不算 | **只取快照或传引用，没取任何键** ⇒ 不判动态 |
-| `{}.get("X")` / 自己定义的 `environ = {}` 后 `.get("X")` | ❌ 不算 | 基名不是污点 |
-
-🔴 **最后两行是第十四轮回滚的根因，必须记住**：
-那一版把所有"碰过 `os.environ`"的写法一律判为动态，于是 `dict(os.environ)`
-这类**合法且无害**的用法（本仓 10 个文件都在用，为了给子进程传环境）全部假红 ⇒
-门禁判负 ⇒ 整轮重写被回滚 ⇒ 真正该抓的 7 种后门继续溜。
-⇒ 教训：**判据过宽与判据过窄同样是失效**，而"过宽"更隐蔽 ——
-它不会放过坏人，它会让好人受不了而把判据整个撤掉。
-
-这 6 条反例（含 `dict(os.environ)`）与 17 条正例一起，固化在
-`verify_all.py` 的 `_ENV_SCAN_FIXTURES` 里，随 `main()` 每次启动自检。
+- 版本号写在 profile **头注第一行**：`#! version=routing_vX.Y.Z`。
+- **三内核同号**（由 X 判据与 V5 硬守）。
+- `.min` 必须带**同一行**头注（对拍要求逐字节一致）。
+- 升号只改头注 6 处（三内核 × 两产品线），改完跑 `verify_all.py`。
+- **历史版本不再在仓内归档** —— 要看历史用 `git log`；要下载历史版本去 Releases。
 
 
-### 5 · 发布流程（push 之后）
+### 7 · 发布流程
 
-1. 确认当天门禁全绿：`python skill/tests/verify_all.py`
-2. 补齐当日主题与条目
-3. 发布 Release
+```bash
+python skill/scripts/repo_state.py                      # ① 看清现状（版本 / Release / CI）
+python skill/tests/verify_all.py                        # ② 门禁全绿
+python skill/scripts/release_publish.py                 # ③ 计划模式：预览说明，一个字不发
+python skill/scripts/release_publish.py --apply         # ④ 真发（需 GITHUB_TOKEN）
+```
+
+**说明从 commit 自动汇总**（自上一个 tag 以来的 subject，过滤 chore/ci/style/test/refactor）
+—— 不再有手写的发布说明表，因此不可能与代码漂移。
+⇒ 想让某条变更出现在 Release 里，**把它写进 commit subject**。
+
+tag = `vYYYY-MM-DD`（发布日）。同一天重复 `--apply` 是幂等的（回写同一张 + 对账资产）。
 
 ⚠️ 改 mihomo 的版本号要改**脚本**（`clash/override/*.js` 不直接写版本头 ——
 版本头由 `build_profiles.py` 保留并写入；`.min` 由生成器同步）。直接改 profile 会在重新生成时被覆盖。
 
-### 6 · 已知取舍
+### 8 · 已知取舍
 
-- ~~mihomo 侧不参与 Surge / Egern 的「跨内核同号」判据（独立版本线）~~ ⇒ **2026-10-08 起已作废**：三内核统一 v1.0.0，由 `check_version_header.py` 的 V5 断言守着。
-- 归档文件（config_old）里的 URL 指向本仓，是为了自包含 —— 代价是归档不再忠实于
-  发布当时的绝对地址。刻意如此（本仓是唯一真源）。
+- 三内核统一同号（`check_min_pair` 的 X 判据 + `check_version_header` 的 V5 守着）；
+  历史上 mihomo 曾是独立版本线，已作废。
+- **仓内不保留历史版本快照** —— 历史在 git 与 Releases 里。
 
 ---
 
@@ -1803,11 +1702,11 @@ for f in ["lazy.yaml","routing.yaml"]:
     rp = c.get("rule-providers") or {}
     print("="*20, f)
     for r in c.get("rules") or []:
-        p = [x.strip() for x in r.split(",")]
+        p = [x.strip for x in r.split(",")]
         prov = p[1] if p[0] == "RULE-SET" else None
         beh = (rp.get(prov) or {}).get("behavior") if prov else None
         if beh == "ipcidr" or p[0].startswith(("IP-CIDR","GEOIP","IP-ASN")):
-            ok = "no-resolve" in [x.lower() for x in p]
+            ok = "no-resolve" in [x.lower for x in p]
             print("  %-45s behavior=%-8s no-resolve=%s" % (r, beh, ok))
 PY
 ```

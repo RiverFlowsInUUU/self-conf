@@ -416,7 +416,7 @@ Apple Update · AD · Hong Kong · Taiwan · Japan · Singapore · United States
 - **Egern**：`smart` + `policies: [Airport]` + `flatten: true`，用 `priorities` 表达同一个 0.15 权重。
 - **mihomo**：没有权重机制。静态文件声明 `Low Mult.` / `Auto` / `High Mult.` 三个
   `url-test` 组，以 `filter` 分档，再由 `fallback` 按档回落；覆写脚本则在执行时用
-  `sortedByRate()` 排可见的内联节点，`Smart` 仍是 `fallback`。
+  `sortedByRate` 排可见的内联节点，`Smart` 仍是 `fallback`。
 
 ⚠️ **按真实配置核对出的当前状态**：`clash/profiles/routing.yaml` 虽然声明了三个隐藏分档组，
 但 `Smart.proxies` 当前实际是单独的 `DIRECT`，并未引用这三个组；同一文件也没有
@@ -724,7 +724,7 @@ python skill/scripts/surge/audit_ruleset_content.py surge/profiles/lazy.conf
 
 ### 4 · 类型分布的读法
 
-`parse_ruleset()` 把条目分成三类：
+`parse_ruleset` 把条目分成三类：
 
 ```python
 _DOMAIN_TYPES = {

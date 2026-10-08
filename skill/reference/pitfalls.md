@@ -425,7 +425,7 @@ Surge iOS 不支持本地文件配置 —— 把 profile 托管到可访问地�
 | 9 | "DIRECT 在 REJECT 之前"这条不变量**本身是错的** | 白名单就是 DIRECT 且必须在 REJECT 前 |
 | 10 | 不变量一刀切套到「精简版配置」上 → 要求它改名成完整版 | 更好的修法是**消灭分叉**（已随架构变更消失） |
 | 11 | 同一判据两份拷贝 → 两脚本结论相反 | 靠注释提醒同步是不可靠的 |
-| 12 | 审计脚本扫注释行 → "没有任何 RULE-SET 规则" | 先 `strip_comment()` |
+| 12 | 审计脚本扫注释行 → "没有任何 RULE-SET 规则" | 先 `strip_comment` |
 | 13 | 退出码 1 既表示"判负通过"又表示"环境坏了" | 环境故障必须用 2 |
 | 14 | 把"性能探针"误当"泄露通道" → 无谓改 `proxy-test-url` | 职责是"测准"，不能用"藏解析"去改它 |
 | 15 | 为让脚本变绿而改判据 | 判据可以退让，**但退让必须留痕** |
@@ -539,7 +539,7 @@ RULE-SET,<ads.list>,REJECT,pre-matching,extended-matching    # ✅ 字面量
 > ⚠️ **判据写错方向比漏报更危险** —— 它会让使用者去改一条**本来正确的**规则。
 > 漏报只是少发现一个问题；假 HIGH 会把人引向错误的修改。
 
-**已固化**：`_surge_common.policy_index()` 集中实现，并在注释里写明这条坑。
+**已固化**：`_surge_common.policy_index` 集中实现，并在注释里写明这条坑。
 
 ### 5 · 审计器 `RULE-SET` 也取错位置 → 12 个假 HIGH
 
@@ -677,7 +677,7 @@ DOMESTIC_TEST_SUFFIXES = (
 **根因**：收集 `RULE-SET` 引用时遍历的是原始行，注释里的
 `# RULE-SET,…`（被注释掉的规则）也被当成引用，或者反过来被 `#` 开头的行卡住。
 
-**修法**：先 `strip_comment()` 再 `split_csv()`。
+**修法**：先 `strip_comment` 再 `split_csv`。
 
 **通用规则**：**任何"取出规则/条目"的代码都必须先剥注释。**
 拿原始行做正则匹配的写法，早晚会踩。
@@ -837,12 +837,12 @@ Surge 的 filter 不支持引用变量（filter 是字面正则），所以这�
 |:-:|:---|:-------|:-------------|
 | 1 | 远程规则集死链**静默降级** | `mihomo-white-guard.yaml` 404 了半年，没人知道 | `check_remote_urls.py` + CI 每周任务 |
 | 2 | 静态 profile 被**纵向堆叠 7 份** | PyYAML 只取最后一份 ⇒ 全绿看不出 | `build_profiles.py` 的两条硬保证 |
-| 3 | 门禁引用未定义的 `diff` | 恒一致时不触发，真漂移时 `NameError` 且无诊断 | `check_script_sync.py` 的 `diff()` 本体 |
+| 3 | 门禁引用未定义的 `diff` | 恒一致时不触发，真漂移时 `NameError` 且无诊断 | `check_script_sync.py` 的 `diff` 本体 |
 | 4 | DNS 广告拦截**双条件缺一即失效** | 只写 `nameserver-policy` 不写 `fake-ip-filter` = 完全没效果，且不报错 | `check_structure.py` ③（a/b/c/d 四条）|
 | 5 | IPv6 未关闭 | 只关一处 → 真实 IPv6 绕 TUN 出网，出口 IP 与节点不符 | `check_structure.py` ④（`is not False`）|
 | 6 | 改了脚本忘重生成静态 profile / `.min` | 两边漂移，两边都不报错 | `build_profiles.py --check` + `check_min_pair.py` |
 | 7 | Windows 中文环境 print 非 GBK 字符 | `UnicodeEncodeError` → 退出码 1 → 被读成「判负」 | 每脚本 import 时 `reconfigure` + CI 编码门 + E4 |
-| 8 | 路径探测基于 `__file__` | 本地全绿，GitHub Actions 上报「缺文件」 | 四个 clash 门禁的 `_default_root()`（CWD 优先）|
+| 8 | 路径探测基于 `__file__` | 本地全绿，GitHub Actions 上报「缺文件」 | 四个 clash 门禁的 `_default_root`（CWD 优先）|
 | 9 | 复制文件丢 mtime | V7「一天一版」误判成当天升了 21 个版本 | `cp -p` + `SKIP_V7`（输出「未验证，不是通过」）|
 | 10 | 两版 `AD` 组口径不同被套错 | 分流版 `REJECT`/`DIRECT`，懒人版单成员 `REJECT` | ⚠️ **仅靠注释与文档，无机器判据（挂账）** |
 | 11 | 跨仓引用 → 本仓不自洽 | 2511 处 URL 仍指向外部仓库（图标 2311 + 规则集 200）| `check_selfcontained.py`（闸门 **#42 自洽性**，在 CI 里跑）|
@@ -907,7 +907,7 @@ url: JS + "/geosite/" + c + ".mrs"
 //         ↑ 基址常量 + 变量拼接 —— 纯文本扫描抓不到完整 URL
 ```
 
-`collect_urls()`（文本扫）与 `collect_from_scripts()`（跑脚本）**两条收集路径必须都在**。
+`collect_urls`（文本扫）与 `collect_from_scripts`（跑脚本）**两条收集路径必须都在**。
 
 配合 CI 的两处设计（`.github/workflows/ci.yml`）：
 
@@ -981,7 +981,7 @@ open(fp, "a", encoding="utf-8").write(new_content)   # ← 追加，不是覆盖
 
 | 门禁 | 为什么没抓到 |
 |:-----|:-------------|
-| `check_structure.py` | `yaml.safe_load()` 遇到重复顶层键**静默取最后一份** ⇒ 读到的就是"正确"的第 7 块，判据全过 |
+| `check_structure.py` | `yaml.safe_load` 遇到重复顶层键**静默取最后一份** ⇒ 读到的就是"正确"的第 7 块，判据全过 |
 | `check_min_pair.py` | 同样拿解析结果（= 第 7 块）与 `.min` 对拍 ⇒ 通过 |
 | `check_script_sync.py` | 同上 ⇒ 通过 |
 | 肉眼 | 3294 行里 7 份几乎一样的内容，扫过去看不出 |
@@ -1005,9 +1005,9 @@ open(fp, "a", encoding="utf-8").write(new_content)   # ← 追加，不是覆盖
 
 open(fp, "w", encoding="utf-8", newline="\n").write(want)
 
-raw = open(fp, encoding="utf-8").read()
+raw = open(fp, encoding="utf-8").read
 keys = [l.split(":")[0] for l in raw.split("\n")
-        if l and not l[0].isspace() and not l.startswith("#") and ":" in l]
+        if l and not l[0].isspace and not l.startswith("#") and ":" in l]
 dup = {k for k in keys if keys.count(k) > 1}
 if dup:
     print("  NG %s 顶层键重复（疑似重复粘贴）：%s" % (full_rel, sorted(dup)))
@@ -1050,7 +1050,7 @@ if len(parsed.get("proxy-groups") or []) != ng or len(parsed.get("rules") or [])
 
 #### 根因
 
-`diff()` **在本文件被引用但未定义、也未导入**
+`diff` **在本文件被引用但未定义、也未导入**
 （`check_min_pair.py` 里有同名函数，但没有共享模块）：
 
 ```python
@@ -1079,7 +1079,7 @@ if out.get("rules") != (st.get("rules") or []):
 
 #### 修法
 
-补上 `diff()` 的定义（递归比对，产出可定位的差异描述）：
+补上 `diff` 的定义（递归比对，产出可定位的差异描述）：
 
 ```python
 def diff(a, b, path=""):
@@ -1109,14 +1109,14 @@ def diff(a, b, path=""):
 
 实测（commit `7d7250c`）：**注入漂移后可精确定位到 `rules[19]`**。
 
-📌 **更通用的修法（本项目未采用，记录在此）**：把 `diff()` 提进
+📌 **更通用的修法（本项目未采用，记录在此）**：把 `diff` 提进
 `skill/scripts/clash/_clash_common.py`，两个脚本共用 —— 否则它是
 **同一判据的两份拷贝**，会重演「改了一个、另一个没改」的旧病。
 （现状：`check_min_pair.py` 与 `check_script_sync.py` 各有一份 `diff`。）
 
 #### 判据固化在哪
 
-- **`skill/tests/clash/check_script_sync.py`** 的 `diff()` 函数本体（含记录本坑的 docstring）。
+- **`skill/tests/clash/check_script_sync.py`** 的 `diff` 函数本体（含记录本坑的 docstring）。
 - 判负样例：`checker.md` §9.2 第 13 条 —— 从 `my_clash_lazy.js` 删掉一条规则
   ⇒ exit 1，且（修好后）输出含 `rules[…] 长度不同` 之类的定位标记。
 
@@ -1124,7 +1124,7 @@ def diff(a, b, path=""):
 
 1. `checker.md` §6.2 的滞后**已同步**：该挂账标记为「✅ 已修（commit `7d7250c`）」，
    并附实测证据（注入一条规则 ⇒ 输出 `rules 长度不同: 脚本 12 vs 静态 11`，不再是 `NameError`）。
-2. `diff()` 现定义于 `check_script_sync.py` 第 94 行 —— 判负时能给出精确诊断。
+2. `diff` 现定义于 `check_script_sync.py` 第 94 行 —— 判负时能给出精确诊断。
    ⚠️ 仍**未做到的**：docstring 提到的「末尾自检」确实没有，判负样例仍需人工跑。
 
 ---
@@ -1357,11 +1357,11 @@ python skill/scripts/clash/build_profiles.py --check    # CI 用：过期即判�
 **本次文档编写时就实测撞上了一次**（在同一个仓库、同一台机器上）：
 
 ```
-$ python -c "print(open('...').read()[i:i+2500])"
+$ python -c "print(open('...').read[i:i+2500])"
 UnicodeEncodeError: 'gbk' codec can't encode character '\u26a0' in position 774
 ```
 
-（⚠️ 那个字符是 `build_gates()` docstring 里的 ⚠️。**读本文档时它就在仓库里，一直都在。**）
+（⚠️ 那个字符是 `build_gates` docstring 里的 ⚠️。**读本文档时它就在仓库里，一直都在。**）
 
 #### 根因
 
@@ -1393,7 +1393,7 @@ for _stream in (sys.stdout, sys.stderr):
         pass
 ```
 
-四个 clash 门禁 + `_clash_common.utf8_stdout()` 都是这一招。
+四个 clash 门禁 + `_clash_common.utf8_stdout` 都是这一招。
 ⚠️ `errors="replace"` 是刻意的：宁可输出 `?` 也不要崩。
 
 **② CI 的「Encoding gate (cp936)」**（在 Linux 上等价复现 Windows 的管道路径）：
@@ -1405,7 +1405,7 @@ for _stream in (sys.stdout, sys.stderr):
     PYTHONIOENCODING: cp936
 ```
 
-⚠️ **前提是 `run_one()` 对 `PYTHONIOENCODING` 用 `setdefault`，不是硬赋值**：
+⚠️ **前提是 `run_one` 对 `PYTHONIOENCODING` 用 `setdefault`，不是硬赋值**：
 
 ```python
 env.setdefault('PYTHONIOENCODING', 'utf-8')     # ✅ 父进程传下来的 cp936 会被原样继承
@@ -1418,21 +1418,21 @@ env.setdefault('PYTHONIOENCODING', 'utf-8')     # ✅ 父进程传下来的 cp93
 
 | | 覆盖 | 假阳性 |
 |:--|:-----|:-------|
-| 编码门（运行时）| 只覆盖 `build_gates()` 跑到的脚本，且只覆盖**执行到的分支** | **零** |
+| 编码门（运行时）| 只覆盖 `build_gates` 跑到的脚本，且只覆盖**执行到的分支** | **零** |
 | E4（静态）| 全覆盖（含 CI 不跑的审计脚本）| 有漏报也有假阳性 |
 
 ⚠️ E4 自己的两个已知边界（都是**宁严勿宽**的刻意保守）：
 
 - 不要退回 `"reconfigure" not in src` 这类**子串判断** —— 光在注释里写一句
   `# 需要 reconfigure 保护` 就会被误判成「已有保护」。**假保护比漏报更坏。**
-- `def setup(): sys.stdout.reconfigure(...)` **定义了却从未调用** ⇒ 判负（正确）；
-  但保护被**包了两层以上**（`boot()` → `force_utf8_stdout()` → `reconfigure`）
+- `def setup: sys.stdout.reconfigure(...)` **定义了却从未调用** ⇒ 判负（正确）；
+  但保护被**包了两层以上**（`boot` → `force_utf8_stdout` → `reconfigure`）
   会被**误判为无保护**（真实运行不崩，E4 却判负）。修法：把保护写在模块级，
   或让**中间层**在模块级被调用。
 
 #### 判据固化在哪
 
-- **每个 clash 脚本**顶部的 `reconfigure` 循环 + `skill/scripts/clash/_clash_common.py` 的 `utf8_stdout()`。
+- **每个 clash 脚本**顶部的 `reconfigure` 循环 + `skill/scripts/clash/_clash_common.py` 的 `utf8_stdout`。
 - **`.github/workflows/ci.yml`** 的 `Encoding gate (cp936)` step。
 - **`skill/tests/check_portability.py`** 的 E4（含它自己的自检样例：只护 `stderr`、只写注释、
   只定义不调用 —— 三个都期望判负）。
@@ -1454,7 +1454,7 @@ Linux CI 上 clash 的两个门禁（`check_structure.py` / `check_script_sync.p
 
 #### 根因
 
-`_default_root()` 的 v1 **基于 `__file__` 向上推算**仓库根：
+`_default_root` 的 v1 **基于 `__file__` 向上推算**仓库根：
 
 ```python
 here = os.path.dirname(os.path.abspath(__file__))
@@ -1480,7 +1480,7 @@ root = os.path.abspath(os.path.join(here, "..", "..", ".."))
 **CWD 优先 + 逐级向上探测，以"特征目录"为准**（不是以"上推层数"为准）：
 
 ```python
-def _default_root():
+def _default_root:
     """定位 clash 配置目录（含 profiles/ 与 override/）。
 
     探测顺序：当前工作目录 → 脚本自身位置。
@@ -1488,7 +1488,7 @@ def _default_root():
     不同调用方式下可能算错（实测 GitHub Actions 上 __file__ 探测失败）。
     """
     cands = []
-    cwd = os.getcwd()
+    cwd = os.getcwd
     cands.append(cwd)
     cands.append(os.path.join(cwd, "clash"))
     here = os.path.dirname(os.path.abspath(__file__))
@@ -1514,14 +1514,14 @@ def _default_root():
 
 #### 判据固化在哪
 
-- **四个 clash 门禁各自的 `_default_root()`**：`check_structure.py` · `check_min_pair.py` ·
+- **四个 clash 门禁各自的 `_default_root`**：`check_structure.py` · `check_min_pair.py` ·
   `check_script_sync.py` · `check_remote_urls.py`（同一段逻辑，四处拷贝 —— 见下方挂账）。
 - **CI**：`Gates (Surge + Egern + mihomo)` step 从仓库根跑 `verify_all.py` ⇒ 每 push 都在验证这条。
 - 文档：`checker.md` §1 环境要求块；`profile-anatomy.md` §18.5；`branch.md` 的移植清单
   （「路径探测优先以仓库根 CWD 为锚点，再向上寻找内核特征目录；不要只按 `__file__` 固定上推层数」）。
 - commit：`d2b3caa fix: clash 门禁路径探测改为 CWD 优先（CI 暴露）`。
 
-⚠️ **挂账**：这四份 `_default_root()` 是**同一判据的四份拷贝**，靠"复制粘贴"保持一致
+⚠️ **挂账**：这四份 `_default_root` 是**同一判据的四份拷贝**，靠"复制粘贴"保持一致
 （正是 `surge/pitfalls.md` 坑 11 的形态）。修法是提进 `_clash_common.py`，**目前未做**。
 
 ---
@@ -1540,7 +1540,7 @@ V7 routing 一天一版  ❌ 2026-10-07 有 21 个版本（v1.0→v1.1→…→v
 
 #### 根因
 
-**版本诞生日期的来源有两个**（由 `release_publish.build_days()` 现算）：
+**版本诞生日期的来源有两个**（由 `release_publish.build_days` 现算）：
 
 | 对象 | 日期来源 |
 |:-----|:---------|
@@ -1594,11 +1594,11 @@ if _os.environ.get("SKIP_V7") == "1":
 
 1. **豁免必须点名**，不冒充通过 —— 输出里要能读出「未验证」。
 2. **豁免要写理由**，理由要能被证伪（"日期分组不成立"是可验证的事实，不是"太麻烦"）。
-3. **豁免项要么进 `build_gates()` 带 SKIP 标记、要么显式注释掉**。
+3. **豁免项要么进 `build_gates` 带 SKIP 标记、要么显式注释掉**。
 
 #### 判据固化在哪
 
-- **`skill/tests/check_min_pair.py`**（跨内核版）的 `_cadence()` 与 `CADENCE_FROM`（2026-10-04）。
+- **`skill/tests/check_min_pair.py`**（跨内核版）的 `_cadence` 与 `CADENCE_FROM`（2026-10-04）。
 - **`skill/tests/verify_all.py`** 的 `_skip_v7 = {'SKIP_V7': '1'}` 传给 `('min-pair 一致', …)`。
 - 文档：`checker.md` §10.1；`boundaries.md`（「一天一版」只从 2026-10-04 起算，历史不回改不追溯）。
 - commit：`3006cf8`。
@@ -1810,11 +1810,11 @@ for m in TOKEN_RE.finditer(txt):
     v = m.group(1)
     if is_placeholder(v):
         continue
-    if v.lower() in ("true", "false", "null", "none", "direct", "reject"):
+    if v.lower in ("true", "false", "null", "none", "direct", "reject"):
         continue
     # 代码里的常量/变量名（如 ALL_KEY = HAS_PROVIDERS）不含数字 ——
     # 真实凭据几乎必含数字，以此区分。
-    if not any(ch.isdigit() for ch in v):
+    if not any(ch.isdigit for ch in v):
         continue
     hits.append((rel, "非占位凭据: %s" % m.group(0)[:60]))
 ```
@@ -1832,7 +1832,7 @@ for m in TOKEN_RE.finditer(txt):
 
 #### 判据固化在哪
 
-- **`skill/tests/clash/check_secrets.py`** 的 `TOKEN_RE` + `is_placeholder()` + `PLACEHOLDER_VALUES`
+- **`skill/tests/clash/check_secrets.py`** 的 `TOKEN_RE` + `is_placeholder` + `PLACEHOLDER_VALUES`
   （含记录 `MyRealP@ssw0rd123` 实测的注释）。
 - 判负样例：`checker.md` §9.2 —— 任意 `.yaml` 里写 `password: MyRealP…` ⇒ `非占位凭据:`。
 - 文档：`public-repo.md` §5.1「两道 secrets 扫描不要混为一个」。

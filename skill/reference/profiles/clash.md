@@ -353,7 +353,7 @@ allNodes[ALL_KEY] = true;
 
 #### 6.3 坑三：`filter` 作用于**合并后**的成员列表
 
-按内核 `groupbase.go` 的 `GetProxies()`，`filter` / `exclude-filter` 作用于
+按内核 `groupbase.go` 的 `GetProxies`，`filter` / `exclude-filter` 作用于
 **最终合并后的成员列表** —— 也就是说，由 `include-all-proxies` / `use` 引入的节点**同样被筛**。
 
 这正是地区组「不写成员表、只写 `filter`」能成立的原因（§8.3）。
@@ -401,7 +401,7 @@ Proxy (select)
 |:--|:---------|:---------|
 | 分档时机 | **运行时**（`filter` 每次求值时筛） | 生成期（脚本执行一次） |
 | 能看到节点名吗 | 能（provider 已加载） | **不能** —— 脚本在订阅加载时跑，`proxies` 里还没有 provider 的节点 |
-| 结果 | 三档，倍率语义化 | 单组 `fallback`，成员顺序由 `sortedByRate()` 按名排出 |
+| 结果 | 三档，倍率语义化 | 单组 `fallback`，成员顺序由 `sortedByRate` 按名排出 |
 
 脚本侧的替代方案（`my_clash.js`）：
 
@@ -414,7 +414,7 @@ function sortedByRate(names) { /* 低倍率在前，无倍率排最后，同倍�
 // Smart 的 proxies = sortedByRate(usable)
 ```
 
-⇒ **脚本只能排序，不能分档。** 而且它的 `rateOf()` 只认低倍率（`0.` 开头），
+⇒ **脚本只能排序，不能分档。** 而且它的 `rateOf` 只认低倍率（`0.` 开头），
 抓不到「高倍率」那一档 —— 高倍率节点在脚本侧混在「无倍率」里排最后。
 模板侧三档把这两种语义**显式分开**，这是二者真正的差距。
 
@@ -1026,7 +1026,7 @@ Surge 的 `always-real-ip` 与 mihomo 的 `fake-ip-filter` 是**同一件事的�
 
 #### 16.2 Smart 三档只存在于模板
 
-脚本侧做不到倍率分档（§7.2），只能用 `sortedByRate()` 排出一个顺序。
+脚本侧做不到倍率分档（§7.2），只能用 `sortedByRate` 排出一个顺序。
 `check_script_sync.py` 把它列为**已知差异**，打印提醒但不判负。
 
 ⇒ 用户用脚本订阅时，`Smart` 是单组 `fallback`（按倍率升序排列的节点），
@@ -1100,7 +1100,7 @@ mihomo 自研的 IP 协议栈（可选 `system` / `gvisor` / `mixed` / `mips`）
 **Q：我加了倍率节点，为什么没进 `Low Mult.`？**
 
 只有**静态模板**才有三档子组。用脚本订阅的话，倍率只影响 `Smart` 的成员**顺序**
-（且脚本的 `rateOf()` 只认低倍率 `0.xxx`，高倍率节点混在「无倍率」里排最后）。
+（且脚本的 `rateOf` 只认低倍率 `0.xxx`，高倍率节点混在「无倍率」里排最后）。
 
 **Q：广告拦截加了清单，但没生效。**
 
@@ -1201,11 +1201,11 @@ python skill/tests/clash/check_secrets.py        # 占位符纪律
 > ⚠️ `2` 与 `1` 必须分开：解释器坏掉、文件缺失、编码炸掉都属于 `2`，
 > **绝不能被读成一次成功的判负**。Windows 中文控制台默认 cp936，
 > `print` 一个中文就可能 `UnicodeEncodeError`、进程以退出码 1 结束
-> —— 而 1 恰是「判负」的码。`_clash_common.utf8_stdout()` 就是为这个存在的。
+> —— 而 1 恰是「判负」的码。`_clash_common.utf8_stdout` 就是为这个存在的。
 
 #### 18.5 路径探测用 CWD 优先
 
-四个 clash 门禁的 `_default_root()` 都是「**当前工作目录 → 逐级向上 + `/clash`**」，
+四个 clash 门禁的 `_default_root` 都是「**当前工作目录 → 逐级向上 + `/clash`**」，
 找到同时含 `profiles/` 与 `override/` 的目录为止。
 
 原因写在每个脚本的注释里：**CI 上 `__file__` 探测会算错目录**

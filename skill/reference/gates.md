@@ -29,7 +29,7 @@
 
 #### 铁律一：先确认注错**生效**了，再判断闸门好坏
 
-踩过的坑：改 `diff()` 时第一遍写错了字符串（`replace` 没匹配上），
+踩过的坑：改 `diff` 时第一遍写错了字符串（`replace` 没匹配上），
 闸门没红 ⇒ 我差点得出「判据失灵」的结论。实际是注错根本没生效。
 
 **每次注错后，先验证文件真的变了**（比对字节 / 回读计数），再跑闸门。
@@ -86,7 +86,6 @@ python skill/tests/verify_all.py
 | 闸门 | 用什么注错戳红的 |
 |:-----|:----------------|
 | 地区组判别力（三内核） | 从 Other Regions 负向断言里删一个关键词 |
-| 闸门清单对账 | 从 `verify_all.py` 删掉一道 |
 | min-pair 一致 / clash min 版一致 | 改静态 profile 与脚本不一致 |
 | 版本头注 | 改版本头注为 v9.9.9 |
 | README 徽章 | 改徽章数字 |
@@ -259,20 +258,20 @@ fi
 
 | # | 检查 | 判负级别 | 判据细节 |
 |:-:|:-----|:--------:|:---------|
-| 1 | 加密 DNS 端点是 IP 字面量 | **HIGH** / MEDIUM / OK | 每个端点过 `ip_literal()`；非字面量的逐个列出。另有 MEDIUM：端点在国外（国内线路通常不可达，属取舍） |
+| 1 | 加密 DNS 端点是 IP 字面量 | **HIGH** / MEDIUM / OK | 每个端点过 `ip_literal`；非字面量的逐个列出。另有 MEDIUM：端点在国外（国内线路通常不可达，属取舍） |
 | 2 | `dns-server` | **HIGH** / MEDIUM / OK | 缺失 → HIGH；含 `system` → **HIGH**；含主机名 → **HIGH**；国内解析器 < 2 → MEDIUM；否则 OK |
 | 3 | `hijack-dns` | LOW / OK | 缺失 → **HIGH**。写 `*` 或 `0.0.0.0:53` → OK。否则算「**已知的**知名境外解析器里还有几个没覆盖」→ LOW（⚠️ **不是按条数判负**，见坑 6） |
 | 4 | `encrypted-dns-follow-outbound-mode` | **HIGH** / OK | `true` → HIGH（会成环 / 回退明文）；未设置或 `false` → OK |
 | 5 | `always-real-ip` / `use-local-host-item-for-proxy` | **HIGH** / LOW / OK | 缺 `always-real-ip` → LOW；`use-local-host-item-for-proxy = true` → **HIGH** |
 | 6 | 测试端点域名归属（**提示性**） | LOW / OK | 逐个看 `internet-test-url` / `proxy-test-url` / `proxy-test-udp`：IP 字面量 → OK；国内域名 → OK；境外域名 → **LOW 提示**（性能取向取舍，见坑 14）；缺失 → LOW。⚠️ **不计入风险等级** |
 | 7 | 策略组成员可解析 | **HIGH** / MEDIUM / OK | 空组 → HIGH；未知组类型 → MEDIUM；成员既不在 `[Proxy]` 也不是已知组 / 内置策略 → **HIGH**（Surge 会拒绝加载） |
-| 8 | 规则策略可解析 | **HIGH** / MEDIUM / OK | 用 `policy_index()` 定位策略字段；类型未识别或字段不足 → MEDIUM（跳过策略校验）；策略不在已知集合 → **HIGH** |
+| 8 | 规则策略可解析 | **HIGH** / MEDIUM / OK | 用 `policy_index` 定位策略字段；类型未识别或字段不足 → MEDIUM（跳过策略校验）；策略不在已知集合 → **HIGH** |
 | 9 | 规则顺序 | **HIGH** / MEDIUM / OK | 无 `FINAL` → HIGH；`FINAL` 不在最后 → MEDIUM；IP 类排在域名类之前 → **HIGH** |
 | 10 | `pre-matching` 的策略是字面量 | **HIGH** / LOW / OK | 无 `pre-matching` 规则 → LOW；有 `pre-matching` 但策略不是 `reject*` → **HIGH**；缺 `extended-matching` → LOW |
 | 11 | `always-real-ip` 被前置域名规则接住 | MEDIUM / LOW / OK | 本地类主机名（`*.lan` 等）不计数。未接住：若文件里有 `RULE-SET` → LOW（远程内容无法静态判定）；否则 → MEDIUM |
 | 12 | IP 类规则的 `no-resolve` | MEDIUM / LOW / OK | 无 IP 类规则 → OK；任一带缺 → **MEDIUM**（⚠️ 不是泄露补丁：走代理时解析在代理端；缺它只是多一次冗余解析。真正风险是连带——补它必须同时有域名类国内直连集）；`FINAL` 缺 `dns-failed` → LOW |
 
-#### 4.1 `policy_index()` —— 最容易写错的一处
+#### 4.1 `policy_index` —— 最容易写错的一处
 
 ```python
 _RULE_TYPES_WITH_VALUE = {
@@ -299,7 +298,7 @@ _RULE_TYPES_NO_VALUE = {"FINAL"}
 ```
 ```
 
-写在 **profile 里**，被 `load_waivers()` 用正则抓出：
+写在 **profile 里**，被 `load_waivers` 用正则抓出：
 
 ```python
 r"#\s*audit-waive:\s*(\d+)\s+(.*)"
@@ -340,7 +339,7 @@ result: 0 high, 0 medium, 2 low, 12 ok, 2 waived
 #### A. 缺 `no-resolve` 的 IP 条目
 
 ```python
-opts = [p.lower() for p in parts[2:]]
+opts = [p.lower for p in parts[2:]]
 if "no-resolve" not in opts:
     stats["ip_without_no_resolve"].append((i, s))
 ```
@@ -426,7 +425,7 @@ FOREIGN_PROBES = {
 | `t.me` | `PROXY` | **`TELEGRAM`** |
 | `x.com` | `PROXY` | **`TWITTER`** |
 
-选择哪套表由 `foreign_expectations()` 判定，**判据是「文件里实际定义了哪些组」**
+选择哪套表由 `foreign_expectations` 判定，**判据是「文件里实际定义了哪些组」**
 （存在 `ChatGPT` / `Claude` 组即为分流版），**不是文件名** ——
 所以把分流版改名也不会让期望失配。
 
@@ -494,10 +493,10 @@ APPLE_PROBES = [
 | SNI | 必须 `REPLACE_WITH_*` / 文档段 IP / `example.com` 结尾 |
 | 节点主机名 | `[Proxy]` 段里非 IPv4 的 `server` 必须在 `ALLOWED_DOMAINS` 里 |
 
-⚠️ IPv4 判据只扫**有效行**（`strip_c()` 剥掉整行注释与行尾注释）——
+⚠️ IPv4 判据只扫**有效行**（`strip_c` 剥掉整行注释与行尾注释）——
 注释里出现私有网段是说明性文字，不是泄露。见 [`pitfalls.md`](./pitfalls.md) 坑 8。
 
-⚠️ `strip_c()` **只右裁、不左裁**：YAML 的行首缩进就是层级本身，连行首一起裁会让
+⚠️ `strip_c` **只右裁、不左裁**：YAML 的行首缩进就是层级本身，连行首一起裁会让
 `proxies:` 块提前关闭，①-d 对 Egern 侧整段静默失效（2026-09-25 实测踩到）。
 
 #### ② DNS 段一致性（两组，共 3 条断言）
@@ -555,13 +554,13 @@ DNS_KEYS = [
 | v2 | `check_6` 加 `DOMESTIC_TEST_SUFFIXES` 显式清单 | `miui.com` 被误判为境外，见坑 7 |
 | v3 | `check_6` 境外端点从 MEDIUM 降为 **LOW 提示** | 它是性能探针不是泄露通道，见坑 14 |
 | v1 | `check_8` 策略取 `parts[1]` | 初版 |
-| v2 | 引入 `policy_index()` | `GEOIP` 把 `CN` 当策略 → 12 个假 HIGH，见坑 4 |
-| v3 | `policy_index()` 处理 `RULE-SET` | 索引 1 是规则集标识 → 又 12 个假 HIGH，见坑 5 |
-| v4 | `policy_index()` 移入 `_surge_common.py` | 两处拷贝，见坑 11 |
+| v2 | 引入 `policy_index` | `GEOIP` 把 `CN` 当策略 → 12 个假 HIGH，见坑 4 |
+| v3 | `policy_index` 处理 `RULE-SET` | 索引 1 是规则集标识 → 又 12 个假 HIGH，见坑 5 |
+| v4 | `policy_index` 移入 `_surge_common.py` | 两处拷贝，见坑 11 |
 | v1 | `check_11` 把本地类主机名也计入"未覆盖" | 初版 |
 | v2 | 排除 `*.lan` / `*.local` 等；有 `RULE-SET` 时降级为 LOW | 误报，见坑 8 的同型问题 |
 | v1 | 架构检查扫全文找 IPv4 | 初版 |
-| v2 | 加 `strip_c()`，只扫有效行 | 注释里的 `10.0.0.0/8` 被误报，见坑 8 |
+| v2 | 加 `strip_c`，只扫有效行 | 注释里的 `10.0.0.0/8` 被误报，见坑 8 |
 | v1 | 架构检查断言「DIRECT 不在 REJECT 之前」 | 初版 |
 | v1 | ② 只比对 `lazy.conf` ↔ `lazy.min.conf` | 单配置时代 |
 | v2 | ② 扩为**两组 + 跨组**（共 3 条）：新增 `routing` 对与 `lazy↔routing` 对 | 引入分流版后，"防泄露标准不因分流粒度而变"需要被断言 |
@@ -576,7 +575,7 @@ DNS_KEYS = [
 | — | 无豁免机制 | 初版：豁免只能写死在审计器里 |
 | — | 引入 `# audit-waive:` | 判据可以退让，但退让必须留痕，见坑 15 |
 | v1 | `audit_ruleset_content` 遍历原始行 | 初版 |
-| v2 | 先 `strip_comment()` | 注释行被当成引用，见坑 12 |
+| v2 | 先 `strip_comment` | 注释行被当成引用，见坑 12 |
 | v1 | 只判"退出码非 0 即失败" | 初版 |
 | v2 | 加前置检查，环境故障用退出码 2 | 解释器坏了被算成"判负通过"，见坑 13 |
 
@@ -617,18 +616,18 @@ DNS_KEYS = [
 | 项 | 要求 |
 |:---|:-----|
 | Python | 3.8+，**仅标准库 + PyYAML** |
-| Node.js | **仅 `check_script_sync.py` 与 `check_remote_urls.py` 需要**（要执行 `override/*.js`）。`_clash_common.find_node()` 先 `shutil.which("node")`，再探测 `C:/Program Files/nodejs/node.exe` |
+| Node.js | **仅 `check_script_sync.py` 与 `check_remote_urls.py` 需要**（要执行 `override/*.js`）。`_clash_common.find_node` 先 `shutil.which("node")`，再探测 `C:/Program Files/nodejs/node.exe` |
 | curl | `check_remote_urls.py` 需要（HEAD / GET 探测） |
 | 网络 | 只有 `check_remote_urls.py` 需要；其余 mihomo 门禁全离线 |
 | 输出编码 | 无需设置 —— 每个脚本 import 时把 stdout/stderr 钉成 UTF-8（Windows 默认 cp936，emoji 会崩成**退出码 1**，而 1 恰是判负码）|
 
 ⚠️ **Windows 上 `subprocess` 不继承 Git Bash 扩展的 PATH**，直接 `subprocess.run(["node", ...])` 会 `WinError 2`。
-这是 `_clash_common.find_node()` 存在的唯一理由 —— 别"简化"掉它。
+这是 `_clash_common.find_node` 存在的唯一理由 —— 别"简化"掉它。
 
-⚠️ **工作目录（CWD）优先**。所有 clash 门禁的 `_default_root()` 都是同一段逻辑：
+⚠️ **工作目录（CWD）优先**。所有 clash 门禁的 `_default_root` 都是同一段逻辑：
 
 ```python
-def _default_root():
+def _default_root:
     """定位 clash 配置目录（含 profiles/ 与 override/）。
 
     两种布局都支持：
@@ -636,7 +635,7 @@ def _default_root():
       · 单仓 Clash：配置就在 <root> 下
     """
     cands = []
-    cwd = os.getcwd()
+    cwd = os.getcwd
     cands.append(cwd)
     cands.append(os.path.join(cwd, "clash"))
     here = os.path.dirname(os.path.abspath(__file__))
@@ -680,7 +679,7 @@ python skill/tests/check_selfcontained.py         # 整合仓自洽性
 ```
 
 所有 clash 门禁都接受**可选的仓库根参数**：`python skill/tests/clash/check_structure.py <根目录>`。
-不传就用 `_default_root()`。**这正是不带参数时在仓库根调用能工作的原因**（CWD → CWD/clash 命中）。
+不传就用 `_default_root`。**这正是不带参数时在仓库根调用能工作的原因**（CWD → CWD/clash 命中）。
 
 ⚠️ `python skill/tests/check_secrets.py` 与 `skill/tests/clash/check_secrets.py` 是**两个不同的脚本**：
 
@@ -749,15 +748,15 @@ for g in groups:
 ```python
 for r in c.get("rules") or []:
     p = r.split(",")
-    if p[0].strip() == "RULE-SET":
+    if p[0].strip == "RULE-SET":
         if len(p) < 3:
             errs.append("规则格式错: %s" % r); continue
-        prov, pol = p[1].strip(), p[2].strip()
+        prov, pol = p[1].strip, p[2].strip
         if prov not in provs:  errs.append("规则引用了未定义的规则集: %s" % prov)
         if pol not in gnames and pol not in BUILTIN:
             errs.append("规则指向了不存在的组: %s" % pol)
-    elif p[0].strip() == "MATCH":
-        pol = p[1].strip() if len(p) > 1 else ""
+    elif p[0].strip == "MATCH":
+        pol = p[1].strip if len(p) > 1 else ""
         if pol not in gnames and pol not in BUILTIN:
             errs.append("MATCH 指向了不存在的组: %s" % pol)
 ```
@@ -858,7 +857,7 @@ d = diff(a, b)
 ```
 
 **比 Python 对象，不是比文本。** 因此注释、键顺序、缩进、引号风格**都不影响判定**，
-只看配置本体。`diff()` 递归：
+只看配置本体。`diff` 递归：
 
 | 情形 | 报告 |
 |:-----|:-----|
@@ -976,7 +975,7 @@ if out.get("rules") != (st.get("rules") or []):
 > **闸门不会假绿，但它给不出任何诊断信息**：没有「第几条规则不同」、没有「哪个 dns 键不同」，
 > 只有一段 traceback。
 >
-> ✅ **已修（commit `7d7250c`）**：`diff()` 现已定义在本文件第 94 行，判负时能给出
+> ✅ **已修（commit `7d7250c`）**：`diff` 现已定义在本文件第 94 行，判负时能给出
 > 精确诊断（实测：注入一条额外规则 ⇒ 输出 `rules 长度不同: 脚本 12 vs 静态 11`），
 > 不再是 `NameError` traceback。
 >
@@ -1012,8 +1011,8 @@ if out.get("rules") != (st.get("rules") or []):
 
 | 路径 | 抓什么 | 为什么需要 |
 |:-----|:-------|:-----------|
-| `collect_urls()`（纯文本扫）| `override/` 与 `profiles/` 里 `.js` / `.yaml` / `.yml` 中的 http(s) URL | 覆盖注释与字面量 |
-| `collect_from_scripts()`（**真的跑一遍脚本**）| `rule-providers` 的 `url`、策略组的 `icon` | 脚本里 MRS 是 `JS + "/geosite/" + c + ".mrs"` **拼接**出来的，纯文本扫描抓不到完整 URL |
+| `collect_urls`（纯文本扫）| `override/` 与 `profiles/` 里 `.js` / `.yaml` / `.yml` 中的 http(s) URL | 覆盖注释与字面量 |
+| `collect_from_scripts`（**真的跑一遍脚本**）| `rule-providers` 的 `url`、策略组的 `icon` | 脚本里 MRS 是 `JS + "/geosite/" + c + ".mrs"` **拼接**出来的，纯文本扫描抓不到完整 URL |
 
 ⚠️ 第二条是关键设计：**不跑脚本就收集不到拼接出来的地址**。只做文本扫描这道门等于半瞎。
 
@@ -1049,7 +1048,7 @@ for method in ("HEAD", "GET"):
 | `死链 N 个` + `出处: override/xxx.js (运行期)` | 改脚本里的拼接/常量；**同时**确认静态 profile 里的同款 URL 也改了 |
 | `死链` + `出处: profiles/xxx.yaml` | 改静态 profile；若脚本也引用了同款，一并改 |
 | 本仓 raw 地址 404 | 本地用 `--skip-self` 排除；CI 侧**用重跑而非跳过** |
-| `未收集到任何远程 URL —— 检查收集规则`（exit 2）| 先看是不是**在没有 `profiles/`+`override/` 的目录**下跑的（`_default_root()` 落到了 CWD）；其次看 `--skip-self` 是否把全部目标都跳过了 |
+| `未收集到任何远程 URL —— 检查收集规则`（exit 2）| 先看是不是**在没有 `profiles/`+`override/` 的目录**下跑的（`_default_root` 落到了 CWD）；其次看 `--skip-self` 是否把全部目标都跳过了 |
 
 ⚠️ **改 URL 后必须同时跑 `check_script_sync.py`** —— 它比对两侧 `rule-providers` 的 URL 集合，
 只改一侧会立刻判负。
@@ -1077,13 +1076,13 @@ TARGETS = [
 ```python
 rules = read_rules(sp)
 want  = render(dst, src, desc, rules)
-have  = open(dp, encoding="utf-8").read() if os.path.exists(dp) else None
+have  = open(dp, encoding="utf-8").read if os.path.exists(dp) else None
 if have == want:      print("  OK … (已是最新)")
 elif check:           print("  NG rules/%s 已过期（真源 %s 有更新）"); stale.append(dst)
 else:                 open(dp, "w", …).write(want)   # 重新生成
 ```
 
-**逐字节比对 `render()` 的期望输出与磁盘内容**（含头部注释里的条数）。
+**逐字节比对 `render` 的期望输出与磁盘内容**（含头部注释里的条数）。
 真源缺失 ⇒ `NG 真源缺失` 并计 stale。
 
 | 模式 | 行为 | 退出码 |
@@ -1272,7 +1271,7 @@ _skip_v7 = {'SKIP_V7': '1'}
 ```python
 ```
 
-直接从 `build_gates()` 里**注释掉**，不是跑完跳过。理由：
+直接从 `build_gates` 里**注释掉**，不是跑完跳过。理由：
 检查对象是「本仓自己的 Release 发布纪律」。✅ **已于 2026-10-08 启用**（首个 Release `v2026-10-08` 已发布），现为闸门第 22 道。
 
 ⚠️ 这道门在姊妹仓是有效判据（需 `GITHUB_TOKEN`，缺省回退 `gh auth token`；
@@ -1283,7 +1282,7 @@ _skip_v7 = {'SKIP_V7': '1'}
 
 1. **豁免必须点名**，不冒充通过 —— 输出里要能读出「未验证」。
 2. **豁免要写理由**，理由要能被证伪（"没有 Release"是可验证的事实，不是"太麻烦"）。
-3. **豁免项要么进 `build_gates()` 带 SKIP 标记、要么显式注释掉**。
+3. **豁免项要么进 `build_gates` 带 SKIP 标记、要么显式注释掉**。
    绝不允许"跑一遍然后无视结果" —— 那是静默假绿。
 
 ### 12 · CI 怎么跑（`.github/workflows/ci.yml`）
@@ -1327,10 +1326,10 @@ on:
 
 | | 覆盖 | 假阳性 |
 |:--|:-----|:-------|
-| 编码门（运行时）| 只覆盖 `build_gates()` 跑到的脚本、且只覆盖**执行到的分支** | **零** |
+| 编码门（运行时）| 只覆盖 `build_gates` 跑到的脚本、且只覆盖**执行到的分支** | **零** |
 | E4（静态）| 全覆盖（含 CI 不跑的审计脚本）| 有漏报也有假阳性 |
 
-⚠️ 前提是 `run_one()` 对 `PYTHONIOENCODING` 用 **`setdefault`**：
+⚠️ 前提是 `run_one` 对 `PYTHONIOENCODING` 用 **`setdefault`**：
 
 ```python
 env.setdefault('PYTHONIOENCODING', 'utf-8')
@@ -1353,21 +1352,22 @@ push 时严格，PR 时网络抖动不阻塞。⚠️ 这是**有意的非对称
 
 > **与 CI 同源是铁律** —— 本地绿但 CI 红属于竞态 / 环境差，不允许有"第三套判据"。
 
-**已进 43 道**（`闸门清单对账`）。它判四件事（前三件 + 第四轮新增的孤儿检查）：
-① `ci.yml` 里被调用的判据必须在 `verify_all` 清单里（豁免项逐条点名）；
-② `verify_all` 列出的每一道，文件必须真实存在；
-③ `skill/tests/` 下既没进闸门、也没登记在 `ops.md` §6.8.1 的脚本 ⇒ 报「永远不会跑」。
--④ **孤儿探测**：同一文件名，在某内核被闸门引用、另一内核有文件却没引用 ⇒ 报。
-   ⚠️ 边界：**独有名字**的新脚本不报（有意为之 —— 全扫 `skill/scripts/` 会假报十几处）。
+**同源靠纪律，不靠门禁。**
+`ci.yml` 的 Gates step 直接调 `verify_all.py`，而 `verify_all.py` 的 `build_gates()`
+是清单的唯一真源 —— 不存在第二份手抄清单，因此不需要「对账门禁」去守两份一致。
+（改革前确有 `check_gate_manifest.py` 做机器对账，那是为了守「ci.yml ↔ verify_all 双写」
+这个自造的问题；双写消除后它一并删除。）
 
-⚠️ 豁免项**必须显式登记**，不能静默放行：现为 `check_remote_urls.py`（CI 独立 step，慢）、
-`check_real_kernel.py`（需真内核 + 真网络）、~~`check_releases.py`（本仓未发布 Release）~~ ⇒ 已启用（第 22 道）、
-`verify_all.py`（它自己就是入口）。
+引用清单时用 `--index` 现抓：
 
-引用清单时仍建议用 `--index` 现抓 —— 但即使手抄，这份对账会兜住漂移。
+```bash
+python skill/tests/verify_all.py --index
+```
 
-> **推翻挂账的触发条件**：一旦出现「一侧增删闸门、另一侧未同步」且事后确认是人工漏同步
-> 造成的本地/CI 结论分歧，就必须补上清单对账断言。
+⚠️ **独立 step（不进 build_gates）**：`check_remote_urls.py`（慢、需联网）、
+`probe_dns_endpoints.py`（需联网实测加密 DNS 端点，抖动会假红）。
+两者都在 `ci.yml` 里各有独立 step，并在 PR 事件上 `continue-on-error`。
+
 
 ⚠️ 本地与 CI 对**退出码 3** 的口径**有意不同**：本地允许 SKIP（可能真离线 → exit 0 + ⚠️），
 CI 侧 3 视为失败（CI 带 token，读不到远端即 CI 环境异常）。这是**严格化**，不是第三套判据。
@@ -1402,7 +1402,7 @@ mihomo 版（`skill/tests/clash/check_secrets.py`）覆盖 `.js`、且跳过 `ru
 
 **Q：门禁报「缺文件」但我明明有。**
 
-先看在哪个目录下跑的。`_default_root()` 的判据是「**同时含 `profiles/` 与 `override/`**」，
+先看在哪个目录下跑的。`_default_root` 的判据是「**同时含 `profiles/` 与 `override/`**」，
 顺序是 CWD → `CWD/clash` → `__file__` 逐级向上。在仓库根跑会命中 `<root>/clash`。
 若在某处跑导致落到了 CWD 而 CWD 不是 clash 目录，就会报缺文件。显式传参最稳：
 `python skill/tests/clash/check_structure.py clash`。
@@ -1485,22 +1485,21 @@ python skill/tests/clash/check_remote_urls.py
 3. **探针做在仓库外**（`/tmp` 或 `%TEMP%` 下的副本 + 显式传 ROOT 参数），
    做完还原并 `git status` 确认没多出改动。
 4. **动 `rules/*.list` 做实验前先备份真源**，做完立刻还原并 `git diff rules/` 确认为空。
-5. **改 `build_gates()` 就要改 `ci.yml`**（同源铁律）。引用清单用 `--index` 现抓，别手抄。
+5. **改 `build_gates` 就要改 `ci.yml`**（同源铁律）。引用清单用 `--index` 现抓，别手抄。
 
 #### 16.4 已知挂账（接手时先看这里）
 
 > ⚠️ **2026-10-08 第十五轮：本表已逐条核实并消掉两条。**
 > 原表写的是「四条」，但其中**两条早已修好、表格却未同步** ——
 > 这正是本仓最忌讳的「文档在为不存在的事实背书」（维护者会以为坑还在而重复劳动）。
-> 表格是**挂账清单**，不是历史；修好就该消账（历史在 `CHANGELOG.md`）。
+> 表格是**挂账清单**，不是历史；修好就该消账（历史在 git）。
 
 | # | 挂账 | 状态 | 触发修补的条件 |
 |:-:|:-----|:-----|:---------------|
 | ~~1~~ | ~~`check_script_sync.py` 的 `diff` 未定义~~ | ✅ **已消**（commit `7d7250c`）| — 已补定义（本文件 L94）+ `--self-test` 自检已进闸门；实测真实漂移时给 `rules[6] 不同: …` 精确诊断，**不再** `NameError` |
-| ~~2~~ | ~~闸门清单 `ci.yml` ↔ `verify_all.py` 人工双写、机器对账未做~~ | ✅ **已消** | — `check_gate_manifest.py` 已做机器对账（含「孤儿探测」），**已进 43 道** |
 | 3 | mihomo 侧门禁**没有常驻的判负 fixture 回归**（判别力靠人记得跑）| ⚠️ 仍在 | 出现「判据改坏、不再判负、现役仍全绿」时。（注：地区组那一块已有 fixture，见闸门「地区组判别力·mihomo」；此条指**其余** clash 门禁）|
 | 4 | **clash 侧没有 `.min` 生成器**（`make_min.py` 只含 surge / egern 两族）⇒ `.min.yaml` 靠手工同步 + 对拍兜底 | ⚠️ 仍在 | 出现第一次「手工同步漏改、对拍才发现」时；修法是给 `make_min.py` 的 `FAMILIES` 加一族 clash |
-| 5 | `_default_root()` 在 clash 侧有**6 份拷贝**（`check_structure` / `check_min_pair` / `check_script_sync` / `check_remote_urls` / `check_header_numbers` / `audit_ruleset_content`）| ⚠️ 仍在 | 六份逻辑出现分歧时。未名扫描能抓住「拷贝时漏了名字」，但抓不住「逻辑各自漂移」 |
+| 5 | `_default_root` 在 clash 侧有**6 份拷贝**（`check_structure` / `check_min_pair` / `check_script_sync` / `check_remote_urls` / `check_header_numbers` / `audit_ruleset_content`）| ⚠️ 仍在 | 六份逻辑出现分歧时。未名扫描能抓住「拷贝时漏了名字」，但抓不住「逻辑各自漂移」 |
 
 > 📌 第 5 条是本轮新增的挂账 —— 顺带把它记下来的原因：
 > 本轮修的那个 `NL` bug 正是「拷贝时带进了一个本文件没有的名字」。
@@ -2022,9 +2021,7 @@ secrets 扫描发现新的主机或 IP 时，只有两种正确处理：
 - CI 读取的是提交后的仓库，抓不到未提交的本地私密文件；
 - 所有门禁都可能只有“绿样例”，若没有坏样例证明判负能力，绿色可信度有限。
 
-~~因此公开发布前仍要显式补跑~~ ⇒ **下面这两项也都已进闸门**（第十一轮问题 2：
-此处原写“仍在闸门之外”，但代码块里两项**当时就已经在跑**了 —— 我只改了上半句、
-没动代码块和末句 ⇒ 标题、代码块、结语三者自相矛盾）：
+~~因此公开发布前仍要显式补跑~~ ⇒ **下面这两项也都已进闸门**：
 
 | 命令 | 闸门 | 编号 |
 |:-----|:----:|:----:|
