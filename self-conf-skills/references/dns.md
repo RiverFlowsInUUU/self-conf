@@ -793,7 +793,7 @@ case "RULE-SET":
 
 `RC.ParseParams(params)` 解析出了 `noResolve`，随后原样传给 `RP.NewRuleSet`。
 所以这不是「照搬 Clash 语法」或「待确认的猜测」：**对 `RULE-SET` 的行尾写法有效。**
-同一结论也已经写入 [`hardening-template.md` §9.2](./profiles/clash.md)。
+同一结论也已经写入 [`profiles/<内核>.md` §9.2](./profiles/clash.md)。
 
 #### 3. 为什么必须带：它收的是泄露面④
 

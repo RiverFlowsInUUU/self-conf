@@ -1457,7 +1457,7 @@ python self-conf-skills/gates/clash/check_remote_urls.py
 |:-:|:-----|:---------------|
 | 1 | mihomo 侧**其余**门禁没有常驻的判负 fixture 回归（判别力靠人记得跑）| 出现「判据改坏、不再判负、现役仍全绿」时。注：地区组那块已有 fixture（闸门「地区组判别力·mihomo」）|
 | 2 | **clash 侧没有 `.min` 生成器**（`make_min.py` 只有 surge / egern 两族）⇒ `.min.yaml` 靠手工同步 + 对拍兜底 | 出现第一次「手工同步漏改、对拍才发现」时；修法是给 `make_min.py` 加一族 clash |
-| 3 | `_default_root()` 在 clash 侧有 **6 份拷贝**（`check_structure` / `check_min_pair` / `check_script_sync` / `check_remote_urls` / `check_header_numbers` / `audit_ruleset_content`）| 六份逻辑出现分歧时。未定义名扫描能抓住「拷贝时漏了名字」，抓不住「逻辑各自漂移」 |
+| ~~3~~ | ~~`_default_root()` 有 6 份拷贝~~ | ✅ **已消（2026-10-08）** —— 收敛为 `lib/_clash_common.py` 的**唯一实现** `default_root()`；6 处改为调用它。原来 3 份是**退化变体**（无 CWD 优先），在 CI 上会算错目录 |
 | 4 | **「一天一版」无机器判据** —— 改革删掉归档后，V7 一并删除。现在它靠 §6.1 的纪律，**没有闸门守** | 出现真的「同一天升了两个号」且造成困扰时 |
 
 #### 16.5 退出码速查
@@ -1486,9 +1486,9 @@ self-conf/
 ├── self-conf-skills/                       # ★ AI 驱动的唯一知识库与工具集（无人类文档）
 │   ├── AGENTS.md                 # 单一入口：底线与纪律 → §0 判内核 → 分支 A(Surge) / 分支 B(Egern)
 │   ├── reference/               # 8 篇：profiles/*.md · dns · rulesets · pitfalls · ops · gates ·
-│   │                            #   no-resolve-pairing · dns-basics · ops · troubleshoot-faq
-│   ├── reference/profiles/ # 单侧主题：profile-anatomy（逐键权威）· hardening-template · pitfalls ·
-│   │                            #   leak-localization · checker · ruleset-weight · public-repo（本文）
+│   │                            #   dns.md · rulesets.md · ops.md · pitfalls.md
+│   ├── references/profiles/ # 各内核：逐键语义（权威）· 加固模板 · 坑 ·
+│   │                            #   判据与命令 · 规则集重量 · 公开仓交付（本文）
 │   ├── scripts/{surge,egern}/   # 审计脚本（Surge 5+1 共享模块 / Egern 10+1 共享模块）
 │   └── tests/                   # check_secrets · check_portability · check_min_pair · check_links · make_min
 └── surge/                       ── Surge 全部产品物 ──

@@ -330,7 +330,7 @@ Egern 用本仓快照 `apple_system.list`，且若干内核级约束不可套用
 
 ### FAQ 与术语表
 
-FAQ 从两侧 [`profile-anatomy`](./profiles/surge.md) · [`profile-anatomy`](./profiles/egern.md) 的问答节归并而来（答案与源文件同口径，冲突时以 `profile-anatomy` 为准）。
+FAQ 从两侧 [`profiles/<内核>.md`](./profiles/clash.md) · [`profiles/<内核>.md`](./profiles/clash.md) 的问答节归并而来（答案与源文件同口径，冲突时以 `profiles/<内核>.md` 的「逐键语义」 为准）。
 术语表是全手册的公共词汇，定义以本仓文档的实际用法为准。
 
 #### 10.1 FAQ

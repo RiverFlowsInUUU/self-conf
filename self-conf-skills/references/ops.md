@@ -61,11 +61,11 @@ Surge 的 `.conf` 按节组织，模板里与防泄露相关的节：
 |:---|:-----|:-----|
 | `dns-server` | 引导与连通性测试用的本地上游 | 全 IP 字面量，不放 `system`。不要删它来"减少解析面"：删了 Surge 会用系统 DNS（运营商下发），正是出口 ① |
 | `encrypted-dns-server` | 日常解析走加密通道 | 端点尽量 IP 字面量；保留的 2 个主机名端点已用 `# audit-waive:` 记录豁免与理由 |
-| `hijack-dns` | 旁路设备（出口 ②） | 模板列出最常见的境外解析器地址把它们收进本地；想一网打尽可写 `hijack-dns = *`（有取舍，见 `profile-anatomy` §10.3） |
-| `encrypted-dns-follow-outbound-mode` | 防止"出站走代理、解析也跟着出境"的意外 | 模板显式设 `false`，理由在 `profile-anatomy` |
-| `use-local-host-item-for-proxy` | 防止本地 hosts 条目污染代理侧解析 | 理由在 `profile-anatomy` |
+| `hijack-dns` | 旁路设备（出口 ②） | 模板列出最常见的境外解析器地址把它们收进本地；想一网打尽可写 `hijack-dns = *`（有取舍，见 `profiles/<内核>.md` 的「逐键语义」 §10.3） |
+| `encrypted-dns-follow-outbound-mode` | 防止"出站走代理、解析也跟着出境"的意外 | 模板显式设 `false`，理由在 `profiles/<内核>.md` 的「逐键语义」 |
+| `use-local-host-item-for-proxy` | 防止本地 hosts 条目污染代理侧解析 | 理由在 `profiles/<内核>.md` 的「逐键语义」 |
 | `always-real-ip` | Fake-IP 模式下游戏机 / NTP / STUN 拿到假 IP | 是功能清单，不是可选装饰。里面的主机名应能被 `[Rule]` 域名规则接住，`check_surge_dns.py` 第 11 项专查这条 |
-| `internet-test-url` / `proxy-test-url` | — | 性能探针，不是泄露通道：前者国内 204（测"能不能上网"），后者保持境外 `gstatic.com`（`smart` 打分要含国际段才是真实路径）。把后者"为防泄露"改成国内是典型的原则误套用，见 `profile-anatomy` §16 |
+| `internet-test-url` / `proxy-test-url` | — | 性能探针，不是泄露通道：前者国内 204（测"能不能上网"），后者保持境外 `gstatic.com`（`smart` 打分要含国际段才是真实路径）。把后者"为防泄露"改成国内是典型的原则误套用，见 `profiles/<内核>.md` 的「逐键语义」 §16 |
 
 > **注意**　`# audit-waive: <编号> <理由>` 是有语义的注释，审计器真的会读它。删掉那行，读数立刻从「已豁免」变「HIGH/MEDIUM」；同文件内编号不重复。
 
@@ -176,7 +176,7 @@ Hong Kong = smart, include-all-proxies=true, include-other-group="Airport", poli
 
 - 策略组 / `include-other-group`：[manual.nssurge.com/policy-groups/policy-including.html](https://manual.nssurge.com/policy-groups/policy-including.html)
 - Smart 组限制（中文）：[kb.nssurge.com · smart-group](https://kb.nssurge.com/surge-knowledge-base/zh/guidelines/smart-group)
-- 其余逐节引用见 `profile-anatomy` 各节脚注。
+- 其余逐节引用见 `profiles/<内核>.md` 的「逐键语义」 各节脚注。
 
 #### 相关页面
 
@@ -214,7 +214,7 @@ Egern 的 YAML 顶层：`ipv6`、`vif_only`、`hijack_dns`、`geoip_db_url` / `a
 | `proxy_nameservers` | 硬覆盖：一设就绕过 `forward`、强制直连、成为代理侧解析的唯一出口。"不设"本身也留了一条"未命中回退 Bootstrap"的明文分支 —— 模板最终选择显式设置 + 国内端点（它是强制直连的，境外解析器在国内线路不可达）。排障口诀：节点连不上，第一件事注释掉这个列表 |
 | `hosts` / `block_ips` | `hosts` 是"端点写主机名"时代的补救，端点全 IP 后无引用点、已删；`block_ips` 丢弃空路由式污染应答，刻意不含私网段，免误伤内网 |
 
-已知代价（完整版见 `profile-anatomy` 的取舍节）：设置了 `proxy_nameservers` + 兜底国内组，需要本地解析的境外域名会拿到国内答案，实际影响面仅限 `DIRECT` 域名。审计里那两条 `LOW`（一条是 `proxy_nameservers` 成为代理侧解析唯一出口，一条是 `forward` 兜底指向国内组）就是它 —— 是取舍，不是缺陷。
+已知代价（完整版见 `profiles/<内核>.md` 的「逐键语义」 的取舍节）：设置了 `proxy_nameservers` + 兜底国内组，需要本地解析的境外域名会拿到国内答案，实际影响面仅限 `DIRECT` 域名。审计里那两条 `LOW`（一条是 `proxy_nameservers` 成为代理侧解析唯一出口，一条是 `forward` 兜底指向国内组）就是它 —— 是取舍，不是缺陷。
 
 #### 4.3 `proxies:` 与节点形态
 
@@ -910,7 +910,7 @@ python self-conf-skills/gates/clash/check_structure.py
 | 7 | ⭐ `tun` 是否接管 `:53`（旁路设备面③）+ `strict-route` | ⭐ 判据不是"列了几条"，而是**是否覆盖 `:53` 的整个地址空间** —— 地址空间无限，逐个列举永远列不全（Surge 侧第 3 项踩过同一个坑：按条数判负是错的）。只有 `any:53` / `0.0.0.0:53` 才叫收口。另要求 `enable` / `auto-route` / `strict-route` 三键。<br>⚠️ **形态差异**：覆写脚本（`override/*.js`）的输出**不该有** `tun`（客户端自己管 TUN）⇒ `--override` 下本项整体跳过；当前也未接管 TCP:53（不写协议前缀默认 `udp://`，LOW，是已知取舍） | **高** |
 | 8 | ⭐⭐ **DNS 层广告拦截的两个必要条件**（缺任一 ⇒ 静默失效、且不报错） | ① `nameserver-policy` 里 `rule-set:<广告集>: rcode://success`；② **同一个广告集在 `fake-ip-filter` 里再列一遍** —— 否则 `withFakeIP` 中间件对 A / AAAA **直接返回假 IP**，请求永远走不到 ①。另：两处广告集**必须一致**，且都**不得引用未定义**的 `rule-set:`（死引用 ⇒ 静默消失）。当前两版均为 `AWAvenue-Ads` + `Jinx-Ads`，两处一致 ✅ | **高** |
 | 9 | `nameserver-policy` 的**广告项必须排在 `cn` / `private` 之前** | YAML mapping 在 Python 3.7+ 保持插入顺序，而这个顺序**就是 mihomo 的匹配顺序**：先命中 `rule-set:cn` ⇒ 拿国内答案，永远走不到后面的 `rcode://success` | **高** |
-| 10 | ⭐⭐ IP 类规则必须带 `no-resolve`（面④），域名类不该写 | ⭐ 判"是不是 IP 类规则"的**第一依据是 provider 的 `behavior`**，不是名字前缀：`ipcidr` ⇒ 不带会为判定而强制解析；`domain` ⇒ 写了无意义；`classical` ⇒ 内容混合、**无法静态判定**（单独归组提示）。只有 provider 未声明 `behavior` 时才退回 `geoip-` 名字前缀兜底。<br>⚠️ **双刃与另两侧同**：给 IP 规则补 `no-resolve` 会同时关掉"靠解析判 IP 归属"那条直连路径 ⇒ 必须与域名补偿**成对交付**（见 [no-resolve-pairing.md](./dns.md)）。当前分流版 4 条 / 懒人版 2 条全部带 ✅ | **高**（IP 类缺）／低（域名类写了） |
+| 10 | ⭐⭐ IP 类规则必须带 `no-resolve`（面④），域名类不该写 | ⭐ 判"是不是 IP 类规则"的**第一依据是 provider 的 `behavior`**，不是名字前缀：`ipcidr` ⇒ 不带会为判定而强制解析；`domain` ⇒ 写了无意义；`classical` ⇒ 内容混合、**无法静态判定**（单独归组提示）。只有 provider 未声明 `behavior` 时才退回 `geoip-` 名字前缀兜底。<br>⚠️ **双刃与另两侧同**：给 IP 规则补 `no-resolve` 会同时关掉"靠解析判 IP 归属"那条直连路径 ⇒ 必须与域名补偿**成对交付**（见 [`dns.md` 的成对交付节](./dns.md)）。当前分流版 4 条 / 懒人版 2 条全部带 ✅ | **高**（IP 类缺）／低（域名类写了） |
 | 11 | ⭐ **零 dat 依赖** | 顶层出现 `geox-url` / `geo-auto-update` / `geo-update-interval` ⇒ mihomo 会去下载并加载 `GeoSite.dat` / `GeoIP.dat`；规则写原生 `GEOSITE,` / `GEOIP,` ⇒ 直接查那两个库；`nameserver-policy` 键用 `geosite:` 同理；provider 引 `.dat` 文件同样判负。<br>⚠️ **这不排斥 `.mrs`**：`geoip-private` / `geoip-cn` 等是 MetaCubeX 的**独立远程集文件**（`format: mrs`），与 dat 数据库无关 —— 正是本仓想要的形态。判据只拦 dat，不拦 mrs（注入测试专门验过不误伤） | **高** |
 | 12 | `rule-provider` 形态（**不做网络探测**） | 既无 `url` 也无 `path` ⇒ 永远加载不出来 ⇒ 引用它的规则**静默变成空集**（死规则），门禁看不出来。一个 provider 都没有 ⇒ MEDIUM。可达性归 `check_remote_urls.py` | **高**（缺 url+path）／中（零 provider） |
 | 13 | ⭐ 规则引用的名字必须**能解析**（provider / 策略组） | 引用不存在的东西**不会让 mihomo 拒绝启动** —— 它只是静默不生效。对防泄露而言这最危险：那正是收口装置所在的位置（广告集 / 国内集 / 兜底）。策略名笔误（如 `负载均衡`）同判 | **高** |
@@ -924,7 +924,7 @@ python self-conf-skills/gates/clash/check_structure.py
 | **provider 的 `behavior`** | `behavior: ipcidr` | **判定"这条规则是不是 IP 类"的第一依据** —— 比名字前缀可靠，也是 `check_clash_dns.py` 判据 10 的落点 |
 
 > ⚠️ 与 Egern 相反的一点是：**写在 `rule-set` 规则对象上（Egern 的 `no_resolve: true`）不生效**，
-> mihomo 的 `no-resolve` 写在规则行尾。三侧落点对照见 [no-resolve-pairing.md](./dns.md)。
+> mihomo 的 `no-resolve` 写在规则行尾。三侧落点对照见 [`dns.md` 的成对交付节](./dns.md)。
 
 #### 验收标准（六条同时满足才算完）
 
@@ -957,7 +957,7 @@ python self-conf-skills/gates/clash/check_structure.py
 
 > ⭐ **审计通过 ≠ 配置可用**（三侧共通的母题）。mihomo 侧**已有**分流覆盖审计脚本（闸门 #9），但审计通过仍不等于真机可用 —— 这句母题对三侧都成立。
 > （三内核均有 `audit_routing_coverage.py`，闸门 #7/#8/#9）—— 第 6 条验收标准**先跑它们**，但注意离线档按规则集名推演、不读实际策略，**仍需实测兜底**，别把闸门绿当充分条件。
-> 这正是 `no-resolve-pairing.md` 要跨内核保留下来的教训：**不得因为两道静态门禁全绿就跳过它。**
+> 这正是 `dns.md` 的成对交付节 要跨内核保留下来的教训：**不得因为两道静态门禁全绿就跳过它。**
 
 #### 已知取舍（LOW 不是缺陷）
 

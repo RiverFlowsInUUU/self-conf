@@ -2019,7 +2019,7 @@ Surge / Egern 直接消费 `.list`；mihomo 消费生成的 `.yaml`。因此只�
 > 本文件原为 `clash/DetailsReadme/DetailsReadme.md`，整合进 self-conf 后并入 skill，
 > 与 Egern 侧的做法一致（见 [`profiles/egern.md`](./egern.md)）。
 >
-> ⚠️ **与同目录新文档的分工**：`profiles/<kern>.md` / `hardening-template.md` 是
+> ⚠️ **与同目录新文档的分工**：`profiles/<kern>.md` / `profiles/<内核>.md` 的「加固模板」 是
 > 按 SC 规格重写的**现役**文档；本文件是**原始推导与实测读数**，
 > §5「明文泄露面实测」与 §6「已知代价与取舍」为本文件独有，其余章节已被新文档覆盖。
 >
@@ -2234,9 +2234,9 @@ if "respect-rules" is turned on, "proxy-server-nameserver" cannot be empty
 > **何时读**：想知道某个规则集为什么选它、以及选型过程中纠正过哪些错误判断时。
 > 本文件原为 `clash/docs/01-规则集与来源.md`，整合进 self-conf 后并入 skill。
 >
-> ⚠️ **与 `ruleset-weight.md` 的分工**：本文件讲**来源与选型决策**
+> ⚠️ **与 `rulesets.md` 的「规则集重量」 的分工**：本文件讲**来源与选型决策**
 > （§0 三级优先、纠偏记录、为什么移除 blackmatrix7、微信为什么走 `.mrs`）；
-> `ruleset-weight.md` 讲**体量与覆盖度**（份数、条目数、AI 覆盖度实测差集）。
+> `rulesets.md` 的「规则集重量」 讲**体量与覆盖度**（份数、条目数、AI 覆盖度实测差集）。
 >
 > 首页只讲「能实现怎样的分流」。这一页是组件清单：用了哪些规则集、各自从哪来、按什么顺序生效。
 

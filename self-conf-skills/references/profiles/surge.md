@@ -519,7 +519,7 @@ Surge 默认：走代理的域名用 Fake-IP，DIRECT 的用 Real-IP。
 代价是上游更新不跟进，实测 ACL4SSR 的 AI.list 长期停在 51 行，Gemini 新形态全部缺失。
 
 ⇒ 2026-09-28 起换 [Repcz/Tool](https://github.com/Repcz/Tool) 的 AI.list 并改跟分支头（该仓滚动维护），
-   取舍细节见 [`hardening-template.md` §4.7](../profiles/clash.md)。bm7 四条专属集不受影响。
+   取舍细节见 [`profiles/<内核>.md` §4.7](../profiles/clash.md)。bm7 四条专属集不受影响。
 
 #### 11.4 广告拦截的两条清单与 `-RULE-SET` 版地址
 
