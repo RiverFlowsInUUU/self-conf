@@ -15,9 +15,12 @@
 
 设计约定：
     · 与 CI 同源是铁律 —— 本地绿但 CI 红属于竞态/环境差，不允许有"第三套判据"。
-      ⚠️ **已知挂账**：闸门清单靠人工双写（ci.yml ↔ 本文件），机器对账未做（对账脚本
-      自身也是维护面）。**推翻挂账的触发条件**：一旦出现「一侧增删闸门、另一侧未同步」
-      且事后确认是人工漏同步造成的本地/CI 结论分歧，就必须补上清单对账断言。
+      原「闸门清单靠人工双写、机器对账未做」的挂账**已消（2026-10-09）**：
+      新增闸门「CI↔verify_all 对账」（`check_ci_sync.py`）把 ci.yml ↔ 本文件的
+      双向清单做成机器对账 —— ci.yml 里每个 python 脚本调用必须能归类为
+      runner / 重复跑（DUPLICATE 登记）/ CI-only（CI_ONLY 登记），且脚本必须存在。
+      往 ci.yml 加步骤时，去该脚本的两张登记表登记理由即可（这不是挡路，是逼你
+      想清楚它与闸门清单的关系）。
     · 退出码语义（全仓统一，见 reference/pitfalls.md §8.2）：
       0 = 判据全过 ｜ 1 = 有判负 ｜ 2 = 前置环境不达标（**计入失败，先修环境再看判据**）
       ｜ 3 = SKIP（未能验证 → 不计入失败但必须明示）。
@@ -575,6 +578,12 @@ def build_gates():
     # build_rules --check）；地区组判别力本身已有独立 fixture 回归。
     # 详见该脚本 docstring 与 gates.md §9.3。
     add('负样例回归', [PY, 'self-conf-skills/gates/check_negative_fixtures.py'])
+    # CI↔verify_all 清单对账：本文件的 build_gates() 是闸门真源，而 ci.yml 另外
+    # 硬编码了几个直接跑的脚本（F821 重复跑 / cp936 重跑 / 两个联网探测）。
+    # 原本两边靠人肉双写、机器对账未做（已知挂账）—— 本闸门把它变成机器对账：
+    # ci.yml 里每个 python 脚本调用必须能归类（runner / 重复跑·已登记 / CI-only·已登记）
+    # 且脚本必须存在，否则判负。详见该脚本 docstring 与 gates.md §16.4。
+    add('CI↔verify_all 对账', [PY, 'self-conf-skills/gates/check_ci_sync.py'])
 
     # ── ② 三内核审计（每内核按现役文件各一道；脚本支持多文件）────────
     # 每项 = (闸门名, 脚本相对路径模板, 参数模板)
