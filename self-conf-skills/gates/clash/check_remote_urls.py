@@ -12,7 +12,9 @@
     该走 AD 的广告全进了兜底出口，配置看着跑得挺好，其实拦截没了。
 
 判据：
-    · 从 override/*.js 与 profiles/*.yaml 里抽出所有 http(s) 远程资源 URL
+    · 从 clash 的 override/*.js 与 profiles/*.yaml，以及并列的 surge/ 与 egern/
+      （含各自 profiles/）里抽出所有 http(s) 远程规则集 URL —— 三内核共用同一批
+      上游（Jinx / blackmatrix7 / Loyalsoldier），只扫 clash 会漏掉 surge/egern 的死链
     · 逐个 HEAD（失败则退化为 GET Range）探测
     · 非 2xx / 3xx 即判负，并打印 URL 与出处
 
@@ -91,12 +93,16 @@ def collect_urls():
     """(url, 出处) 列表，去重保序。"""
     seen = {}
     targets = []
-    for d in ("override", "profiles"):
-        base = os.path.join(ROOT, d)
+    repo_root = os.path.dirname(ROOT)   # clash/ 的上级：并列着 surge/ 与 egern/
+    # 三内核配置都要扫（缺哪个目录就跳哪个）；surge 用 .conf，egern/clash 用 .yaml
+    bases = [os.path.join(ROOT, "override"), os.path.join(ROOT, "profiles"),
+             os.path.join(repo_root, "surge"), os.path.join(repo_root, "surge", "profiles"),
+             os.path.join(repo_root, "egern"), os.path.join(repo_root, "egern", "profiles")]
+    for base in bases:
         if not os.path.isdir(base):
             continue
         for fn in sorted(os.listdir(base)):
-            if not fn.endswith((".js", ".yaml", ".yml")):
+            if not fn.endswith((".js", ".yaml", ".yml", ".conf")):
                 continue
             p = os.path.join(base, fn)
             try:
@@ -114,7 +120,7 @@ def collect_urls():
                 if not url.lower().endswith(RESOURCE_SUFFIX):
                     continue
                 if url not in seen:
-                    seen[url] = "%s/%s" % (d, fn)
+                    seen[url] = os.path.relpath(p, repo_root).replace(os.sep, "/")
                     targets.append((url, seen[url]))
     return targets
 
