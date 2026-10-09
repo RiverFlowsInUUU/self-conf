@@ -1,0 +1,2211 @@
+{
+ "generated_by": "self-conf-skills/run/build_ir.py",
+ "products": {
+  "lazy": {
+   "cross": {
+    "notes": [
+     {
+      "detail": "仅出现在 ['egern', 'surge'] —— 多为内核机制差异（如 mihomo 拆分/内置），AGENTS.md 明示刻意不对齐",
+      "kind": "partial",
+      "present_in": [
+       "egern",
+       "surge"
+      ],
+      "source": "surge-direct"
+     },
+     {
+      "detail": "仅出现在 ['egern', 'surge'] —— 多为内核机制差异（如 mihomo 拆分/内置），AGENTS.md 明示刻意不对齐",
+      "kind": "partial",
+      "present_in": [
+       "egern",
+       "surge"
+      ],
+      "source": "surge-ads"
+     },
+     {
+      "detail": "同一规则集在不同内核挂到不同策略组 —— 多为刻意，改前先读 rulesets.md",
+      "kind": "target_mismatch",
+      "source": "surge-ads",
+      "targets": {
+       "egern": "AD",
+       "surge": "REJECT"
+      }
+     },
+     {
+      "detail": "仅出现在 ['egern', 'surge'] —— 多为内核机制差异（如 mihomo 拆分/内置），AGENTS.md 明示刻意不对齐",
+      "kind": "partial",
+      "present_in": [
+       "egern",
+       "surge"
+      ],
+      "source": "awavenue-ads-rule-surge-rule-set"
+     },
+     {
+      "detail": "同一规则集在不同内核挂到不同策略组 —— 多为刻意，改前先读 rulesets.md",
+      "kind": "target_mismatch",
+      "source": "awavenue-ads-rule-surge-rule-set",
+      "targets": {
+       "egern": "AD",
+       "surge": "REJECT"
+      }
+     },
+     {
+      "detail": "仅出现在 ['surge'] —— 多为内核机制差异（如 mihomo 拆分/内置），AGENTS.md 明示刻意不对齐",
+      "kind": "partial",
+      "present_in": [
+       "surge"
+      ],
+      "source": "system"
+     },
+     {
+      "detail": "仅出现在 ['egern', 'surge'] —— 多为内核机制差异（如 mihomo 拆分/内置），AGENTS.md 明示刻意不对齐",
+      "kind": "partial",
+      "present_in": [
+       "egern",
+       "surge"
+      ],
+      "source": "lan"
+     },
+     {
+      "detail": "仅出现在 ['egern', 'surge'] —— 多为内核机制差异（如 mihomo 拆分/内置），AGENTS.md 明示刻意不对齐",
+      "kind": "partial",
+      "present_in": [
+       "egern",
+       "surge"
+      ],
+      "source": "direct"
+     },
+     {
+      "detail": "仅出现在 ['clash', 'egern'] —— 多为内核机制差异（如 mihomo 拆分/内置），AGENTS.md 明示刻意不对齐",
+      "kind": "partial",
+      "present_in": [
+       "clash",
+       "egern"
+      ],
+      "source": "apple-system"
+     },
+     {
+      "detail": "仅出现在 ['clash'] —— 多为内核机制差异（如 mihomo 拆分/内置），AGENTS.md 明示刻意不对齐",
+      "kind": "partial",
+      "present_in": [
+       "clash"
+      ],
+      "source": "jinx-cn"
+     },
+     {
+      "detail": "仅出现在 ['clash'] —— 多为内核机制差异（如 mihomo 拆分/内置），AGENTS.md 明示刻意不对齐",
+      "kind": "partial",
+      "present_in": [
+       "clash"
+      ],
+      "source": "jinx-ads"
+     },
+     {
+      "detail": "仅出现在 ['clash'] —— 多为内核机制差异（如 mihomo 拆分/内置），AGENTS.md 明示刻意不对齐",
+      "kind": "partial",
+      "present_in": [
+       "clash"
+      ],
+      "source": "awavenue-ads"
+     },
+     {
+      "detail": "仅出现在 ['clash'] —— 多为内核机制差异（如 mihomo 拆分/内置），AGENTS.md 明示刻意不对齐",
+      "kind": "partial",
+      "present_in": [
+       "clash"
+      ],
+      "source": "geoip-private"
+     },
+     {
+      "detail": "仅出现在 ['clash'] —— 多为内核机制差异（如 mihomo 拆分/内置），AGENTS.md 明示刻意不对齐",
+      "kind": "partial",
+      "present_in": [
+       "clash"
+      ],
+      "source": "category-ai-chat-!cn"
+     },
+     {
+      "detail": "仅出现在 ['clash'] —— 多为内核机制差异（如 mihomo 拆分/内置），AGENTS.md 明示刻意不对齐",
+      "kind": "partial",
+      "present_in": [
+       "clash"
+      ],
+      "source": "geoip-cn"
+     }
+    ],
+    "sources": {
+     "ai-domains": {
+      "clash": "AI",
+      "egern": "AI",
+      "surge": "AI"
+     },
+     "apple-system": {
+      "clash": "DIRECT",
+      "egern": "DIRECT"
+     },
+     "awavenue-ads": {
+      "clash": "AD"
+     },
+     "awavenue-ads-rule-surge-rule-set": {
+      "egern": "AD",
+      "surge": "REJECT"
+     },
+     "category-ai-chat-!cn": {
+      "clash": "AI"
+     },
+     "cn": {
+      "clash": "DIRECT",
+      "egern": "DIRECT",
+      "surge": "DIRECT"
+     },
+     "direct": {
+      "egern": "DIRECT",
+      "surge": "DIRECT"
+     },
+     "geoip-cn": {
+      "clash": "DIRECT"
+     },
+     "geoip-private": {
+      "clash": "DIRECT"
+     },
+     "jinx-ads": {
+      "clash": "AD"
+     },
+     "jinx-cn": {
+      "clash": "DIRECT"
+     },
+     "lan": {
+      "egern": "DIRECT",
+      "surge": "DIRECT"
+     },
+     "private": {
+      "clash": "DIRECT",
+      "egern": "DIRECT",
+      "surge": "DIRECT"
+     },
+     "surge-ads": {
+      "egern": "AD",
+      "surge": "REJECT"
+     },
+     "surge-direct": {
+      "egern": "DIRECT",
+      "surge": "DIRECT"
+     },
+     "system": {
+      "surge": "DIRECT"
+     }
+    }
+   },
+   "kernels": {
+    "clash": {
+     "groups": [
+      {
+       "members": [],
+       "name": "Proxy",
+       "type": "url-test"
+      },
+      {
+       "members": [
+        "Proxy"
+       ],
+       "name": "AI",
+       "type": "select"
+      },
+      {
+       "members": [
+        "REJECT"
+       ],
+       "name": "AD",
+       "type": "select"
+      }
+     ],
+     "rules": [
+      {
+       "kind": "RULE-SET",
+       "options": [],
+       "source": "Jinx-CN",
+       "source_norm": "jinx-cn",
+       "target": "DIRECT"
+      },
+      {
+       "kind": "RULE-SET",
+       "options": [],
+       "source": "Jinx-Ads",
+       "source_norm": "jinx-ads",
+       "target": "AD"
+      },
+      {
+       "kind": "RULE-SET",
+       "options": [],
+       "source": "AWAvenue-Ads",
+       "source_norm": "awavenue-ads",
+       "target": "AD"
+      },
+      {
+       "kind": "RULE-SET",
+       "options": [],
+       "source": "apple-system",
+       "source_norm": "apple-system",
+       "target": "DIRECT"
+      },
+      {
+       "kind": "RULE-SET",
+       "options": [
+        "no-resolve"
+       ],
+       "source": "geoip-private",
+       "source_norm": "geoip-private",
+       "target": "DIRECT"
+      },
+      {
+       "kind": "RULE-SET",
+       "options": [],
+       "source": "private",
+       "source_norm": "private",
+       "target": "DIRECT"
+      },
+      {
+       "kind": "RULE-SET",
+       "options": [],
+       "source": "category-ai-chat-!cn",
+       "source_norm": "category-ai-chat-!cn",
+       "target": "AI"
+      },
+      {
+       "kind": "RULE-SET",
+       "options": [],
+       "source": "AI_Domains",
+       "source_norm": "ai-domains",
+       "target": "AI"
+      },
+      {
+       "kind": "RULE-SET",
+       "options": [],
+       "source": "cn",
+       "source_norm": "cn",
+       "target": "DIRECT"
+      },
+      {
+       "kind": "RULE-SET",
+       "options": [
+        "no-resolve"
+       ],
+       "source": "geoip-cn",
+       "source_norm": "geoip-cn",
+       "target": "DIRECT"
+      },
+      {
+       "kind": "MATCH",
+       "options": [],
+       "source": null,
+       "source_norm": null,
+       "target": "Proxy"
+      }
+     ]
+    },
+    "egern": {
+     "groups": [
+      {
+       "members": [],
+       "name": "Airport",
+       "type": "external"
+      },
+      {
+       "members": [
+        "Airport"
+       ],
+       "name": "Proxy",
+       "type": "smart"
+      },
+      {
+       "members": [
+        "Airport"
+       ],
+       "name": "AI",
+       "type": "select"
+      },
+      {
+       "members": [
+        "REJECT"
+       ],
+       "name": "AD",
+       "type": "select"
+      }
+     ],
+     "rules": [
+      {
+       "kind": "rule_set",
+       "options": [],
+       "source": "https://raw.githubusercontent.com/RiverFlowsInUUU/Jinx/main/surge-direct.list",
+       "source_norm": "surge-direct",
+       "target": "DIRECT"
+      },
+      {
+       "kind": "rule_set",
+       "options": [],
+       "source": "https://raw.githubusercontent.com/RiverFlowsInUUU/Jinx/main/surge-ads.list",
+       "source_norm": "surge-ads",
+       "target": "AD"
+      },
+      {
+       "kind": "rule_set",
+       "options": [],
+       "source": "https://raw.githubusercontent.com/TG-Twilight/AWAvenue-Ads-Rule/main/Filters/AWAvenue-Ads-Rule-Surge-RULE-SET.list",
+       "source_norm": "awavenue-ads-rule-surge-rule-set",
+       "target": "AD"
+      },
+      {
+       "kind": "rule_set",
+       "options": [],
+       "source": "https://raw.githubusercontent.com/RiverFlowsInUUU/self-conf/main/rules/apple_system.list",
+       "source_norm": "apple-system",
+       "target": "DIRECT"
+      },
+      {
+       "kind": "rule_set",
+       "options": [],
+       "source": "https://raw.githubusercontent.com/blackmatrix7/ios_rule_script/master/rule/Surge/Lan/Lan.list",
+       "source_norm": "lan",
+       "target": "DIRECT"
+      },
+      {
+       "kind": "rule_set",
+       "options": [],
+       "source": "https://raw.githubusercontent.com/Loyalsoldier/surge-rules/release/ruleset/private.txt",
+       "source_norm": "private",
+       "target": "DIRECT"
+      },
+      {
+       "kind": "rule_set",
+       "options": [],
+       "source": "https://raw.githubusercontent.com/Repcz/Tool/X/Surge/Rules/AI.list",
+       "source_norm": "ai-domains",
+       "target": "AI"
+      },
+      {
+       "kind": "rule_set",
+       "options": [],
+       "source": "https://raw.githubusercontent.com/RiverFlowsInUUU/self-conf/main/rules/AI.list",
+       "source_norm": "ai-domains",
+       "target": "AI"
+      },
+      {
+       "kind": "rule_set",
+       "options": [],
+       "source": "https://raw.githubusercontent.com/Loyalsoldier/surge-rules/release/ruleset/direct.txt",
+       "source_norm": "direct",
+       "target": "DIRECT"
+      },
+      {
+       "kind": "geoip",
+       "options": [
+        "no_resolve"
+       ],
+       "source": "CN",
+       "source_norm": "cn",
+       "target": "DIRECT"
+      },
+      {
+       "kind": "default",
+       "options": [],
+       "source": null,
+       "source_norm": null,
+       "target": "Proxy"
+      }
+     ]
+    },
+    "surge": {
+     "groups": [
+      {
+       "members": [],
+       "name": "Airport",
+       "type": "select"
+      },
+      {
+       "members": [],
+       "name": "Proxy",
+       "type": "smart"
+      },
+      {
+       "members": [],
+       "name": "AI",
+       "type": "select"
+      },
+      {
+       "members": [
+        "REJECT"
+       ],
+       "name": "AD",
+       "type": "select"
+      }
+     ],
+     "rules": [
+      {
+       "kind": "RULE-SET",
+       "options": [
+        "update-interval=604800"
+       ],
+       "source": "https://raw.githubusercontent.com/RiverFlowsInUUU/Jinx/main/surge-direct.list",
+       "source_norm": "surge-direct",
+       "target": "DIRECT"
+      },
+      {
+       "kind": "RULE-SET",
+       "options": [
+        "update-interval=604800",
+        "pre-matching",
+        "extended-matching"
+       ],
+       "source": "https://raw.githubusercontent.com/RiverFlowsInUUU/Jinx/main/surge-ads.list",
+       "source_norm": "surge-ads",
+       "target": "REJECT"
+      },
+      {
+       "kind": "RULE-SET",
+       "options": [
+        "update-interval=604800",
+        "pre-matching",
+        "extended-matching"
+       ],
+       "source": "https://raw.githubusercontent.com/TG-Twilight/AWAvenue-Ads-Rule/main/Filters/AWAvenue-Ads-Rule-Surge-RULE-SET.list",
+       "source_norm": "awavenue-ads-rule-surge-rule-set",
+       "target": "REJECT"
+      },
+      {
+       "kind": "RULE-SET",
+       "options": [],
+       "source": "SYSTEM",
+       "source_norm": "system",
+       "target": "DIRECT"
+      },
+      {
+       "kind": "RULE-SET",
+       "options": [
+        "no-resolve"
+       ],
+       "source": "LAN",
+       "source_norm": "lan",
+       "target": "DIRECT"
+      },
+      {
+       "kind": "RULE-SET",
+       "options": [
+        "update-interval=604800"
+       ],
+       "source": "https://raw.githubusercontent.com/Loyalsoldier/surge-rules/release/ruleset/private.txt",
+       "source_norm": "private",
+       "target": "DIRECT"
+      },
+      {
+       "kind": "RULE-SET",
+       "options": [
+        "update-interval=604800"
+       ],
+       "source": "https://raw.githubusercontent.com/Repcz/Tool/X/Surge/Rules/AI.list",
+       "source_norm": "ai-domains",
+       "target": "AI"
+      },
+      {
+       "kind": "RULE-SET",
+       "options": [
+        "update-interval=604800"
+       ],
+       "source": "https://raw.githubusercontent.com/RiverFlowsInUUU/self-conf/main/rules/AI.list",
+       "source_norm": "ai-domains",
+       "target": "AI"
+      },
+      {
+       "kind": "RULE-SET",
+       "options": [
+        "update-interval=604800"
+       ],
+       "source": "https://raw.githubusercontent.com/Loyalsoldier/surge-rules/release/ruleset/direct.txt",
+       "source_norm": "direct",
+       "target": "DIRECT"
+      },
+      {
+       "kind": "GEOIP",
+       "options": [
+        "no-resolve"
+       ],
+       "source": "CN",
+       "source_norm": "cn",
+       "target": "DIRECT"
+      },
+      {
+       "kind": "FINAL",
+       "options": [
+        "dns-failed"
+       ],
+       "source": null,
+       "source_norm": null,
+       "target": "Proxy"
+      }
+     ]
+    }
+   },
+   "paths": {
+    "clash": "clash\\profiles\\lazy.yaml",
+    "egern": "egern\\profiles\\lazy.yaml",
+    "surge": "surge\\profiles\\lazy.conf"
+   }
+  },
+  "routing": {
+   "cross": {
+    "notes": [
+     {
+      "detail": "仅出现在 ['egern', 'surge'] —— 多为内核机制差异（如 mihomo 拆分/内置），AGENTS.md 明示刻意不对齐",
+      "kind": "partial",
+      "present_in": [
+       "egern",
+       "surge"
+      ],
+      "source": "surge-direct"
+     },
+     {
+      "detail": "仅出现在 ['egern', 'surge'] —— 多为内核机制差异（如 mihomo 拆分/内置），AGENTS.md 明示刻意不对齐",
+      "kind": "partial",
+      "present_in": [
+       "egern",
+       "surge"
+      ],
+      "source": "surge-ads"
+     },
+     {
+      "detail": "同一规则集在不同内核挂到不同策略组 —— 多为刻意，改前先读 rulesets.md",
+      "kind": "target_mismatch",
+      "source": "surge-ads",
+      "targets": {
+       "egern": "AD",
+       "surge": "REJECT"
+      }
+     },
+     {
+      "detail": "仅出现在 ['egern', 'surge'] —— 多为内核机制差异（如 mihomo 拆分/内置），AGENTS.md 明示刻意不对齐",
+      "kind": "partial",
+      "present_in": [
+       "egern",
+       "surge"
+      ],
+      "source": "awavenue-ads-rule-surge-rule-set"
+     },
+     {
+      "detail": "同一规则集在不同内核挂到不同策略组 —— 多为刻意，改前先读 rulesets.md",
+      "kind": "target_mismatch",
+      "source": "awavenue-ads-rule-surge-rule-set",
+      "targets": {
+       "egern": "AD",
+       "surge": "REJECT"
+      }
+     },
+     {
+      "detail": "仅出现在 ['egern', 'surge'] —— 多为内核机制差异（如 mihomo 拆分/内置），AGENTS.md 明示刻意不对齐",
+      "kind": "partial",
+      "present_in": [
+       "egern",
+       "surge"
+      ],
+      "source": "systemota"
+     },
+     {
+      "detail": "仅出现在 ['surge'] —— 多为内核机制差异（如 mihomo 拆分/内置），AGENTS.md 明示刻意不对齐",
+      "kind": "partial",
+      "present_in": [
+       "surge"
+      ],
+      "source": "system"
+     },
+     {
+      "detail": "仅出现在 ['egern', 'surge'] —— 多为内核机制差异（如 mihomo 拆分/内置），AGENTS.md 明示刻意不对齐",
+      "kind": "partial",
+      "present_in": [
+       "egern",
+       "surge"
+      ],
+      "source": "lan"
+     },
+     {
+      "detail": "仅出现在 ['egern', 'surge'] —— 多为内核机制差异（如 mihomo 拆分/内置），AGENTS.md 明示刻意不对齐",
+      "kind": "partial",
+      "present_in": [
+       "egern",
+       "surge"
+      ],
+      "source": "gemini"
+     },
+     {
+      "detail": "仅出现在 ['egern', 'surge'] —— 多为内核机制差异（如 mihomo 拆分/内置），AGENTS.md 明示刻意不对齐",
+      "kind": "partial",
+      "present_in": [
+       "egern",
+       "surge"
+      ],
+      "source": "claude"
+     },
+     {
+      "detail": "仅出现在 ['egern', 'surge'] —— 多为内核机制差异（如 mihomo 拆分/内置），AGENTS.md 明示刻意不对齐",
+      "kind": "partial",
+      "present_in": [
+       "egern",
+       "surge"
+      ],
+      "source": "youtubemusic"
+     },
+     {
+      "detail": "仅出现在 ['egern', 'surge'] —— 多为内核机制差异（如 mihomo 拆分/内置），AGENTS.md 明示刻意不对齐",
+      "kind": "partial",
+      "present_in": [
+       "egern",
+       "surge"
+      ],
+      "source": "apple"
+     },
+     {
+      "detail": "仅出现在 ['egern', 'surge'] —— 多为内核机制差异（如 mihomo 拆分/内置），AGENTS.md 明示刻意不对齐",
+      "kind": "partial",
+      "present_in": [
+       "egern",
+       "surge"
+      ],
+      "source": "direct"
+     },
+     {
+      "detail": "仅出现在 ['clash', 'egern'] —— 多为内核机制差异（如 mihomo 拆分/内置），AGENTS.md 明示刻意不对齐",
+      "kind": "partial",
+      "present_in": [
+       "clash",
+       "egern"
+      ],
+      "source": "apple-system"
+     },
+     {
+      "detail": "仅出现在 ['clash'] —— 多为内核机制差异（如 mihomo 拆分/内置），AGENTS.md 明示刻意不对齐",
+      "kind": "partial",
+      "present_in": [
+       "clash"
+      ],
+      "source": "jinx-cn"
+     },
+     {
+      "detail": "仅出现在 ['clash'] —— 多为内核机制差异（如 mihomo 拆分/内置），AGENTS.md 明示刻意不对齐",
+      "kind": "partial",
+      "present_in": [
+       "clash"
+      ],
+      "source": "jinx-ads"
+     },
+     {
+      "detail": "仅出现在 ['clash'] —— 多为内核机制差异（如 mihomo 拆分/内置），AGENTS.md 明示刻意不对齐",
+      "kind": "partial",
+      "present_in": [
+       "clash"
+      ],
+      "source": "awavenue-ads"
+     },
+     {
+      "detail": "仅出现在 ['clash'] —— 多为内核机制差异（如 mihomo 拆分/内置），AGENTS.md 明示刻意不对齐",
+      "kind": "partial",
+      "present_in": [
+       "clash"
+      ],
+      "source": "apple-update"
+     },
+     {
+      "detail": "仅出现在 ['clash'] —— 多为内核机制差异（如 mihomo 拆分/内置），AGENTS.md 明示刻意不对齐",
+      "kind": "partial",
+      "present_in": [
+       "clash"
+      ],
+      "source": "geoip-private"
+     },
+     {
+      "detail": "仅出现在 ['clash'] —— 多为内核机制差异（如 mihomo 拆分/内置），AGENTS.md 明示刻意不对齐",
+      "kind": "partial",
+      "present_in": [
+       "clash"
+      ],
+      "source": "google-gemini"
+     },
+     {
+      "detail": "仅出现在 ['clash'] —— 多为内核机制差异（如 mihomo 拆分/内置），AGENTS.md 明示刻意不对齐",
+      "kind": "partial",
+      "present_in": [
+       "clash"
+      ],
+      "source": "category-ai-chat-!cn"
+     },
+     {
+      "detail": "仅出现在 ['clash'] —— 多为内核机制差异（如 mihomo 拆分/内置），AGENTS.md 明示刻意不对齐",
+      "kind": "partial",
+      "present_in": [
+       "clash"
+      ],
+      "source": "music.youtube.com"
+     },
+     {
+      "detail": "仅出现在 ['clash'] —— 多为内核机制差异（如 mihomo 拆分/内置），AGENTS.md 明示刻意不对齐",
+      "kind": "partial",
+      "present_in": [
+       "clash"
+      ],
+      "source": "apple-cn"
+     },
+     {
+      "detail": "仅出现在 ['clash'] —— 多为内核机制差异（如 mihomo 拆分/内置），AGENTS.md 明示刻意不对齐",
+      "kind": "partial",
+      "present_in": [
+       "clash"
+      ],
+      "source": "geoip-google"
+     },
+     {
+      "detail": "仅出现在 ['clash'] —— 多为内核机制差异（如 mihomo 拆分/内置），AGENTS.md 明示刻意不对齐",
+      "kind": "partial",
+      "present_in": [
+       "clash"
+      ],
+      "source": "geoip-telegram"
+     },
+     {
+      "detail": "仅出现在 ['clash'] —— 多为内核机制差异（如 mihomo 拆分/内置），AGENTS.md 明示刻意不对齐",
+      "kind": "partial",
+      "present_in": [
+       "clash"
+      ],
+      "source": "geoip-cn"
+     }
+    ],
+    "sources": {
+     "ai-domains": {
+      "clash": "AI",
+      "egern": "AI",
+      "surge": "AI"
+     },
+     "anthropic": {
+      "clash": "Claude",
+      "egern": "Claude",
+      "surge": "Claude"
+     },
+     "apple": {
+      "egern": "DIRECT",
+      "surge": "DIRECT"
+     },
+     "apple-cn": {
+      "clash": "DIRECT"
+     },
+     "apple-system": {
+      "clash": "DIRECT",
+      "egern": "DIRECT"
+     },
+     "apple-update": {
+      "clash": "Apple Update"
+     },
+     "awavenue-ads": {
+      "clash": "AD"
+     },
+     "awavenue-ads-rule-surge-rule-set": {
+      "egern": "AD",
+      "surge": "REJECT"
+     },
+     "category-ai-chat-!cn": {
+      "clash": "AI"
+     },
+     "claude": {
+      "egern": "Claude",
+      "surge": "Claude"
+     },
+     "cn": {
+      "clash": "DIRECT",
+      "egern": "DIRECT",
+      "surge": "DIRECT"
+     },
+     "direct": {
+      "egern": "DIRECT",
+      "surge": "DIRECT"
+     },
+     "emby": {
+      "clash": "Emby",
+      "egern": "Emby",
+      "surge": "Emby"
+     },
+     "gemini": {
+      "egern": "Gemini",
+      "surge": "Gemini"
+     },
+     "geoip-cn": {
+      "clash": "DIRECT"
+     },
+     "geoip-google": {
+      "clash": "Google"
+     },
+     "geoip-private": {
+      "clash": "DIRECT"
+     },
+     "geoip-telegram": {
+      "clash": "Telegram"
+     },
+     "github": {
+      "clash": "Proxy",
+      "egern": "Proxy",
+      "surge": "Proxy"
+     },
+     "google": {
+      "clash": "Google",
+      "egern": "Google",
+      "surge": "Google"
+     },
+     "google-gemini": {
+      "clash": "Gemini"
+     },
+     "jinx-ads": {
+      "clash": "AD"
+     },
+     "jinx-cn": {
+      "clash": "DIRECT"
+     },
+     "lan": {
+      "egern": "DIRECT",
+      "surge": "DIRECT"
+     },
+     "microsoft": {
+      "clash": "Microsoft",
+      "egern": "Microsoft",
+      "surge": "Microsoft"
+     },
+     "music.youtube.com": {
+      "clash": "YouTube Music"
+     },
+     "openai": {
+      "clash": "ChatGPT",
+      "egern": "ChatGPT",
+      "surge": "ChatGPT"
+     },
+     "private": {
+      "clash": "DIRECT",
+      "egern": "DIRECT",
+      "surge": "DIRECT"
+     },
+     "spotify": {
+      "clash": "Spotify",
+      "egern": "Spotify",
+      "surge": "Spotify"
+     },
+     "surge-ads": {
+      "egern": "AD",
+      "surge": "REJECT"
+     },
+     "surge-direct": {
+      "egern": "DIRECT",
+      "surge": "DIRECT"
+     },
+     "system": {
+      "surge": "DIRECT"
+     },
+     "systemota": {
+      "egern": "Apple Update",
+      "surge": "Apple Update"
+     },
+     "telegram": {
+      "clash": "Telegram",
+      "egern": "Telegram",
+      "surge": "Telegram"
+     },
+     "twitter": {
+      "clash": "Twitter",
+      "egern": "Twitter",
+      "surge": "Twitter"
+     },
+     "youtube": {
+      "clash": "YouTube",
+      "egern": "YouTube",
+      "surge": "YouTube"
+     },
+     "youtubemusic": {
+      "egern": "YouTube Music",
+      "surge": "YouTube Music"
+     }
+    }
+   },
+   "kernels": {
+    "clash": {
+     "groups": [
+      {
+       "members": [
+        "Smart",
+        "Hong Kong",
+        "Taiwan",
+        "Japan",
+        "Singapore",
+        "United States",
+        "Other Regions"
+       ],
+       "name": "Proxy",
+       "type": "select"
+      },
+      {
+       "members": [
+        "Low Mult.",
+        "Auto",
+        "High Mult."
+       ],
+       "name": "Smart",
+       "type": "fallback"
+      },
+      {
+       "members": [],
+       "name": "Low Mult.",
+       "type": "url-test"
+      },
+      {
+       "members": [],
+       "name": "Auto",
+       "type": "url-test"
+      },
+      {
+       "members": [],
+       "name": "High Mult.",
+       "type": "url-test"
+      },
+      {
+       "members": [
+        "United States",
+        "Taiwan",
+        "Japan",
+        "Singapore"
+       ],
+       "name": "ChatGPT",
+       "type": "select"
+      },
+      {
+       "members": [
+        "United States",
+        "Taiwan",
+        "Japan",
+        "Singapore"
+       ],
+       "name": "Gemini",
+       "type": "select"
+      },
+      {
+       "members": [
+        "Taiwan",
+        "Japan",
+        "Singapore",
+        "United States"
+       ],
+       "name": "Claude",
+       "type": "select"
+      },
+      {
+       "members": [
+        "Smart",
+        "Taiwan",
+        "Japan",
+        "Singapore",
+        "United States"
+       ],
+       "name": "AI",
+       "type": "select"
+      },
+      {
+       "members": [
+        "Smart",
+        "Hong Kong",
+        "Taiwan",
+        "Japan",
+        "Singapore",
+        "United States"
+       ],
+       "name": "YouTube",
+       "type": "select"
+      },
+      {
+       "members": [
+        "Smart",
+        "Hong Kong",
+        "Taiwan",
+        "Japan",
+        "Singapore",
+        "United States"
+       ],
+       "name": "Emby",
+       "type": "select"
+      },
+      {
+       "members": [
+        "Gemini",
+        "Smart",
+        "Hong Kong",
+        "Taiwan",
+        "Japan",
+        "Singapore",
+        "United States"
+       ],
+       "name": "Google",
+       "type": "select"
+      },
+      {
+       "members": [
+        "Smart",
+        "Hong Kong",
+        "Taiwan",
+        "Japan",
+        "Singapore",
+        "United States"
+       ],
+       "name": "Telegram",
+       "type": "select"
+      },
+      {
+       "members": [
+        "United States",
+        "Hong Kong",
+        "Taiwan",
+        "Japan",
+        "Singapore"
+       ],
+       "name": "YouTube Music",
+       "type": "select"
+      },
+      {
+       "members": [
+        "United States",
+        "Hong Kong",
+        "Taiwan",
+        "Japan",
+        "Singapore"
+       ],
+       "name": "Spotify",
+       "type": "select"
+      },
+      {
+       "members": [
+        "Smart",
+        "Hong Kong",
+        "Taiwan",
+        "Japan",
+        "Singapore",
+        "United States"
+       ],
+       "name": "Twitter",
+       "type": "select"
+      },
+      {
+       "members": [
+        "DIRECT",
+        "Proxy"
+       ],
+       "name": "Microsoft",
+       "type": "select"
+      },
+      {
+       "members": [
+        "DIRECT",
+        "REJECT"
+       ],
+       "name": "Apple Update",
+       "type": "select"
+      },
+      {
+       "members": [
+        "REJECT",
+        "DIRECT"
+       ],
+       "name": "AD",
+       "type": "select"
+      },
+      {
+       "members": [],
+       "name": "Hong Kong",
+       "type": "url-test"
+      },
+      {
+       "members": [],
+       "name": "Taiwan",
+       "type": "url-test"
+      },
+      {
+       "members": [],
+       "name": "Japan",
+       "type": "url-test"
+      },
+      {
+       "members": [],
+       "name": "Singapore",
+       "type": "url-test"
+      },
+      {
+       "members": [],
+       "name": "United States",
+       "type": "url-test"
+      },
+      {
+       "members": [],
+       "name": "Other Regions",
+       "type": "url-test"
+      }
+     ],
+     "rules": [
+      {
+       "kind": "RULE-SET",
+       "options": [],
+       "source": "Jinx-CN",
+       "source_norm": "jinx-cn",
+       "target": "DIRECT"
+      },
+      {
+       "kind": "RULE-SET",
+       "options": [],
+       "source": "Jinx-Ads",
+       "source_norm": "jinx-ads",
+       "target": "AD"
+      },
+      {
+       "kind": "RULE-SET",
+       "options": [],
+       "source": "AWAvenue-Ads",
+       "source_norm": "awavenue-ads",
+       "target": "AD"
+      },
+      {
+       "kind": "RULE-SET",
+       "options": [],
+       "source": "apple-update",
+       "source_norm": "apple-update",
+       "target": "Apple Update"
+      },
+      {
+       "kind": "RULE-SET",
+       "options": [],
+       "source": "apple-system",
+       "source_norm": "apple-system",
+       "target": "DIRECT"
+      },
+      {
+       "kind": "RULE-SET",
+       "options": [
+        "no-resolve"
+       ],
+       "source": "geoip-private",
+       "source_norm": "geoip-private",
+       "target": "DIRECT"
+      },
+      {
+       "kind": "RULE-SET",
+       "options": [],
+       "source": "private",
+       "source_norm": "private",
+       "target": "DIRECT"
+      },
+      {
+       "kind": "RULE-SET",
+       "options": [],
+       "source": "openai",
+       "source_norm": "openai",
+       "target": "ChatGPT"
+      },
+      {
+       "kind": "RULE-SET",
+       "options": [],
+       "source": "google-gemini",
+       "source_norm": "google-gemini",
+       "target": "Gemini"
+      },
+      {
+       "kind": "RULE-SET",
+       "options": [],
+       "source": "anthropic",
+       "source_norm": "anthropic",
+       "target": "Claude"
+      },
+      {
+       "kind": "RULE-SET",
+       "options": [],
+       "source": "category-ai-chat-!cn",
+       "source_norm": "category-ai-chat-!cn",
+       "target": "AI"
+      },
+      {
+       "kind": "RULE-SET",
+       "options": [],
+       "source": "AI_Domains",
+       "source_norm": "ai-domains",
+       "target": "AI"
+      },
+      {
+       "kind": "DOMAIN-SUFFIX",
+       "options": [],
+       "source": "music.youtube.com",
+       "source_norm": "music.youtube.com",
+       "target": "YouTube Music"
+      },
+      {
+       "kind": "RULE-SET",
+       "options": [],
+       "source": "github",
+       "source_norm": "github",
+       "target": "Proxy"
+      },
+      {
+       "kind": "RULE-SET",
+       "options": [],
+       "source": "youtube",
+       "source_norm": "youtube",
+       "target": "YouTube"
+      },
+      {
+       "kind": "RULE-SET",
+       "options": [],
+       "source": "emby",
+       "source_norm": "emby",
+       "target": "Emby"
+      },
+      {
+       "kind": "RULE-SET",
+       "options": [],
+       "source": "google",
+       "source_norm": "google",
+       "target": "Google"
+      },
+      {
+       "kind": "RULE-SET",
+       "options": [],
+       "source": "spotify",
+       "source_norm": "spotify",
+       "target": "Spotify"
+      },
+      {
+       "kind": "RULE-SET",
+       "options": [],
+       "source": "twitter",
+       "source_norm": "twitter",
+       "target": "Twitter"
+      },
+      {
+       "kind": "RULE-SET",
+       "options": [],
+       "source": "microsoft",
+       "source_norm": "microsoft",
+       "target": "Microsoft"
+      },
+      {
+       "kind": "RULE-SET",
+       "options": [],
+       "source": "apple-cn",
+       "source_norm": "apple-cn",
+       "target": "DIRECT"
+      },
+      {
+       "kind": "RULE-SET",
+       "options": [],
+       "source": "telegram",
+       "source_norm": "telegram",
+       "target": "Telegram"
+      },
+      {
+       "kind": "RULE-SET",
+       "options": [
+        "no-resolve"
+       ],
+       "source": "geoip-google",
+       "source_norm": "geoip-google",
+       "target": "Google"
+      },
+      {
+       "kind": "RULE-SET",
+       "options": [
+        "no-resolve"
+       ],
+       "source": "geoip-telegram",
+       "source_norm": "geoip-telegram",
+       "target": "Telegram"
+      },
+      {
+       "kind": "RULE-SET",
+       "options": [],
+       "source": "cn",
+       "source_norm": "cn",
+       "target": "DIRECT"
+      },
+      {
+       "kind": "RULE-SET",
+       "options": [
+        "no-resolve"
+       ],
+       "source": "geoip-cn",
+       "source_norm": "geoip-cn",
+       "target": "DIRECT"
+      },
+      {
+       "kind": "MATCH",
+       "options": [],
+       "source": null,
+       "source_norm": null,
+       "target": "Proxy"
+      }
+     ]
+    },
+    "egern": {
+     "groups": [
+      {
+       "members": [
+        "Smart",
+        "Hong Kong",
+        "Taiwan",
+        "Japan",
+        "Singapore",
+        "United States",
+        "Other Regions"
+       ],
+       "name": "Proxy",
+       "type": "select"
+      },
+      {
+       "members": [
+        "Airport"
+       ],
+       "name": "Smart",
+       "type": "smart"
+      },
+      {
+       "members": [
+        "United States",
+        "Taiwan",
+        "Japan",
+        "Singapore"
+       ],
+       "name": "ChatGPT",
+       "type": "select"
+      },
+      {
+       "members": [
+        "United States",
+        "Taiwan",
+        "Japan",
+        "Singapore"
+       ],
+       "name": "Gemini",
+       "type": "select"
+      },
+      {
+       "members": [
+        "Taiwan",
+        "Japan",
+        "Singapore",
+        "United States"
+       ],
+       "name": "Claude",
+       "type": "select"
+      },
+      {
+       "members": [
+        "Smart",
+        "Taiwan",
+        "Japan",
+        "Singapore",
+        "United States"
+       ],
+       "name": "AI",
+       "type": "select"
+      },
+      {
+       "members": [
+        "Smart",
+        "Hong Kong",
+        "Taiwan",
+        "Japan",
+        "Singapore",
+        "United States"
+       ],
+       "name": "YouTube",
+       "type": "select"
+      },
+      {
+       "members": [
+        "Smart",
+        "Hong Kong",
+        "Taiwan",
+        "Japan",
+        "Singapore",
+        "United States"
+       ],
+       "name": "Emby",
+       "type": "select"
+      },
+      {
+       "members": [
+        "Gemini",
+        "Smart",
+        "Hong Kong",
+        "Taiwan",
+        "Japan",
+        "Singapore",
+        "United States"
+       ],
+       "name": "Google",
+       "type": "select"
+      },
+      {
+       "members": [
+        "Smart",
+        "Hong Kong",
+        "Taiwan",
+        "Japan",
+        "Singapore",
+        "United States"
+       ],
+       "name": "Telegram",
+       "type": "select"
+      },
+      {
+       "members": [
+        "United States",
+        "Hong Kong",
+        "Taiwan",
+        "Japan",
+        "Singapore"
+       ],
+       "name": "YouTube Music",
+       "type": "select"
+      },
+      {
+       "members": [
+        "United States",
+        "Hong Kong",
+        "Taiwan",
+        "Japan",
+        "Singapore"
+       ],
+       "name": "Spotify",
+       "type": "select"
+      },
+      {
+       "members": [
+        "Smart",
+        "Hong Kong",
+        "Taiwan",
+        "Japan",
+        "Singapore",
+        "United States"
+       ],
+       "name": "Twitter",
+       "type": "select"
+      },
+      {
+       "members": [],
+       "name": "Airport",
+       "type": "external"
+      },
+      {
+       "members": [
+        "DIRECT",
+        "Proxy"
+       ],
+       "name": "Microsoft",
+       "type": "select"
+      },
+      {
+       "members": [
+        "DIRECT",
+        "REJECT"
+       ],
+       "name": "Apple Update",
+       "type": "select"
+      },
+      {
+       "members": [
+        "REJECT",
+        "DIRECT"
+       ],
+       "name": "AD",
+       "type": "select"
+      },
+      {
+       "members": [
+        "Airport"
+       ],
+       "name": "Hong Kong",
+       "type": "smart"
+      },
+      {
+       "members": [
+        "Airport"
+       ],
+       "name": "Taiwan",
+       "type": "smart"
+      },
+      {
+       "members": [
+        "Airport"
+       ],
+       "name": "Japan",
+       "type": "smart"
+      },
+      {
+       "members": [
+        "Airport"
+       ],
+       "name": "Singapore",
+       "type": "smart"
+      },
+      {
+       "members": [
+        "Airport"
+       ],
+       "name": "United States",
+       "type": "smart"
+      },
+      {
+       "members": [
+        "Airport"
+       ],
+       "name": "Other Regions",
+       "type": "smart"
+      }
+     ],
+     "rules": [
+      {
+       "kind": "rule_set",
+       "options": [],
+       "source": "https://raw.githubusercontent.com/RiverFlowsInUUU/Jinx/main/surge-direct.list",
+       "source_norm": "surge-direct",
+       "target": "DIRECT"
+      },
+      {
+       "kind": "rule_set",
+       "options": [],
+       "source": "https://raw.githubusercontent.com/RiverFlowsInUUU/Jinx/main/surge-ads.list",
+       "source_norm": "surge-ads",
+       "target": "AD"
+      },
+      {
+       "kind": "rule_set",
+       "options": [],
+       "source": "https://raw.githubusercontent.com/TG-Twilight/AWAvenue-Ads-Rule/main/Filters/AWAvenue-Ads-Rule-Surge-RULE-SET.list",
+       "source_norm": "awavenue-ads-rule-surge-rule-set",
+       "target": "AD"
+      },
+      {
+       "kind": "rule_set",
+       "options": [],
+       "source": "https://raw.githubusercontent.com/blackmatrix7/ios_rule_script/master/rule/Surge/SystemOTA/SystemOTA.list",
+       "source_norm": "systemota",
+       "target": "Apple Update"
+      },
+      {
+       "kind": "rule_set",
+       "options": [],
+       "source": "https://raw.githubusercontent.com/RiverFlowsInUUU/self-conf/main/rules/apple_system.list",
+       "source_norm": "apple-system",
+       "target": "DIRECT"
+      },
+      {
+       "kind": "rule_set",
+       "options": [],
+       "source": "https://raw.githubusercontent.com/blackmatrix7/ios_rule_script/master/rule/Surge/Lan/Lan.list",
+       "source_norm": "lan",
+       "target": "DIRECT"
+      },
+      {
+       "kind": "rule_set",
+       "options": [],
+       "source": "https://raw.githubusercontent.com/Loyalsoldier/surge-rules/release/ruleset/private.txt",
+       "source_norm": "private",
+       "target": "DIRECT"
+      },
+      {
+       "kind": "rule_set",
+       "options": [],
+       "source": "https://raw.githubusercontent.com/blackmatrix7/ios_rule_script/master/rule/Surge/OpenAI/OpenAI.list",
+       "source_norm": "openai",
+       "target": "ChatGPT"
+      },
+      {
+       "kind": "rule_set",
+       "options": [],
+       "source": "https://raw.githubusercontent.com/blackmatrix7/ios_rule_script/master/rule/Surge/Gemini/Gemini.list",
+       "source_norm": "gemini",
+       "target": "Gemini"
+      },
+      {
+       "kind": "rule_set",
+       "options": [],
+       "source": "https://raw.githubusercontent.com/blackmatrix7/ios_rule_script/master/rule/Surge/Anthropic/Anthropic.list",
+       "source_norm": "anthropic",
+       "target": "Claude"
+      },
+      {
+       "kind": "rule_set",
+       "options": [],
+       "source": "https://raw.githubusercontent.com/blackmatrix7/ios_rule_script/master/rule/Surge/Claude/Claude.list",
+       "source_norm": "claude",
+       "target": "Claude"
+      },
+      {
+       "kind": "rule_set",
+       "options": [],
+       "source": "https://raw.githubusercontent.com/Repcz/Tool/X/Surge/Rules/AI.list",
+       "source_norm": "ai-domains",
+       "target": "AI"
+      },
+      {
+       "kind": "rule_set",
+       "options": [],
+       "source": "https://raw.githubusercontent.com/RiverFlowsInUUU/self-conf/main/rules/AI.list",
+       "source_norm": "ai-domains",
+       "target": "AI"
+      },
+      {
+       "kind": "rule_set",
+       "options": [],
+       "source": "https://raw.githubusercontent.com/blackmatrix7/ios_rule_script/master/rule/Surge/YouTubeMusic/YouTubeMusic.list",
+       "source_norm": "youtubemusic",
+       "target": "YouTube Music"
+      },
+      {
+       "kind": "rule_set",
+       "options": [],
+       "source": "https://raw.githubusercontent.com/blackmatrix7/ios_rule_script/master/rule/Surge/GitHub/GitHub.list",
+       "source_norm": "github",
+       "target": "Proxy"
+      },
+      {
+       "kind": "rule_set",
+       "options": [],
+       "source": "https://raw.githubusercontent.com/blackmatrix7/ios_rule_script/master/rule/Surge/YouTube/YouTube.list",
+       "source_norm": "youtube",
+       "target": "YouTube"
+      },
+      {
+       "kind": "rule_set",
+       "options": [],
+       "source": "https://raw.githubusercontent.com/RiverFlowsInUUU/self-conf/main/rules/emby.list",
+       "source_norm": "emby",
+       "target": "Emby"
+      },
+      {
+       "kind": "rule_set",
+       "options": [],
+       "source": "https://raw.githubusercontent.com/blackmatrix7/ios_rule_script/master/rule/Surge/Google/Google.list",
+       "source_norm": "google",
+       "target": "Google"
+      },
+      {
+       "kind": "rule_set",
+       "options": [],
+       "source": "https://raw.githubusercontent.com/blackmatrix7/ios_rule_script/master/rule/Surge/Telegram/Telegram.list",
+       "source_norm": "telegram",
+       "target": "Telegram"
+      },
+      {
+       "kind": "rule_set",
+       "options": [],
+       "source": "https://raw.githubusercontent.com/blackmatrix7/ios_rule_script/master/rule/Surge/Spotify/Spotify.list",
+       "source_norm": "spotify",
+       "target": "Spotify"
+      },
+      {
+       "kind": "rule_set",
+       "options": [],
+       "source": "https://raw.githubusercontent.com/blackmatrix7/ios_rule_script/master/rule/Surge/Twitter/Twitter.list",
+       "source_norm": "twitter",
+       "target": "Twitter"
+      },
+      {
+       "kind": "rule_set",
+       "options": [],
+       "source": "https://raw.githubusercontent.com/blackmatrix7/ios_rule_script/master/rule/Surge/Microsoft/Microsoft.list",
+       "source_norm": "microsoft",
+       "target": "Microsoft"
+      },
+      {
+       "kind": "rule_set",
+       "options": [],
+       "source": "https://raw.githubusercontent.com/Loyalsoldier/surge-rules/release/ruleset/apple.txt",
+       "source_norm": "apple",
+       "target": "DIRECT"
+      },
+      {
+       "kind": "rule_set",
+       "options": [],
+       "source": "https://raw.githubusercontent.com/Loyalsoldier/surge-rules/release/ruleset/direct.txt",
+       "source_norm": "direct",
+       "target": "DIRECT"
+      },
+      {
+       "kind": "geoip",
+       "options": [
+        "no_resolve"
+       ],
+       "source": "CN",
+       "source_norm": "cn",
+       "target": "DIRECT"
+      },
+      {
+       "kind": "default",
+       "options": [],
+       "source": null,
+       "source_norm": null,
+       "target": "Proxy"
+      }
+     ]
+    },
+    "surge": {
+     "groups": [
+      {
+       "members": [
+        "Smart",
+        "Hong Kong",
+        "Taiwan",
+        "Japan",
+        "Singapore",
+        "United States",
+        "Other Regions"
+       ],
+       "name": "Proxy",
+       "type": "select"
+      },
+      {
+       "members": [],
+       "name": "Smart",
+       "type": "smart"
+      },
+      {
+       "members": [
+        "United States",
+        "Taiwan",
+        "Japan",
+        "Singapore"
+       ],
+       "name": "ChatGPT",
+       "type": "select"
+      },
+      {
+       "members": [
+        "United States",
+        "Taiwan",
+        "Japan",
+        "Singapore"
+       ],
+       "name": "Gemini",
+       "type": "select"
+      },
+      {
+       "members": [
+        "Taiwan",
+        "Japan",
+        "Singapore",
+        "United States"
+       ],
+       "name": "Claude",
+       "type": "select"
+      },
+      {
+       "members": [
+        "Smart",
+        "Taiwan",
+        "Japan",
+        "Singapore",
+        "United States"
+       ],
+       "name": "AI",
+       "type": "select"
+      },
+      {
+       "members": [
+        "Smart",
+        "Hong Kong",
+        "Taiwan",
+        "Japan",
+        "Singapore",
+        "United States"
+       ],
+       "name": "YouTube",
+       "type": "select"
+      },
+      {
+       "members": [
+        "Smart",
+        "Hong Kong",
+        "Taiwan",
+        "Japan",
+        "Singapore",
+        "United States"
+       ],
+       "name": "Emby",
+       "type": "select"
+      },
+      {
+       "members": [
+        "Gemini",
+        "Smart",
+        "Hong Kong",
+        "Taiwan",
+        "Japan",
+        "Singapore",
+        "United States"
+       ],
+       "name": "Google",
+       "type": "select"
+      },
+      {
+       "members": [
+        "Smart",
+        "Hong Kong",
+        "Taiwan",
+        "Japan",
+        "Singapore",
+        "United States"
+       ],
+       "name": "Telegram",
+       "type": "select"
+      },
+      {
+       "members": [
+        "United States",
+        "Hong Kong",
+        "Taiwan",
+        "Japan",
+        "Singapore"
+       ],
+       "name": "YouTube Music",
+       "type": "select"
+      },
+      {
+       "members": [
+        "United States",
+        "Hong Kong",
+        "Taiwan",
+        "Japan",
+        "Singapore"
+       ],
+       "name": "Spotify",
+       "type": "select"
+      },
+      {
+       "members": [
+        "Smart",
+        "Hong Kong",
+        "Taiwan",
+        "Japan",
+        "Singapore",
+        "United States"
+       ],
+       "name": "Twitter",
+       "type": "select"
+      },
+      {
+       "members": [],
+       "name": "Airport",
+       "type": "select"
+      },
+      {
+       "members": [
+        "DIRECT",
+        "Proxy"
+       ],
+       "name": "Microsoft",
+       "type": "select"
+      },
+      {
+       "members": [
+        "DIRECT",
+        "REJECT"
+       ],
+       "name": "Apple Update",
+       "type": "select"
+      },
+      {
+       "members": [
+        "REJECT",
+        "DIRECT"
+       ],
+       "name": "AD",
+       "type": "select"
+      },
+      {
+       "members": [],
+       "name": "Hong Kong",
+       "type": "smart"
+      },
+      {
+       "members": [],
+       "name": "Taiwan",
+       "type": "smart"
+      },
+      {
+       "members": [],
+       "name": "Japan",
+       "type": "smart"
+      },
+      {
+       "members": [],
+       "name": "Singapore",
+       "type": "smart"
+      },
+      {
+       "members": [],
+       "name": "United States",
+       "type": "smart"
+      },
+      {
+       "members": [],
+       "name": "Other Regions",
+       "type": "smart"
+      }
+     ],
+     "rules": [
+      {
+       "kind": "RULE-SET",
+       "options": [
+        "update-interval=604800"
+       ],
+       "source": "https://raw.githubusercontent.com/RiverFlowsInUUU/Jinx/main/surge-direct.list",
+       "source_norm": "surge-direct",
+       "target": "DIRECT"
+      },
+      {
+       "kind": "RULE-SET",
+       "options": [
+        "update-interval=604800",
+        "pre-matching",
+        "extended-matching"
+       ],
+       "source": "https://raw.githubusercontent.com/RiverFlowsInUUU/Jinx/main/surge-ads.list",
+       "source_norm": "surge-ads",
+       "target": "REJECT"
+      },
+      {
+       "kind": "RULE-SET",
+       "options": [
+        "update-interval=604800",
+        "pre-matching",
+        "extended-matching"
+       ],
+       "source": "https://raw.githubusercontent.com/TG-Twilight/AWAvenue-Ads-Rule/main/Filters/AWAvenue-Ads-Rule-Surge-RULE-SET.list",
+       "source_norm": "awavenue-ads-rule-surge-rule-set",
+       "target": "REJECT"
+      },
+      {
+       "kind": "RULE-SET",
+       "options": [
+        "update-interval=604800"
+       ],
+       "source": "https://raw.githubusercontent.com/blackmatrix7/ios_rule_script/master/rule/Surge/SystemOTA/SystemOTA.list",
+       "source_norm": "systemota",
+       "target": "Apple Update"
+      },
+      {
+       "kind": "RULE-SET",
+       "options": [],
+       "source": "SYSTEM",
+       "source_norm": "system",
+       "target": "DIRECT"
+      },
+      {
+       "kind": "RULE-SET",
+       "options": [
+        "no-resolve"
+       ],
+       "source": "LAN",
+       "source_norm": "lan",
+       "target": "DIRECT"
+      },
+      {
+       "kind": "RULE-SET",
+       "options": [
+        "update-interval=604800"
+       ],
+       "source": "https://raw.githubusercontent.com/Loyalsoldier/surge-rules/release/ruleset/private.txt",
+       "source_norm": "private",
+       "target": "DIRECT"
+      },
+      {
+       "kind": "RULE-SET",
+       "options": [
+        "update-interval=604800",
+        "no-resolve"
+       ],
+       "source": "https://raw.githubusercontent.com/blackmatrix7/ios_rule_script/master/rule/Surge/OpenAI/OpenAI.list",
+       "source_norm": "openai",
+       "target": "ChatGPT"
+      },
+      {
+       "kind": "RULE-SET",
+       "options": [
+        "update-interval=604800"
+       ],
+       "source": "https://raw.githubusercontent.com/blackmatrix7/ios_rule_script/master/rule/Surge/Gemini/Gemini.list",
+       "source_norm": "gemini",
+       "target": "Gemini"
+      },
+      {
+       "kind": "RULE-SET",
+       "options": [
+        "update-interval=604800"
+       ],
+       "source": "https://raw.githubusercontent.com/blackmatrix7/ios_rule_script/master/rule/Surge/Anthropic/Anthropic.list",
+       "source_norm": "anthropic",
+       "target": "Claude"
+      },
+      {
+       "kind": "RULE-SET",
+       "options": [
+        "update-interval=604800"
+       ],
+       "source": "https://raw.githubusercontent.com/blackmatrix7/ios_rule_script/master/rule/Surge/Claude/Claude.list",
+       "source_norm": "claude",
+       "target": "Claude"
+      },
+      {
+       "kind": "RULE-SET",
+       "options": [
+        "update-interval=604800"
+       ],
+       "source": "https://raw.githubusercontent.com/Repcz/Tool/X/Surge/Rules/AI.list",
+       "source_norm": "ai-domains",
+       "target": "AI"
+      },
+      {
+       "kind": "RULE-SET",
+       "options": [
+        "update-interval=604800"
+       ],
+       "source": "https://raw.githubusercontent.com/RiverFlowsInUUU/self-conf/main/rules/AI.list",
+       "source_norm": "ai-domains",
+       "target": "AI"
+      },
+      {
+       "kind": "RULE-SET",
+       "options": [
+        "update-interval=604800"
+       ],
+       "source": "https://raw.githubusercontent.com/blackmatrix7/ios_rule_script/master/rule/Surge/YouTubeMusic/YouTubeMusic.list",
+       "source_norm": "youtubemusic",
+       "target": "YouTube Music"
+      },
+      {
+       "kind": "RULE-SET",
+       "options": [
+        "update-interval=604800"
+       ],
+       "source": "https://raw.githubusercontent.com/blackmatrix7/ios_rule_script/master/rule/Surge/GitHub/GitHub.list",
+       "source_norm": "github",
+       "target": "Proxy"
+      },
+      {
+       "kind": "RULE-SET",
+       "options": [
+        "update-interval=604800",
+        "no-resolve"
+       ],
+       "source": "https://raw.githubusercontent.com/blackmatrix7/ios_rule_script/master/rule/Surge/YouTube/YouTube.list",
+       "source_norm": "youtube",
+       "target": "YouTube"
+      },
+      {
+       "kind": "RULE-SET",
+       "options": [
+        "update-interval=604800"
+       ],
+       "source": "https://raw.githubusercontent.com/RiverFlowsInUUU/self-conf/main/rules/emby.list",
+       "source_norm": "emby",
+       "target": "Emby"
+      },
+      {
+       "kind": "RULE-SET",
+       "options": [
+        "update-interval=604800",
+        "no-resolve"
+       ],
+       "source": "https://raw.githubusercontent.com/blackmatrix7/ios_rule_script/master/rule/Surge/Google/Google.list",
+       "source_norm": "google",
+       "target": "Google"
+      },
+      {
+       "kind": "RULE-SET",
+       "options": [
+        "update-interval=604800",
+        "no-resolve"
+       ],
+       "source": "https://raw.githubusercontent.com/blackmatrix7/ios_rule_script/master/rule/Surge/Telegram/Telegram.list",
+       "source_norm": "telegram",
+       "target": "Telegram"
+      },
+      {
+       "kind": "RULE-SET",
+       "options": [
+        "update-interval=604800",
+        "no-resolve"
+       ],
+       "source": "https://raw.githubusercontent.com/blackmatrix7/ios_rule_script/master/rule/Surge/Spotify/Spotify.list",
+       "source_norm": "spotify",
+       "target": "Spotify"
+      },
+      {
+       "kind": "RULE-SET",
+       "options": [
+        "update-interval=604800",
+        "no-resolve"
+       ],
+       "source": "https://raw.githubusercontent.com/blackmatrix7/ios_rule_script/master/rule/Surge/Twitter/Twitter.list",
+       "source_norm": "twitter",
+       "target": "Twitter"
+      },
+      {
+       "kind": "RULE-SET",
+       "options": [
+        "update-interval=604800"
+       ],
+       "source": "https://raw.githubusercontent.com/blackmatrix7/ios_rule_script/master/rule/Surge/Microsoft/Microsoft.list",
+       "source_norm": "microsoft",
+       "target": "Microsoft"
+      },
+      {
+       "kind": "RULE-SET",
+       "options": [
+        "update-interval=604800"
+       ],
+       "source": "https://raw.githubusercontent.com/Loyalsoldier/surge-rules/release/ruleset/apple.txt",
+       "source_norm": "apple",
+       "target": "DIRECT"
+      },
+      {
+       "kind": "RULE-SET",
+       "options": [
+        "update-interval=604800"
+       ],
+       "source": "https://raw.githubusercontent.com/Loyalsoldier/surge-rules/release/ruleset/direct.txt",
+       "source_norm": "direct",
+       "target": "DIRECT"
+      },
+      {
+       "kind": "GEOIP",
+       "options": [
+        "no-resolve"
+       ],
+       "source": "CN",
+       "source_norm": "cn",
+       "target": "DIRECT"
+      },
+      {
+       "kind": "FINAL",
+       "options": [
+        "dns-failed"
+       ],
+       "source": null,
+       "source_norm": null,
+       "target": "Proxy"
+      }
+     ]
+    }
+   },
+   "paths": {
+    "clash": "clash\\profiles\\routing.yaml",
+    "egern": "egern\\profiles\\routing.yaml",
+    "surge": "surge\\profiles\\routing.conf"
+   }
+  }
+ },
+ "schema": "self-conf.intent/v1"
+}

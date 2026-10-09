@@ -23,6 +23,8 @@ python self-conf-skills/gates/verify_all.py --index  # 列闸门清单（现抓�
 python self-conf-skills/run/make_min.py --apply              # 改完完整版后同步 .min
 python self-conf-skills/run/clash/build_profiles.py          # 改完 my_clash*.js 后重生成 mihomo profile
 python self-conf-skills/run/clash/build_rules.py             # 改完 rules/*.list 后重生成 .yaml
+python self-conf-skills/run/build_ir.py                      # 改完三内核任一配置后重生成路由意图 IR（intent.json）
+python self-conf-skills/run/routing_evolution.py             # 分流意图 git 演变：按需跑，输出机读 JSON（谁加了/删了/改了去向）
 python self-conf-skills/run/repo_state.py                    # 一屏现状：版本 / Release / CI
 ```
 
@@ -45,7 +47,8 @@ python self-conf-skills/run/repo_state.py                    # 一屏现状：�
 **🚫 从不**
 - 手工编辑生成物：`rules/*.yaml`（改 `rules/*.list`）、
   `clash/profiles/*.yaml`（改 `clash/override/my_clash*.js`）、`*.min.*`（跑 `make_min.py --apply`）、
-  **`rules/AI.list`**（改 `self-conf-skills/run/ai_sources/` 再跑 `ai_domains_build.py`）
+  **`rules/AI.list`**（改 `self-conf-skills/run/ai_sources/` 再跑 `ai_domains_build.py`）、
+  **`self-conf-skills/references/intent.json`**（改三内核配置后跑 `build_ir.py`）
 - 为了「让门禁变绿」而改判据
 - 把文档里写的数字当权威（组数/条数一律现抓）
 - **把三内核「对齐」** —— 机制不同，看起来的不一致常是刻意的
@@ -69,6 +72,7 @@ surge|egern/profiles/*.conf|yaml   ──make_min.py──▶        *.min.*
 clash/override/my_clash*.js        ──build_profiles.py──▶  clash/profiles/*.yaml + *.min.yaml
 rules/*.list                       ──build_rules.py──▶     rules/*.yaml
 self-conf-skills/run/ai_sources/*  ──ai_domains_build.py──▶ rules/AI.list
+三内核现役 profiles（只读）          ──build_ir.py──▶        references/intent.json（统一意图 IR，给 AI 读）
 ```
 
 ⚠️ **`rules/AI.list` 也是生成物**（由 `ai_sources/` 里 10 个来源合并而成）——

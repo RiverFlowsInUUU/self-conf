@@ -584,6 +584,10 @@ def build_gates():
     # ci.yml 里每个 python 脚本调用必须能归类（runner / 重复跑·已登记 / CI-only·已登记）
     # 且脚本必须存在，否则判负。详见该脚本 docstring 与 gates.md §16.4。
     add('CI↔verify_all 对账', [PY, 'self-conf-skills/gates/check_ci_sync.py'])
+    # 路由意图 IR 新鲜度：references/intent.json 是三内核分流的统一中间表示（给 AI 读的
+    # 规范化视图）。它由 build_ir.py 从现役配置抽出 —— 改了配置就必须重跑，否则 IR 会
+    # 骗后来的 AI。本闸门重算一遍并与落盘的 intent.json 对账，不一致则判负。
+    add('路由意图 IR 新鲜', [PY, 'self-conf-skills/run/build_ir.py', '--check'])
 
     # ── ② 三内核审计（每内核按现役文件各一道；脚本支持多文件）────────
     # 每项 = (闸门名, 脚本相对路径模板, 参数模板)
