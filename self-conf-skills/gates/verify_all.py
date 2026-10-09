@@ -568,6 +568,13 @@ def build_gates():
     #    两者只在「空白落位」上分岔，而那不影响配置语义；但保留检测（见该脚本）。
     add('Release 断言', [PY, 'self-conf-skills/gates/check_releases.py'],
         {'GITHUB_TOKEN': _token() or ''})
+    # 判别力回归：注错样例常驻跑，守住「闸门改坏了还能全绿」这个盲区。
+    # 现役配置永远是好的，所以一道已失效的判据会一直显示绿 —— 只有把
+    # 「喂坏配置必须判负」做成常驻回归才能守住。目前覆盖 4 道已实测判负
+    # 的闸门（check_structure / check_min_pair / check_script_sync /
+    # build_rules --check）；地区组判别力本身已有独立 fixture 回归。
+    # 详见该脚本 docstring 与 gates.md §9.3。
+    add('负样例回归', [PY, 'self-conf-skills/gates/check_negative_fixtures.py'])
 
     # ── ② 三内核审计（每内核按现役文件各一道；脚本支持多文件）────────
     # 每项 = (闸门名, 脚本相对路径模板, 参数模板)

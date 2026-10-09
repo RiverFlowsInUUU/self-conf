@@ -104,6 +104,11 @@ python self-conf-skills/gates/verify_all.py
 | clash 结构 / 分流覆盖 | 改组名 / 改 MATCH |
 | AI 入口唯一性 | 重建 `GEMINI.md` / `CLAUDE.md` / `.cursorrules`（工具专属入口会被优先读取、屏蔽真源）|
 
+> 🔁 **2026-10-09 起部分自动化**：闸门「负样例回归」（`check_negative_fixtures.py`）把上表中
+> `clash 结构`、`min-pair 一致`、`clash 脚本/静态对拍`、`.min 漂移`（build_rules --check）
+> 四类注错做进了**常驻 CI** —— 每次 verify_all 都在临时副本上重放这些注错、断言判负，
+> 不再靠人记得跑。其余行仍是**人工实测过、未常驻**。
+
 #### 已发现并修好的假闸门
 
 - **规则集刷新周期（Surge / Egern）**：默认不判负，要 `--strict`。
@@ -1196,19 +1201,20 @@ python self-conf-skills/gates/clash/check_script_sync.py "$SB"   # 期望 0
 
 | 门禁 | 判负样例已实测 | 有自动化回归 |
 |:-----|:--------------|:------------|
-| `check_structure.py` | ✅ 10 个，逐个 exit 1 + 定位标记 | ❌ 无（人工跑）|
-| `check_min_pair.py` | ✅ 2 个 | ❌ 无 |
-| `check_script_sync.py` | ⚠️ 1 个，能判负但无诊断（§6.2）| ❌ 无 |
-| `build_rules.py --check` | ✅ 1 个 | ❌ 无 |
+| `check_structure.py` | ✅ 10 个，逐个 exit 1 + 定位标记 | ✅ 有（负样例回归 · 1 例）|
+| `check_min_pair.py` | ✅ 2 个 | ✅ 有（负样例回归 · 1 例）|
+| `check_script_sync.py` | ⚠️ 1 个，能判负但无诊断（§6.2）| ✅ 有（负样例回归 · 1 例）|
+| `build_rules.py --check` | ✅ 1 个 | ✅ 有（负样例回归 · 1 例）|
 | `check_remote_urls.py` | ⚠️ 联网依赖，未逐个固定 | ❌ 无 |
-| `check_region_filters.py`（跨内核）| ✅ | ✅ **有**（唯一定期跑判负 fixture 的闸门）|
+| `check_region_filters.py`（跨内核）| ✅ | ✅ **有**（独立 fixture，逐例断言退出码+标记）|
 
-> 📌 跨内核的 `check_region_filters.py` 是**唯一**把「判负 fixture」做进闸门的闸门，
-> 且它对每个判负用例断言**退出码 + 输出标记**两条。mihomo 侧**还没有对应的自动化回归** ——
-> 上表前五行的"已实测"是**本次文档编写时人工跑出来的**，不是常驻 CI 的保证。
+> 📌 闸门「负样例回归」（`check_negative_fixtures.py`）把上面 4 道（structure / min_pair /
+> script_sync / build_rules --check）做进了**常驻 CI**：临时副本注错 → 断言「退出码 = 1 且输出
+> 含预期标记」两条，覆盖「闸门改坏了还能全绿」这个盲区。地区组判别力则有**自己独立**的 fixture 回归。
 >
-> **已知缺口**：mihomo 侧门禁的判别力靠"人记得跑"，不是靠机器守住（见 §16.4）。
-> 一旦出现「门禁逻辑改坏、判据不再判负、现役配置仍全绿」，本仓**没有闸门会发现**。
+> **仍缺**：`check_remote_urls.py` 靠联网、判据未逐个固定；其余审计类闸门（DNS / 分流覆盖等）
+> 的判别力仍靠人记得跑（见 §16.4）。
+> 一旦出现「门禁逻辑改坏、判据不再判负、现役配置仍全绿」，负样例回归这道会先发现。
 
 #### 10 · 已知豁免项（豁免 ≠ 通过）
 
@@ -1458,7 +1464,7 @@ python self-conf-skills/gates/clash/check_remote_urls.py
 
 | # | 缺口 | 触发修补的条件 |
 |:-:|:-----|:---------------|
-| 1 | mihomo 侧**其余**门禁没有常驻的判负 fixture 回归（判别力靠人记得跑）| 出现「判据改坏、不再判负、现役仍全绿」时。注：地区组那块已有 fixture（闸门「地区组判别力·mihomo」）|
+| 1 | **其余**审计类门禁（DNS / 分流覆盖 / 刷新周期 等）没有常驻的判负 fixture 回归（判别力靠人记得跑）| 出现「判据改坏、不再判负、现役仍全绿」时。注：structure / min_pair / script_sync / build_rules 已由闸门「负样例回归」守住，地区组那块已有独立 fixture |
 | 2 | **clash 侧没有 `.min` 生成器**（`make_min.py` 只有 surge / egern 两族）⇒ `.min.yaml` 靠手工同步 + 对拍兜底 | 出现第一次「手工同步漏改、对拍才发现」时；修法是给 `make_min.py` 加一族 clash |
 | ~~3~~ | ~~`_default_root()` 有 6 份拷贝~~ | ✅ **已消（2026-10-08）** —— 收敛为 `lib/_clash_common.py` 的**唯一实现** `default_root()`；6 处改为调用它。原来 3 份是**退化变体**（无 CWD 优先），在 CI 上会算错目录 |
 | 4 | **「一天一版」无机器判据** —— 改革删掉归档后，V7 一并删除。现在它靠 §6.1 的纪律，**没有闸门守** | 出现真的「同一天升了两个号」且造成困扰时 |

@@ -2024,12 +2024,13 @@ python self-conf-skills/gates/clash/check_script_sync.py "$SB"   # 期望 0
 | `check_remote_urls.py` | ⚠️ 联网依赖，未逐个固定 | ❌ 无 |
 | **`check_region_filters.py`（跨内核）** | ✅ | ✅ **有** —— 唯一定期跑判负 fixture 的闸门 |
 
-> 📌 跨内核的 `check_region_filters.py` 是**唯一**把「判负 fixture」做进总入口的闸门，
-> 且它对每个判负用例断言**退出码 + 输出标记**两条。
-> **mihomo 侧还没有对应的自动化回归** —— 上表前五行的"已实测"是文档编写时
-> **人工跑出来的**，不是常驻 CI 的保证。
+> 📌 闸门「负样例回归」（`self-conf-skills/gates/check_negative_fixtures.py`）把
+> `check_structure` / `check_min_pair` / `check_script_sync` / `build_rules --check`
+> 四道做进了**常驻 CI**：临时副本注错 → 断言「退出码 = 1 且输出含预期标记」两条。
+> 地区组判别力则有**自己独立**的 fixture 回归。
 >
-> **这是已知挂账**：mihomo 侧门禁的判别力目前靠"人记得跑"，不是靠机器守住。
+> **仍缺（挂账）**：审计类闸门（DNS / 分流覆盖 / 刷新周期 等）与 `check_remote_urls`
+> 的判别力目前仍靠"人记得跑"，不是靠机器守住。
 
 #### 判据固化在哪
 
