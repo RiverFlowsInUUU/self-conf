@@ -157,8 +157,38 @@ def plan(root):
             "notes": notes, "since": since, "assets": assets}
 
 
-def release_body(p):
+def notes_file_path(root, tag):
+    """面向用户的发布说明文件：`releases/<tag>.md`。"""
+    return os.path.join(root, "releases", "%s.md" % tag)
+
+
+def _human_notes(root, tag):
+    """读人工维护的发布说明；没有则返回 None（调用方决定降级还是报错）。
+
+    ⚠️ 为什么要这个（2026-10-10 事故）：
+        原先说明**只**从 commit subject 自动汇总 ⇒ 发出来的 Release 是
+        「Release 断言新增 R6」「路径统一 as_posix()」这类**内部工程语言**，
+        与往日 Release 的形态（`# …更新日志` 标题、`## 懒人版变更 / ## 分流版变更`
+        /`## 适用版本` 分列、面向用户描述行为影响）**完全不符**。
+        实测：v2026-10-10 首发即被用户指出「充满内部工程师自说自话」。
+        ⇒ 说明必须有**人工把关的入口**；自动汇总降级为「提醒」，不再直接当正文。
+    """
+    p = notes_file_path(root, tag)
+    if os.path.isfile(p):
+        with open(p, encoding="utf-8") as fh:
+            return fh.read().strip()
+    return None
+
+
+def release_body(p, human=None):
+    """正文 = 人工说明（首选）；缺失时降级为 commit 汇总 + 显式警告。"""
+    if human:
+        return human
     lines = ["# %s" % " / ".join("%s %s" % (FAM_CN[f], p["versions"][f]) for f in FAMS)]
+    lines.append("")
+    lines.append("> ⚠️ 本说明由 commit 自动汇总，**未经用户向改写** —— "
+                 "发布前请人工撰写 `%s`。"
+                 % os.path.relpath(notes_file_path(repo_root(), p["tag"])))
     lines.append("")
     if p["since"]:
         lines.append("> 自上一版（`%s`）以来的变更。" % p["since"])
@@ -232,7 +262,8 @@ def _asset_stale(asset, path):
 
 
 def apply(p, token):
-    body, title = release_body(p), release_title(p)
+    body = release_body(p, _human_notes(repo_root(), p["tag"]))
+    title = release_title(p)
     ex = {r["tag_name"]: r for r in existing_releases(token)}
     rel = ex.get(p["tag"])
     if rel:
@@ -279,12 +310,16 @@ def main():
     args = ap.parse_args()
 
     p = plan(repo_root())
+    human = _human_notes(repo_root(), p["tag"])
     print("tag      %s" % p["tag"])
     print("版本     %s" % " · ".join("%s %s" % (FAM_CN[f], p["versions"][f]) for f in FAMS))
     print("自       %s" % (p["since"] or "（首个版本）"))
     print("资产     %d 件" % len(p["assets"]))
+    print("说明     %s" % ("人工撰写：%s" % os.path.relpath(
+        notes_file_path(repo_root(), p["tag"]))
+        if human else "⚠️ 未撰写 —— 将降级为 commit 汇总（内部语言，不合适直接发布）"))
     print("\n──── 说明预览 ────")
-    print(release_body(p))
+    print(release_body(p, human))
 
     if not args.apply:
         print("\n（计划模式：一个字都没发。加 --apply 才发布）")
@@ -292,6 +327,11 @@ def main():
     if not args.token:
         print("❌ --apply 需要 GITHUB_TOKEN")
         return 2
+    if not human:
+        # 不硬拦：允许「确实没有面向用户的变更」时发版，但必须显式确认。
+        # 硬拦会让「只升了内部判据」的日子发不出 Release，反而逼人绕过流程。
+        print("⚠️ 未找到 releases/%s.md —— 正文将是 commit 汇总。"
+              "若本次有用户可见的变更，请先撰写该文件。" % p["tag"])
     return apply(p, args.token)
 
 

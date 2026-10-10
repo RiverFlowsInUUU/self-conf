@@ -1027,27 +1027,50 @@ python self-conf-skills/gates/clash/check_structure.py
 
 #### 标题与正文模板
 
-标题 = 分类 emoji + 日期 + 当日主题。正文层级（**H1 更新日志**标题永远置顶）：
+**说明文件**：正文写在 `releases/<tag>.md`（如 `releases/v2026-10-10.md`），
+发布时由 `release_publish.py` 读入。人工撰写，不手抄进脚本。
+
+⚠️ **正文是写给「用配置的人」看的，不是写给维护者看的**（2026-10-10 事故）：
+`release_publish.py` 原有的「从 commit subject 自动汇总」会在正文里塞满
+`Release 断言新增 R6`、`路径统一 as_posix()` 这类**内部工程语言**，
+与往日 Release 形态完全不符。实测首发即被指出。
+⇒ 现在：**人工说明是首选**；没有该文件时降级为 commit 汇总**并在正文顶部打出警告**
+（不硬拦 —— 「只改了内部判据」的日子确实没有面向用户的变更）。
+
+**必须避免的词**（出现即视为写错）：判据/闸门编号（`R6` / `P1` / `V5`）、脚本名
+（`verify_all` / `build_ir`）、函数或语言构造（`as_posix()`）、`commit` / `CI` /
+`profile` 这类维护者词汇。要写的是**用户会遇到什么、这次改完他会看到什么不同**。
+
+**结构**（H1 带「更新日志」四个字，永远是第一行）：
 
 ```markdown
-🛡️ 2026-10-07 · 三内核并列与 DNS 防泄露统一      ← Release 标题
+# 懒人版 v1.0.0 → v1.0.1 更新日志        ← H1：产品线 + 版本变化 + 「更新日志」
+                                          （只有单边有变更时，也可写 `# 分流版 v3.5 更新日志`）
 
+> 本次仅懒人版有变更，分流版无变化。      ← 导语：一句话说清本次范围
 
-> 本次两版同步，变更一致。
+## 懒人版变更                             ← 分列各产品线的变更
 
-### 共同变更
+- **v1.0.1** 修复 Android 上 Google Play 无法更新、下载应用的问题。此前……被国内直连
+  域名清单接走，导致应用更新与下载卡住；现这两类域名改由代理访问。若你此前遇到过
+  「Play 商店能打开、但应用一直转圈不下载」，本版即可解决。
 
-#### 1. 关闭 IPv6
-- Surge：`ipv6 = false`
-- Egern：`ipv6: false`
-- mihomo：顶层 `ipv6` + `dns.ipv6` 两处都关
-- 影响：不再返回 AAAA 记录，双栈站点自动回落 IPv4；三内核行为对齐。
+## 适用版本
 
-### 适用版本
+- 懒人版 v1.0.1
 
-- 分流版 v4.0.5
-- 懒人版 v2.0.5
+- 分流版 v1.0.0
+
+<下载徽章区>                               ← 脚本生成，人工说明里不必写
 ```
+
+- **每条以版本号开头**（`- **vX.Y.Z** …`），便于读者对号入座。
+- 讲**行为与影响**：分流结果变没变、用户该做什么、什么情况下会遇到。
+- 变化不大时**明说**「分流行为无变化」。
+- 有共同变更时加 `## 共同变更`；条目多时可加 `### 1. <主题>` 小节（见 `v2026-10-07`）。
+- **单边内核日如实注明**，不硬凑。
+
+> 参考样本：远端 `v2026-10-07`（共同变更 + 分列 + 逐条版本号）与 `v2026-10-08`（首次发布）。
 
 ### 4 · 谁在守这些规矩
 
@@ -1057,6 +1080,12 @@ python self-conf-skills/gates/clash/check_structure.py
 | 三内核版本同号 | `check_min_pair.py`（X 判据）+ `clash/check_version_header.py`（V5） |
 | 徽章承诺的组数 / 规则数与实际一致 | `check_badges.py` |
 | 线上 Release 与当前版本一致 | `check_releases.py`（R1–R5） |
+| HEAD 的改动已被发出去（防漏发版） | `check_releases.py`（R6a / R6b，2026-10-10 新增） |
+
+⚠️ **说明文件的格式没有机器判据** —— 「面向用户」是好坏判断，不是是非判断，
+写成判据只会退化成关键词黑名单。**靠发布前人工过一遍〈标题与正文模板〉的禁忌词清单。**
+（2026-10-10 事故的教训：`R1–R5` 齐全并不能保证正文能看，因为判据只管
+「版本号对不对」，管不了「说的是不是人话」。）
 
 **没有豁免项。** 全套闸门全部对现役判，不存在「已登记的跳过」。
 （改革前有 `SKIP_V7` / `STRICT_ARCHIVE` 两个逃生门 —— 它们只服务于已删除的归档机制，
@@ -1086,14 +1115,21 @@ python self-conf-skills/gates/clash/check_structure.py
 
 ```bash
 python self-conf-skills/run/repo_state.py                      # ① 看清现状（版本 / Release / CI）
-python self-conf-skills/gates/verify_all.py                        # ② 门禁全绿
-python self-conf-skills/run/release_publish.py                 # ③ 计划模式：预览说明，一个字不发
-python self-conf-skills/run/release_publish.py --apply         # ④ 真发（需 GITHUB_TOKEN）
+python self-conf-skills/gates/verify_all.py                    # ② 门禁全绿
+#  ③ 撰写 releases/<tag>.md —— 面向用户的更新日志（格式见〈标题与正文模板〉，**不可跳过**）
+python self-conf-skills/run/release_publish.py                 # ④ 计划模式：预览，一个字不发
+python self-conf-skills/run/release_publish.py --apply         # ⑤ 真发（需 GITHUB_TOKEN）
 ```
 
-**说明从 commit 自动汇总**（自上一个 tag 以来的 subject，过滤 chore/ci/style/test/refactor）
-—— 不再有手写的发布说明表，因此不可能与代码漂移。
-⇒ 想让某条变更出现在 Release 里，**把它写进 commit subject**。
+**说明以「人工撰写的 `releases/<tag>.md`」为准**（`## 更新日志` 那套格式，见〈标题与正文模板〉）。
+标题由脚本生成（`📱 日期 · 当日主题`），资产与下载区由脚本生成。
+
+⚠️ **不要拿 commit 汇总当正文**（2026-10-10 事故）：自动汇总只是**降级兜底** ——
+它产出的是 `Release 断言新增 R6` 这类内部语言，读者是用户、不是维护者。
+脚本找不到说明文件时会**在正文顶部打警告**，看到警告就说明第 ③ 步被跳过了。
+（历史：2026-10-08 改革曾把说明改为「纯 commit 自动汇总」以求「不可能漂移」；
+2026-10-10 实测证明它牺牲了可读性 —— 漂移问题应当靠「说明书不与代码同步」来避免，
+而不是靠「让机器替人说话」。）
 
 tag = `vYYYY-MM-DD`（发布日）。同一天重复 `--apply` 是幂等的（回写同一张 + 对账资产）。
 
