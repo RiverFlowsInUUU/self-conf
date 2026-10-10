@@ -1,4 +1,4 @@
-#! version=lazy_v1.0.0
+#! version=lazy_v1.0.1
 ipv6: false
 proxy-providers:
   Airport:
