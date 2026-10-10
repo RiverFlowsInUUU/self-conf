@@ -381,6 +381,19 @@ allNodes[ALL_KEY] = true;
 
 > 🧠 这是**模板专属**结构，脚本侧没有。分流版才有（`lazy` 的 `Proxy` 是单组 `url-test`）。
 
+> 🚫 **这是刻意的设计差异，不是漂移，不要去"对齐"。**
+> 「静态模板 `Smart` = 三档子组」vs「覆写脚本 `Smart` = 单组 fallback」是**机制决定的**：
+> 脚本在订阅加载时只执行一次、生成期看不到 provider 里的节点名，做不到按倍率分档。
+> 门禁侧把它登记在 `gates/clash/check_script_sync.py` 的 `EXPECTED_DIFF` 白名单里
+> —— 该判据打印 `~ 已知差异` 提醒但**不判负**。看到这条提醒属**预期**，不是待修项。
+> （2026-10-10：曾有审查把此差异当缺陷上报，本条陈述即为防止重复误判而写。）
+>
+> ⚠️ 另注：脚本侧 `Smart.proxies` 只从**内联 `proxies`** 计算（见 §7.2 的
+> `sortedByRate` 说明）。若订阅只带 `proxy-providers` 而无内联节点，
+> `smartOrder` 为空 ⇒ 退化为 `["DIRECT"]`。这是脚本侧的**已知边界**，
+> 由 `references/profiles/clash.md` §6.2 的 `HAS_PROVIDERS` 说明覆盖：
+> 地区组会用 `include-all` 拿到 provider 节点，但 `Smart` 的**排序**能力仅限内联节点。
+
 #### 7.1 结构
 
 ```
@@ -496,11 +509,13 @@ AD   : select,   proxies: [REJECT]                                 # 单成员�
 - name: Hong Kong
   type: url-test
   include-all: true
-  filter: '(?=.*(港|HK|(?i)Hong))^((?!(台|日|韩|新|美)).)*$'
+  filter: '(?i)(?=.*(香港|港|HK|Hong))^((?!(台|日|韩|新|美)).)*$'
   url: https://www.gstatic.com/generate_204
   interval: 300
   tolerance: 50
 ```
+
+> `(?i)` 必须写在**最前面** —— 它只作用于「定义点之后」的部分，详见 §8.4。
 
 两条断言叠在一起：
 
@@ -518,7 +533,51 @@ AD   : select,   proxies: [REJECT]                                 # 单成员�
 > mihomo 侧**已有**这个比对器（`self-conf-skills/run/clash/audit_region_filters.py`，2026-10-07 补）——
 > 改地区正则时两侧各自六处，由它判一致，见 §18.2。
 
-#### 8.4 `hidden: true` 只用于三档子组
+#### 8.4 `(?i)` 只作用于「它之后」的部分 —— 位置错了会静默漏收 / 双落组
+
+**这是本仓最容易读错、且出错后完全不报错的一处**，故单列一节。
+
+mihomo 的 `filter` 用 [`dlclark/regexp2`](https://github.com/dlclark/regexp2) 编译，
+而它是 **.NET 正则引擎的移植**（README 原文：*"ported from the .NET framework's
+System.Text.RegularExpressions.Regex engine… patterns matched should be identical"*）。
+
+[.NET 官方文档](https://learn.microsoft.com/en-us/dotnet/standard/base-types/regular-expression-options)
+明确定义内联选项的作用域：
+
+> `(?imnsx-imnsx)` … The option applies to the pattern **from the point that the option
+> is defined** to either the end of the pattern or to the point at which the option is
+> undefined by another inline option.
+
+⇒ **`(?i)` 不是「整条正则」的大小写开关，只看它后面那半串。**
+写在中间 ⇒ 它**前面**的词仍然大小写敏感。
+
+**两种写法的差别**（2026-10-10 实测，正则从 profile 原样取出、用 .NET 引擎判定）：
+
+| 写法 | 小写 `hk 01` | 小写 `singapore 01` | `hongkong 01` |
+|:--|:--|:--|:--|
+| `(?=.*(…|HK|(?i)Hong))…`（错） | **仅落 `Other Regions`**（漏收） | — | **双落组** |
+| `(?i)(?=.*(…|HK|Hong))…`（对） | 落 `Hong Kong` ✅ | 落 `Singapore` ✅ | 仅 `Hong Kong` ✅ |
+
+两类症状都由同一原因造成：
+
+- **漏收**：`HK` 写在 `(?i)` 之前 ⇒ 小写名进不了本地区组；
+  而 `Other Regions` 的排除块（同样大小写敏感）**也不认**它 ⇒ 节点**无组可归**，
+  表现是面板上「少了几个节点」，没有任何报错。
+- **双落组**：正向半串大小写不敏感、`Other Regions` 的负向断言却敏感 ⇒
+  小写名同时进两个组，两组不再互斥。
+
+**本仓的权威写法：把 `(?i)` 放在正则的**最前面**（`^` 之前），
+让正向与负向两半串**同为**大小写不敏感 —— Surge / Egern 两侧本来就是这样
+（它们的 `Other Regions` 用 `(?xi)`，含 `i`），三内核由此对齐。
+
+⚠️ **改这一处要同时改六处**（5 个地区组正向 + `Other Regions` 负向）：这是 §8.3
+那份「抄一遍」拷贝的一部分，改完由 `audit_region_filters.py` 判一致。
+
+> ⚠️ **读这一节时不要误判为「三内核漂移」**：clash 的地区组用 `(?i)`、
+> Surge 用 `policy-regex-filter`、Egern 用 `filter`，**语法形态本就不同**；
+> 这里守的是**语义等价**（三边都大小写不敏感），不是字面相同。
+
+#### 8.5 `hidden: true` 只用于三档子组
 
 三个倍率子组（`Low Mult.` / `Auto` / `High Mult.`）都带 `hidden: true` ——
 它们是 `Smart` 的内部实现，不该出现在面板上让人手动选。

@@ -59,14 +59,35 @@ Surge / Egern 两侧各有一份 `audit_region_filters.py`，守的是「正向�
 2026-10-07 实测：现役六组对全部 20 个双地区组合样本**零双落组**，故判据 ④
 直接把这些组合样本当**判据**跑（不是只靠猜形态），写错形态时它会立刻红。
 
-正则语义（**近似**，待确认）
---------------------------
-mihomo 用 Go 的 regexp2，`(?i)` 这类内联 flag 可以出现在**任意位置**、
-作用于"所在分组的剩余部分"；Python 的 `re` 不接受非开头的全局 flag。
-本脚本的做法是**剥掉所有 `(?i)` 再整条以 `re.IGNORECASE` 编译**：
-方向是**略微放宽**（把 `港|HK` 也变成大小写不敏感），对本仓样本无影响，
-但对"太宽"判据是**保守**的一侧（更容易报，不会漏报）。
-⚠️ 本机无 Go 工具链，未能跑真值对拍 —— 这条近似**待确认**。
+正则语义（**已确认**，2026-10-10）
+--------------------------------
+mihomo 用 Go 的 `dlclark/regexp2` 编译 `filter`
+（出处：`adapter/outboundgroup/groupbase.go` 的 `regexp2.MustCompile`）。
+`regexp2` README 原文：*"ported from the .NET framework's
+System.Text.RegularExpressions.Regex engine … patterns matched should be identical"*
+⇒ **.NET 的匹配语义即 mihomo 的行为。**
+
+[.NET 文档](https://learn.microsoft.com/en-us/dotnet/standard/base-types/regular-expression-options)
+定义内联选项作用域：`(?imnsx-imnsx)` … *"applies to the pattern **from the point that
+the option is defined** to either the end of the pattern or to the point at which the
+option is undefined"* ⇒ **`(?i)` 只对它之后的部分生效，写在中间 = 它前面的词仍大小写敏感。**
+
+⚠️ **已知盲区（本脚本守不住，重要）**：本脚本的做法是
+**剥掉所有 `(?i)` 再整条以 `re.IGNORECASE` 编译**（`strip_inline_flags`）——
+方向是**放宽**，于是**无法区分 `(?i)` 的位置**：
+
+| 写法 | 本脚本判定 | 真实 .NET / regexp2 行为 |
+|:--|:--:|:--:|
+| `…(港|HK|(?i)Hong)…`（错位） | 匹配 ✅ | **不匹配** ❌ |
+| `(?i)(…(港|HK|Hong)…)`（正确） | 匹配 ✅ | 匹配 ✅ |
+
+2026-10-10 实测（样本 `hk 01`）：本脚本对两种写法**都判 True**，而真实引擎
+对错位写法判 **False** ⇒ 本脚本对「地区组漏收节点」这类**太窄**缺陷**会漏报**。
+
+> ⚠️ 此前本文件此处写「对'太宽'判据是保守的一侧，**不会漏报**」——
+> 该陈述**已被证伪**：它对「太窄」方向同样会漏报。现按实测更正。
+> `(?i)` 位置的守卫写在 `references/profiles/clash.md` §8.4 的纪律里
+> （「`(?i)` 必须放最前面」），**不依赖本脚本**。
 
 退出码：0 = 通过；1 = 有判负；2 = 环境/参数问题（文件缺失 / 解析失败）。
 

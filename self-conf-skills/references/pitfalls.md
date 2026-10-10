@@ -143,6 +143,8 @@ Egern 日志速读：
 | 规则集突然失效 | 看 `interval` 到期后上游是否 404 | 换可用 URL | `check_remote_urls.py` |
 | Smart 不按倍率选节点 | 看 `Smart.proxies` 是不是 `["DIRECT"]` | 接上三档子组 | `build_profiles.py` 自检 |
 | 头注数字对不上 | 跑一次就知道 | 改文档数字为实际值 | `check_header_numbers.py` |
+| 地区组「少了几个节点」/ 同一节点出现在两个地区组 | 看该组 `filter` 的 `(?i)` 是否写在**最前面** | `(?i)` 挪到 `^` 之前，六处一起改 | `audit_region_filters.py`（见 clash.md §8.4） |
+| 静态模板 `Smart` 与脚本 `Smart` 结构不同 | **这不是 bug** —— 机制差异，见 clash.md §7 | 不要改 | `check_script_sync.py` 打印 `~ 已知差异`、不判负 |
 
 ✅ **mihomo 侧此缺口已补**：已有分流覆盖审计脚本（闸门 #9）。（此处曾写「没有」，与事实相反；Surge / Egern 亦有）
 `audit_routing_coverage.py`）。即「规则是否真的接住了该接的域名」在 mihomo 侧

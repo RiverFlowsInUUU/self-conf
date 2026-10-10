@@ -1,4 +1,4 @@
-#! version=routing_v1.0.0
+#! version=routing_v1.0.1
 # ============================================================================
 #  routing · 分流版（由 override/my_clash.js 生成）
 # ============================================================================
@@ -203,7 +203,7 @@ proxy-groups:
     icon: https://raw.githubusercontent.com/RiverFlowsInUUU/self-conf/main/icons/AdBlock.png
   - name: Hong Kong
     type: url-test
-    filter: '(?=.*(香港|港|HK|(?i)Hong))^((?!(台|日|韩|新|美)).)*$'
+    filter: '(?i)(?=.*(香港|港|HK|Hong))^((?!(台|日|韩|新|美)).)*$'
     url: https://www.gstatic.com/generate_204
     interval: 300
     tolerance: 50
@@ -211,7 +211,7 @@ proxy-groups:
     include-all: true
   - name: Taiwan
     type: url-test
-    filter: '(?=.*(台湾|台|TW|(?i)Taiwan|Tai|TPE|Taipei))^((?!(港|韩|新|美|日)).)*$'
+    filter: '(?i)(?=.*(台湾|台|TW|Taiwan|Tai|TPE|Taipei))^((?!(港|韩|新|美|日)).)*$'
     url: https://www.gstatic.com/generate_204
     interval: 300
     tolerance: 50
@@ -219,7 +219,7 @@ proxy-groups:
     include-all: true
   - name: Japan
     type: url-test
-    filter: '(?=.*(日本|东京|大阪|日|JP|(?i)Japan|NRT|HND|KIX|FUK|NGO|OSA|CTS|SDJ|OKA))^((?!(港|台|韩|新|美)).)*$'
+    filter: '(?i)(?=.*(日本|东京|大阪|日|JP|Japan|NRT|HND|KIX|FUK|NGO|OSA|CTS|SDJ|OKA))^((?!(港|台|韩|新|美)).)*$'
     url: https://www.gstatic.com/generate_204
     interval: 300
     tolerance: 50
@@ -227,7 +227,7 @@ proxy-groups:
     include-all: true
   - name: Singapore
     type: url-test
-    filter: '(?=.*(新加坡|坡|狮城|SG|SGP|SIN|Singapore))^((?!(台|日|韩|深|美)).)*$'
+    filter: '(?i)(?=.*(新加坡|坡|狮城|SG|SGP|SIN|Singapore))^((?!(台|日|韩|深|美)).)*$'
     url: https://www.gstatic.com/generate_204
     interval: 300
     tolerance: 50
@@ -235,7 +235,7 @@ proxy-groups:
     include-all: true
   - name: United States
     type: url-test
-    filter: '(?=.*(美国|美|US|USA|(?i)United|States|America|洛杉矶|硅谷|西雅图|芝加哥|达拉斯|凤凰城|阿什本|纽约|迈阿密|波士顿|休斯顿|亚特兰大|拉斯维加斯|圣地亚哥|盐湖城|奥斯汀|波特兰|丹佛|奥克兰|安大略|圣安娜|LAX|SJC|SFO|SEA|ORD|JFK|DFW|IAD|PHX|ATL|BOS|MIA|EWR|LGA|IAH|HOU|DEN|OAK|ONT|SNA|LAS|PDX|DAL|SAN|SLC|MSP))^((?!(港|台|韩|新|日)).)*$'
+    filter: '(?i)(?=.*(美国|美|US|USA|United|States|America|洛杉矶|硅谷|西雅图|芝加哥|达拉斯|凤凰城|阿什本|纽约|迈阿密|波士顿|休斯顿|亚特兰大|拉斯维加斯|圣地亚哥|盐湖城|奥斯汀|波特兰|丹佛|奥克兰|安大略|圣安娜|LAX|SJC|SFO|SEA|ORD|JFK|DFW|IAD|PHX|ATL|BOS|MIA|EWR|LGA|IAH|HOU|DEN|OAK|ONT|SNA|LAS|PDX|DAL|SAN|SLC|MSP))^((?!(港|台|韩|新|日)).)*$'
     url: https://www.gstatic.com/generate_204
     interval: 300
     tolerance: 50
@@ -243,7 +243,7 @@ proxy-groups:
     include-all: true
   - name: Other Regions
     type: url-test
-    filter: '^(?!(.*(香港|港|HK|Hong|台湾|台|TW|Taiwan|Tai|TPE|Taipei|日本|东京|大阪|日|JP|Japan|NRT|HND|KIX|FUK|NGO|OSA|CTS|SDJ|OKA|新加坡|坡|狮城|SG|Singapore|SIN|SGP|美国|美|US|United|States|America|USA|洛杉矶|硅谷|西雅图|芝加哥|达拉斯|凤凰城|阿什本|纽约|迈阿密|波士顿|休斯顿|亚特兰大|拉斯维加斯|圣地亚哥|盐湖城|奥斯汀|波特兰|丹佛|奥克兰|安大略|圣安娜|LAX|SJC|SFO|SEA|ORD|JFK|DFW|IAD|PHX|ATL|BOS|MIA|EWR|LGA|IAH|HOU|DEN|OAK|ONT|SNA|LAS|PDX|DAL|SAN|SLC|MSP)))(?!(.*(剩余|流量|到期|过期|官网|订阅|重置|续费|Traffic|Expire|GB|倍率|测试|有效|禁止|邮箱|客服|地址|网站|群组))).+$'
+    filter: '(?i)^(?!(.*(香港|港|HK|Hong|台湾|台|TW|Taiwan|Tai|TPE|Taipei|日本|东京|大阪|日|JP|Japan|NRT|HND|KIX|FUK|NGO|OSA|CTS|SDJ|OKA|新加坡|坡|狮城|SG|Singapore|SIN|SGP|美国|美|US|United|States|America|USA|洛杉矶|硅谷|西雅图|芝加哥|达拉斯|凤凰城|阿什本|纽约|迈阿密|波士顿|休斯顿|亚特兰大|拉斯维加斯|圣地亚哥|盐湖城|奥斯汀|波特兰|丹佛|奥克兰|安大略|圣安娜|LAX|SJC|SFO|SEA|ORD|JFK|DFW|IAD|PHX|ATL|BOS|MIA|EWR|LGA|IAH|HOU|DEN|OAK|ONT|SNA|LAS|PDX|DAL|SAN|SLC|MSP)))(?!(.*(剩余|流量|到期|过期|官网|订阅|重置|续费|Traffic|Expire|GB|倍率|测试|有效|禁止|邮箱|客服|地址|网站|群组))).+$'
     url: https://www.gstatic.com/generate_204
     interval: 300
     tolerance: 50

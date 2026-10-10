@@ -4,18 +4,27 @@
 //
 //  作用
 //    对任意 mihomo 订阅配置做整体覆写，使其与 clash/profiles/routing.yaml 一致：
-//      · 22 个策略组（Proxy + Smart + 4 个 AI 组 + AI + 8 个应用组 + Apple Update + AD + 6 地区组）
+//      · 22 个策略组（Proxy + Smart + 3 个 AI 应用组 + AI + 8 个应用组 + Apple Update + AD + 6 地区组）
+//        ⚠️ 分解式字面相加必须等于 22：「4 个 AI 组 + AI」会把 AI 重复计数成 23。
+//           ChatGPT / Gemini / Claude 是 3 个 AI 应用组，AI 是它们之外的第 4 个。
 //      · 25 份规则集（20 份 MRS + 5 份 yaml）+ 27 条规则
 //        ⚠️ 这些数字由 self-conf-skills/gates/clash/check_header_numbers.py 与脚本实际输出对拍，
 //           改了策略组或规则后如不同步更新，CI 会判负。
 //      · DNS 双层广告拦截（fake-ip-filter + nameserver-policy rcode://success）
 //      · 订阅内的节点直接成为组内成员 —— 不再需要 Airport 订阅组
 //
-//  与静态模板的唯一区别
-//    静态模板用 `use: [Airport]` 引入订阅；本脚本按输入形态**二选一**：
-//    输入带 `proxy-providers` 时用 `include-all`（= proxies + providers），
-//    否则用 `include-all-proxies: true`（只收内联 `proxies`）—— 见代码 HAS_PROVIDERS / ALL_KEY。
-//    这样可避免 provider 节点成为孤儿。
+//  与静态模板的差异（**两条都是刻意的，不是漂移**）
+//    ① 节点来源写法：静态模板用 `use: [Airport]` 引入订阅；本脚本按输入形态**二选一**：
+//       输入带 `proxy-providers` 时用 `include-all`（= proxies + providers），
+//       否则用 `include-all-proxies: true`（只收内联 `proxies`）—— 见代码 HAS_PROVIDERS / ALL_KEY。
+//       这样可避免 provider 节点成为孤儿。
+//    ② Smart 组的粒度：静态模板是「Smart(fallback) → 三档隐藏子组
+//       Low Mult. / Auto / High Mult.」，本脚本是**单组 fallback**。
+//       ⚠️ **这是机制差异，不要去"对齐"**：覆写脚本在订阅加载时只执行一次，
+//          生成期看不到 provider 里的节点名，因此做不到「按倍率分档」；
+//          脚本侧的替代方案是按倍率**排序**成员顺序（见 sortedByRate）。
+//       详见 references/profiles/clash.md §7，以及 gates/clash/check_script_sync.py
+//       的 EXPECTED_DIFF 白名单（它打印提醒但**不判负**）。
 //
 //  用法（Mihomo Party / Mihomo Purity 等支持 JS 覆写的客户端）
 //    1) 把本文件放到可访问的 URL（或本地导入）；
@@ -37,7 +46,7 @@ function main(config) {
   if (!config["proxy-groups"]) config["proxy-groups"] = [];
 
   // 规则集整体重建：订阅自带的 rule-providers 一律丢弃，
-  // 只保留本脚本定义的 20 份（避免残留无用 provider 与命名冲突）。
+  // 只保留本脚本定义的 25 份（避免残留无用 provider 与命名冲突）。
   config["rule-providers"] = {};
 
   // 节点筛选（官方 groupbase.go 的 GetProxies 中依次应用）：
@@ -234,7 +243,10 @@ function main(config) {
       name: "Hong Kong",
       type: "url-test",
       ...allNodes,
-      filter: "(?=.*(香港|港|HK|(?i)Hong))^((?!(台|日|韩|新|美)).)*$",
+      // `(?i)` 放在**正向半串的最前面**：.NET 语义下内联 flag 只作用于
+      // 「定义点之后」的部分（regexp2 是 .NET 引擎的移植，匹配行为一致）。
+      // 此前 `HK` 写在 `(?i)` 之前 ⇒ 小写 `hk 01` 进不了本组、却被 Other Regions 排除。
+      filter: "(?i)(?=.*(香港|港|HK|Hong))^((?!(台|日|韩|新|美)).)*$",
       url: HC_URL,
       interval: HC_INT,
       tolerance: 50,
@@ -245,7 +257,7 @@ function main(config) {
       name: "Taiwan",
       type: "url-test",
       ...allNodes,
-      filter: "(?=.*(台湾|台|TW|(?i)Taiwan|Tai|TPE|Taipei))^((?!(港|韩|新|美|日)).)*$",
+      filter: "(?i)(?=.*(台湾|台|TW|Taiwan|Tai|TPE|Taipei))^((?!(港|韩|新|美|日)).)*$",
       url: HC_URL,
       interval: HC_INT,
       tolerance: 50,
@@ -258,7 +270,7 @@ function main(config) {
       ...allNodes,
       // 正向词含机场三字码与城市名（对齐姊妹仓写法）：
       // 否则「东京 01」「NRT 03」这类节点既进不了日本组、又被 Other Regions 排除 ⇒ 无组可归。
-      filter: "(?=.*(日本|东京|大阪|日|JP|(?i)Japan|NRT|HND|KIX|FUK|NGO|OSA|CTS|SDJ|OKA))^((?!(港|台|韩|新|美)).)*$",
+      filter: "(?i)(?=.*(日本|东京|大阪|日|JP|Japan|NRT|HND|KIX|FUK|NGO|OSA|CTS|SDJ|OKA))^((?!(港|台|韩|新|美)).)*$",
       url: HC_URL,
       interval: HC_INT,
       tolerance: 50,
@@ -269,7 +281,9 @@ function main(config) {
       name: "Singapore",
       type: "url-test",
       ...allNodes,
-      filter: "(?=.*(新加坡|坡|狮城|SG|SGP|SIN|Singapore))^((?!(台|日|韩|深|美)).)*$",
+      // ⚠️ 本组此前**完全没有 `(?i)`**，是全仓唯一一处 —— 小写 `singapore 01`
+      //    进不了本组、却被 Other Regions 排除 ⇒ 无组可归。现按三内核对齐补上。
+      filter: "(?i)(?=.*(新加坡|坡|狮城|SG|SGP|SIN|Singapore))^((?!(台|日|韩|深|美)).)*$",
       url: HC_URL,
       interval: HC_INT,
       tolerance: 50,
@@ -281,7 +295,7 @@ function main(config) {
       type: "url-test",
       ...allNodes,
       // 同上：补美国城市名与机场三字码，避免「LAX 02」「硅谷 03」无组可归。
-      filter: "(?=.*(美国|美|US|USA|(?i)United|States|America|洛杉矶|硅谷|西雅图|芝加哥|达拉斯|凤凰城|阿什本|纽约|迈阿密|波士顿|休斯顿|亚特兰大|拉斯维加斯|圣地亚哥|盐湖城|奥斯汀|波特兰|丹佛|奥克兰|安大略|圣安娜|LAX|SJC|SFO|SEA|ORD|JFK|DFW|IAD|PHX|ATL|BOS|MIA|EWR|LGA|IAH|HOU|DEN|OAK|ONT|SNA|LAS|PDX|DAL|SAN|SLC|MSP))^((?!(港|台|韩|新|日)).)*$",
+      filter: "(?i)(?=.*(美国|美|US|USA|United|States|America|洛杉矶|硅谷|西雅图|芝加哥|达拉斯|凤凰城|阿什本|纽约|迈阿密|波士顿|休斯顿|亚特兰大|拉斯维加斯|圣地亚哥|盐湖城|奥斯汀|波特兰|丹佛|奥克兰|安大略|圣安娜|LAX|SJC|SFO|SEA|ORD|JFK|DFW|IAD|PHX|ATL|BOS|MIA|EWR|LGA|IAH|HOU|DEN|OAK|ONT|SNA|LAS|PDX|DAL|SAN|SLC|MSP))^((?!(港|台|韩|新|日)).)*$",
       url: HC_URL,
       interval: HC_INT,
       tolerance: 50,
@@ -292,7 +306,11 @@ function main(config) {
       name: "Other Regions",
       type: "url-test",
       ...allNodes,
-      filter: "^(?!(.*(香港|港|HK|Hong|台湾|台|TW|Taiwan|Tai|TPE|Taipei|日本|东京|大阪|日|JP|Japan|NRT|HND|KIX|FUK|NGO|OSA|CTS|SDJ|OKA|新加坡|坡|狮城|SG|Singapore|SIN|SGP|美国|美|US|United|States|America|USA|洛杉矶|硅谷|西雅图|芝加哥|达拉斯|凤凰城|阿什本|纽约|迈阿密|波士顿|休斯顿|亚特兰大|拉斯维加斯|圣地亚哥|盐湖城|奥斯汀|波特兰|丹佛|奥克兰|安大略|圣安娜|LAX|SJC|SFO|SEA|ORD|JFK|DFW|IAD|PHX|ATL|BOS|MIA|EWR|LGA|IAH|HOU|DEN|OAK|ONT|SNA|LAS|PDX|DAL|SAN|SLC|MSP)))(?!(.*(剩余|流量|到期|过期|官网|订阅|重置|续费|Traffic|Expire|GB|倍率|测试|有效|禁止|邮箱|客服|地址|网站|群组))).+$",
+      // `(?i)` 放在最前，与 5 个地区组的正向半串**同为大小写不敏感** ——
+      // 否则小写英文名（`hongkong 01` / `united states 01`）会同时落进本组与自己的地区组。
+      // Surge / Egern 两侧的 Other Regions 也用 `(?xi)`（含 i），此处与二者对齐。
+      // ⚠️ `(?i)` 必须在 `^` 之前：内联 flag 只作用于定义点之后的部分。
+      filter: "(?i)^(?!(.*(香港|港|HK|Hong|台湾|台|TW|Taiwan|Tai|TPE|Taipei|日本|东京|大阪|日|JP|Japan|NRT|HND|KIX|FUK|NGO|OSA|CTS|SDJ|OKA|新加坡|坡|狮城|SG|Singapore|SIN|SGP|美国|美|US|United|States|America|USA|洛杉矶|硅谷|西雅图|芝加哥|达拉斯|凤凰城|阿什本|纽约|迈阿密|波士顿|休斯顿|亚特兰大|拉斯维加斯|圣地亚哥|盐湖城|奥斯汀|波特兰|丹佛|奥克兰|安大略|圣安娜|LAX|SJC|SFO|SEA|ORD|JFK|DFW|IAD|PHX|ATL|BOS|MIA|EWR|LGA|IAH|HOU|DEN|OAK|ONT|SNA|LAS|PDX|DAL|SAN|SLC|MSP)))(?!(.*(剩余|流量|到期|过期|官网|订阅|重置|续费|Traffic|Expire|GB|倍率|测试|有效|禁止|邮箱|客服|地址|网站|群组))).+$",
       url: HC_URL,
       interval: HC_INT,
       tolerance: 50,
@@ -300,7 +318,7 @@ function main(config) {
     },
   ];
 
-  // ── 2. 规则集（全部 MRS）────────────────────────────────────────────────
+  // ── 2. 规则集（20 份 MRS + 5 份 yaml）────────────────────────────────────
   const JS = "https://cdn.jsdelivr.net/gh/MetaCubeX/meta-rules-dat@meta/geo";
   const rp = config["rule-providers"];
 

@@ -1,4 +1,4 @@
-#! version=routing_v1.0.0
+#! version=routing_v1.0.1
 # ================================================================ routing（正式版 · 推荐）
 # 结构（与 Surge `routing.conf` 逐行对齐，内容与顺序均对拍）：
 #   ① `dns.forward` 由单条 catch-all 扩为 4 层：
