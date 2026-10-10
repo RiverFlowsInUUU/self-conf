@@ -1034,8 +1034,8 @@ python self-conf-skills/gates/clash/check_structure.py
 `release_publish.py` 原有的「从 commit subject 自动汇总」会在正文里塞满
 `Release 断言新增 R6`、`路径统一 as_posix()` 这类**内部工程语言**，
 与往日 Release 形态完全不符。实测首发即被指出。
-⇒ 现在：**人工说明是首选**；没有该文件时降级为 commit 汇总**并在正文顶部打出警告**
-（不硬拦 —— 「只改了内部判据」的日子确实没有面向用户的变更）。
+⇒ 现在：**说明文件是唯一来源**；缺失或结构不合格 ⇒ **拒绝发布**（见〈发布流程〉）。
+先跑 `--init` 生成骨架再填空，不必从零写。
 
 **必须避免的词**（出现即视为写错）：判据/闸门编号（`R6` / `P1` / `V5`）、脚本名
 （`verify_all` / `build_ir`）、函数或语言构造（`as_posix()`）、`commit` / `CI` /
@@ -1114,22 +1114,33 @@ python self-conf-skills/gates/clash/check_structure.py
 ### 7 · 发布流程
 
 ```bash
-python self-conf-skills/run/repo_state.py                      # ① 看清现状（版本 / Release / CI）
-python self-conf-skills/gates/verify_all.py                    # ② 门禁全绿
-#  ③ 撰写 releases/<tag>.md —— 面向用户的更新日志（格式见〈标题与正文模板〉，**不可跳过**）
-python self-conf-skills/run/release_publish.py                 # ④ 计划模式：预览，一个字不发
-python self-conf-skills/run/release_publish.py --apply         # ⑤ 真发（需 GITHUB_TOKEN）
+python self-conf-skills/run/repo_state.py                          # ① 看清现状（版本 / Release / CI）
+python self-conf-skills/gates/verify_all.py                        # ② 门禁全绿
+python self-conf-skills/run/release_publish.py --init              # ③ 生成说明草稿（首次；已存在则跳过）
+#      → 打开 releases/<tag>.md，把每条「一句话」补成用户能看懂的话
+python self-conf-skills/run/release_publish.py                     # ④ 计划模式：预览，一个字不发
+python self-conf-skills/run/release_publish.py --apply             # ⑤ 真发（需 GITHUB_TOKEN）
 ```
 
-**说明以「人工撰写的 `releases/<tag>.md`」为准**（`## 更新日志` 那套格式，见〈标题与正文模板〉）。
-标题由脚本生成（`📱 日期 · 当日主题`），资产与下载区由脚本生成。
+**说明以人工撰写的 `releases/<tag>.md` 为唯一来源**（格式见〈标题与正文模板〉）。
+标题、资产、下载徽章由脚本生成。
 
-⚠️ **不要拿 commit 汇总当正文**（2026-10-10 事故）：自动汇总只是**降级兜底** ——
-它产出的是 `Release 断言新增 R6` 这类内部语言，读者是用户、不是维护者。
-脚本找不到说明文件时会**在正文顶部打警告**，看到警告就说明第 ③ 步被跳过了。
-（历史：2026-10-08 改革曾把说明改为「纯 commit 自动汇总」以求「不可能漂移」；
-2026-10-10 实测证明它牺牲了可读性 —— 漂移问题应当靠「说明书不与代码同步」来避免，
-而不是靠「让机器替人说话」。）
+⚠️ **缺说明文件 ⇒ `--apply` 直接拒绝发布**（退出码 1），不再有「降级为 commit 汇总」
+这条路 —— 那条路正是 2026-10-10 事故的漏洞本身：它让偷懒仍能发出 Release，
+且发出来的全是 `Release 断言新增 R6` 这类内部语言。
+
+⚠️ 说明文件还要过一道**机械格式校验**（`notes_problems()`）：
+必须有 `# …更新日志` 一级标题、`## 适用版本` 段、至少一个变更分列段、
+且正文出现当前版本号。不合格 ⇒ 同样拒绝发布。
+
+> **为什么这样设计**：要「完全避免」这类问题，靠加判据去**猜「人话」是做不到的**
+> （好坏是价值判断）。可行的做法是消除**产生坏结果的那条路** ——
+> 让「没有面向用户的说明」的 Release 在流程上发不出去，同时把「写说明」
+> 变成一条命令就绪的填空（`--init`），使硬拦不会变成负担。
+>
+> 历史：2026-10-08 改革曾把说明改为「纯 commit 自动汇总」以求「不可能漂移」；
+> 2026-10-10 实测证明它牺牲了可读性 —— 漂移该靠「说明书不与代码同步」避免，
+> 不该靠「让机器替人说话」。
 
 tag = `vYYYY-MM-DD`（发布日）。同一天重复 `--apply` 是幂等的（回写同一张 + 对账资产）。
 

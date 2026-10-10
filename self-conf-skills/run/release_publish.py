@@ -12,12 +12,16 @@
 新模型只做一件事：**把当前版本发出去**。
   · tag = vYYYY-MM-DD（发布日；同一天重复发布即幂等回写同一张）
   · 资产 = 三内核 × 两产品线 × 完整版/.min = 12 件，固定名不带版本号
-  · 说明 = **从上次发版以来的 commit 自动汇总**（见 collect_notes）
-    —— 不再有手写历史表，因此不可能与代码漂移
+  · 说明 = **人工撰写的 `releases/<tag>.md`**（面向用户的更新日志）
+    ⚠️ 曾经从 commit subject 自动汇总 —— 2026-10-10 实测证明那是**内部语言**，
+       不是给用户看的更新日志。现已**取消降级路径**：缺说明文件即拒绝发布。
 
 用法（仓库根目录）:
-    python self-conf-skills/run/release_publish.py                # 计划模式：打印将要发布的内容，一个字不发
-    python self-conf-skills/run/release_publish.py --apply        # 真发（需 GITHUB_TOKEN）
+    python self-conf-skills/run/release_publish.py --init     # 生成说明草稿（结构齐备）
+    python self-conf-skills/run/release_publish.py            # 计划模式：预览，一个字不发
+    python self-conf-skills/run/release_publish.py --apply    # 真发（需说明文件 + GITHUB_TOKEN）
+
+退出码：0 = 成功/已预览 · 1 = 说明缺失或不合格（**拒绝发布**）· 2 = 缺 token
 
 可选环境变量：
     GITHUB_REPO   目标仓库 owner/repo（默认 RiverFlowsInUUU/self-conf）
@@ -162,15 +166,74 @@ def notes_file_path(root, tag):
     return os.path.join(root, "releases", "%s.md" % tag)
 
 
+# ── 说明文件的格式判据（机械部分：是非，不是好坏）─────────────────────────
+# ⚠️ 只判「结构在不在」，**不判文采** —— 好坏是价值判断，写成判据会退化成
+#    关键词黑名单式的假精确。结构缺失则是明确的错，可以硬判。
+#    2026-10-10 事故：发布器原先从 commit subject 汇总正文，产出的全是
+#    「Release 断言新增 R6」这类内部语言，与往日用户向更新日志形态不符。
+REQUIRED_H2 = "## 适用版本"
+
+
+def notes_problems(text, versions):
+    """返回说明文件的问题清单；空列表 = 合格。"""
+    bad = []
+    lines = text.splitlines()
+    h1 = [l for l in lines if l.startswith("# ")]
+    if not h1:
+        bad.append("缺一级标题（应为 `# <产品线> vX[ → vY] 更新日志`）")
+    elif "更新日志" not in h1[0]:
+        bad.append("一级标题缺「更新日志」字样：%s" % h1[0])
+    if REQUIRED_H2 not in text:
+        bad.append("缺 `%s` 段" % REQUIRED_H2)
+    if "## " not in text:
+        bad.append("缺变更分列段（`## 懒人版变更` / `## 分流版变更` / `## 共同变更` 至少一个）")
+    for v in sorted(versions):
+        if v not in text:
+            bad.append("正文未出现当前版本号 %s" % v)
+    if "由 commit 自动汇总" in text:
+        bad.append("正文含自动汇总的降级标记 —— 那是内部语言，不应发布")
+    return bad
+
+
+def notes_draft(root, p):
+    """生成说明文件草稿：结构齐备 + 版本号已填，只留「人话」待补。
+
+    目的：让「写说明」从负担变成填空 —— 这是「硬拦」能被接受的前提。
+    """
+    fam_lines = []
+    for fam in FAMS:
+        fam_lines.append("## %s变更" % FAM_CN[fam])
+        fam_lines.append("")
+        # ⚠️ p["versions"][fam] 已含 `v` 前缀（如 `v1.0.1`），不要再拼一个 v
+        fam_lines.append("- **%s** ← 用一句话说明用户会看到什么不同"
+                         "（不是改了什么代码）" % p["versions"][fam])
+        fam_lines.append("")
+    return "\n".join([
+        "# %s 更新日志" % " → ".join(
+            "%s %s" % (FAM_CN[f], p["versions"][f]) for f in FAMS),
+        "",
+        "> ← 一句话说清本次范围（例如：本次仅懒人版有变更，分流版无变化）。",
+        "",
+    ] + fam_lines + [
+        REQUIRED_H2,
+        "",
+    ] + ["- %s %s" % (FAM_CN[f], p["versions"][f]) for f in FAMS] + [
+        "",
+        "<!-- 写法见 self-conf-skills/references/ops.md 的〈标题与正文模板〉：",
+        "     讲用户会遇到什么；避免判据编号 / 脚本名 / 函数名 / commit 这类内部词汇。",
+        "     写完删掉本注释。 -->",
+        "",
+    ])
+
+
 def _human_notes(root, tag):
-    """读人工维护的发布说明；没有则返回 None（调用方决定降级还是报错）。
+    """读人工维护的发布说明；没有则返回 None。
 
     ⚠️ 为什么要这个（2026-10-10 事故）：
         原先说明**只**从 commit subject 自动汇总 ⇒ 发出来的 Release 是
         「Release 断言新增 R6」「路径统一 as_posix()」这类**内部工程语言**，
         与往日 Release 的形态（`# …更新日志` 标题、`## 懒人版变更 / ## 分流版变更`
         /`## 适用版本` 分列、面向用户描述行为影响）**完全不符**。
-        实测：v2026-10-10 首发即被用户指出「充满内部工程师自说自话」。
         ⇒ 说明必须有**人工把关的入口**；自动汇总降级为「提醒」，不再直接当正文。
     """
     p = notes_file_path(root, tag)
@@ -181,36 +244,16 @@ def _human_notes(root, tag):
 
 
 def release_body(p, human=None):
-    """正文 = 人工说明（首选）；缺失时降级为 commit 汇总 + 显式警告。"""
+    """正文 = 说明文件（**唯一来源**）。
+
+    ⚠️ 刻意**不提供**「自动汇总」的降级正文（2026-10-10 第二次修正）：
+        曾经的降级路径是漏洞本身 —— 它让「没写说明」也能发出去，
+        且发出来的正是内部语言。现在缺说明文件由 main() 直接拒绝发布，
+        本函数只负责在说明**存在**时把它取出来。
+    """
     if human:
         return human
-    lines = ["# %s" % " / ".join("%s %s" % (FAM_CN[f], p["versions"][f]) for f in FAMS)]
-    lines.append("")
-    lines.append("> ⚠️ 本说明由 commit 自动汇总，**未经用户向改写** —— "
-                 "发布前请人工撰写 `%s`。"
-                 % os.path.relpath(notes_file_path(repo_root(), p["tag"])))
-    lines.append("")
-    if p["since"]:
-        lines.append("> 自上一版（`%s`）以来的变更。" % p["since"])
-    else:
-        lines.append("> 首个版本。")
-    lines.append("")
-    if not p["notes"]:
-        lines.append("（本次没有面向用户的变更条目。）")
-    for subject in p["notes"]:
-        lines.append("- %s" % subject)
-    lines.append("")
-    lines.append("## 取用")
-    lines.append("")
-    for fam in FAMS:
-        for kern in KERNS:
-            ext = KERN_EXT[kern]
-            for suffix in ("", ".min"):
-                name = "%s-%s%s%s" % (kern, fam, suffix, ext)
-                if name in p["assets"]:
-                    lines.append("- [`%s`](https://github.com/%s/releases/download/%s/%s)"
-                                 % (name, REPO, p["tag"], name))
-    return "\n".join(lines)
+    raise SystemExit("❌ 无发布说明 —— 不应走到这里（main 应先拦下）。")
 
 
 def release_title(p):
@@ -261,8 +304,9 @@ def _asset_stale(asset, path):
         return False                                        # 下载失败 ⇒ 宁可不误删
 
 
-def apply(p, token):
-    body = release_body(p, _human_notes(repo_root(), p["tag"]))
+def apply(p, token, human=None):
+    body = release_body(p, human if human is not None
+                        else _human_notes(repo_root(), p["tag"]))
     title = release_title(p)
     ex = {r["tag_name"]: r for r in existing_releases(token)}
     rel = ex.get(p["tag"])
@@ -306,33 +350,67 @@ def apply(p, token):
 def main():
     ap = argparse.ArgumentParser()
     ap.add_argument("--apply", action="store_true", help="真发（默认只出计划）")
+    ap.add_argument("--init", action="store_true",
+                    help="生成 releases/<tag>.md 草稿骨架（结构齐备，只待补人话）")
     ap.add_argument("--token", default=os.environ.get("GITHUB_TOKEN"))
     args = ap.parse_args()
 
-    p = plan(repo_root())
-    human = _human_notes(repo_root(), p["tag"])
+    root = repo_root()
+    p = plan(root)
+    npath = notes_file_path(root, p["tag"])
+    rel = os.path.relpath(npath, root)
+
+    # ── --init：生成草稿（不发布）────────────────────────────────────────
+    if args.init:
+        if os.path.exists(npath):
+            print("已存在，未覆盖：%s" % rel)
+            return 0
+        os.makedirs(os.path.dirname(npath), exist_ok=True)
+        with open(npath, "w", encoding="utf-8", newline="\n") as fh:
+            fh.write(notes_draft(root, p))
+        print("已生成草稿：%s" % rel)
+        print("→ 打开它，把每条的「一句话」补成用户能看懂的话（结构已就绪）。")
+        return 0
+
+    human = _human_notes(root, p["tag"])
     print("tag      %s" % p["tag"])
     print("版本     %s" % " · ".join("%s %s" % (FAM_CN[f], p["versions"][f]) for f in FAMS))
     print("自       %s" % (p["since"] or "（首个版本）"))
     print("资产     %d 件" % len(p["assets"]))
-    print("说明     %s" % ("人工撰写：%s" % os.path.relpath(
-        notes_file_path(repo_root(), p["tag"]))
-        if human else "⚠️ 未撰写 —— 将降级为 commit 汇总（内部语言，不合适直接发布）"))
-    print("\n──── 说明预览 ────")
-    print(release_body(p, human))
+    print("说明     %s" % ("%s（已撰写）" % rel if human else "❌ 未撰写：%s" % rel))
 
     if not args.apply:
+        if human:
+            print("\n──── 说明预览 ────")
+            print(human)
+        else:
+            print("\n⚠️ 还没有 %s —— 生成草稿："
+                  "python self-conf-skills/run/release_publish.py --init" % rel)
         print("\n（计划模式：一个字都没发。加 --apply 才发布）")
         return 0
+
+    # ── --apply：说明缺失或结构不合格 ⇒ **拒绝发布** ──────────────────────
+    #    这是 2026-10-10 事故的根本修法：不是「加判据去猜人话」，
+    #    而是**让「没有面向用户的说明」这种 Release 根本发不出去**。
+    #    原先的「降级为 commit 汇总 + 警告」是漏洞本身 —— 它让偷懒仍能通过。
+    if not human:
+        print("\n❌ 拒绝发布：缺少 %s" % rel)
+        print("   先跑：python self-conf-skills/run/release_publish.py --init")
+        print("   然后把草稿里的「一句话」补成用户能看懂的话（写法见 ops.md 标题与正文模板）。")
+        return 1
+    probs = notes_problems(human, set(p["versions"].values()))
+    if probs:
+        print("\n❌ 拒绝发布：%s 格式不合格" % rel)
+        for b in probs:
+            print("   · %s" % b)
+        print("   格式要求见 self-conf-skills/references/ops.md 的〈标题与正文模板〉。")
+        return 1
     if not args.token:
         print("❌ --apply 需要 GITHUB_TOKEN")
         return 2
-    if not human:
-        # 不硬拦：允许「确实没有面向用户的变更」时发版，但必须显式确认。
-        # 硬拦会让「只升了内部判据」的日子发不出 Release，反而逼人绕过流程。
-        print("⚠️ 未找到 releases/%s.md —— 正文将是 commit 汇总。"
-              "若本次有用户可见的变更，请先撰写该文件。" % p["tag"])
-    return apply(p, args.token)
+    print("\n──── 说明预览 ────")
+    print(human)
+    return apply(p, args.token, human)
 
 
 if __name__ == "__main__":
