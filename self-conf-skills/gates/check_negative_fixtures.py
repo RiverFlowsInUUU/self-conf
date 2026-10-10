@@ -13,6 +13,12 @@
       2. `check_min_pair`           —— 往 .min 里加一行规则（内容漂移）
       3. `check_script_sync`        —— 静态 profile 与脚本规则长度不一致
       4. `build_rules.py --check`   —— 真源 .list 有更新、生成物未重跑
+      5. `check_ad_caliber`         —— 懒人版的 AD 组被加上 `DIRECT`（口径被改错）
+      6. `check_waiver_usage`       —— 造一条不会触发的 `# audit-waive:`（陈旧豁免）
+
+（5/6 是 2026-10-10 补的：那两道闸门本身就是为了「把靠自觉的格子变成机器守」
+而新增的，它们同样需要判别力回归 —— 否则将来被改坏（如把口径表写成恒真、
+把豁免解析写成恒空集）仍会全绿，等于白加。）
 
 怎么做的（照抄 check_region_filters 的断言口径）：
     临时目录里搭一份最小仓库副本（真仓工作副本一个字节不动），对副本
@@ -151,6 +157,11 @@ def main():
             ("build_rules --check",
              [PY, os.path.join(sb, "self-conf-skills", "run", "clash",
                                "build_rules.py"), "--check"]),
+            # 2026-10-10 新增的两道，基线同样要在未注错的副本上放行
+            ("check_ad_caliber",
+             [PY, os.path.join(GATES, "check_ad_caliber.py"), sb]),
+            ("check_waiver_usage",
+             [PY, os.path.join(GATES, "check_waiver_usage.py"), sb]),
         ]
         for nm, argv in baselines:
             rc, out = _run(argv)
@@ -160,7 +171,7 @@ def main():
                 for line in out.strip().splitlines()[-6:]:
                     print("  " + line)
                 return 2
-        print("  基线 4/4 绿（未注错的副本全部放行）")
+        print("  基线 %d/%d 绿（未注错的副本全部放行）" % (len(baselines), len(baselines)))
 
         passed = 0
 
@@ -208,8 +219,37 @@ def main():
             "已过期")
         passed += c4
 
-        print("\nTOTAL: %d discriminating, %d not" % (passed, 4 - passed))
-        return 0 if passed == 4 else 1
+        # ── 5–7 · 2026-10-10 新增的三道闸门，同样纳入判别力回归 ───────────
+        #    ⚠️ 为什么这三条必须在这里：它们本身就是「补『没有机器守』的格子」而加的
+        #    （见各自 docstring）。若不加回归，它们将来被改坏（比如把 AD_CALIBER
+        #    写成恒真、把 WAIVED 解析写错成恒空集）仍会**全绿**，等于白加。
+        #
+        # 5 · AD 组口径：把懒人版 mihomo 的 AD 加上 DIRECT（懒人版不该放行）
+        c5 = _case(
+            "AD 组口径",
+            lambda: _mutate(
+                os.path.join(clash_sb, "profiles", "lazy.yaml"),
+                "  - name: AD\n    type: select\n    proxies:\n      - REJECT\n",
+                "  - name: AD\n    type: select\n    proxies:\n"
+                "      - REJECT\n      - DIRECT\n"),
+            [PY, os.path.join(GATES, "check_ad_caliber.py"), sb],
+            "应为")
+        passed += c5
+
+        # 6 · 豁免用量：声明一个**不会触发**的检查号（陈旧豁免）
+        c6 = _case(
+            "豁免用量",
+            lambda: _mutate(
+                os.path.join(sb, "surge", "profiles", "lazy.conf"),
+                "# audit-waive: 1 加密 DNS 端点保留",
+                "# audit-waive: 7 negfix 造一条陈旧豁免\n"
+                "# audit-waive: 1 加密 DNS 端点保留"),
+            [PY, os.path.join(GATES, "check_waiver_usage.py"), sb],
+            "陈旧豁免")
+        passed += c6
+
+        print("\nTOTAL: %d discriminating, %d not" % (passed, 6 - passed))
+        return 0 if passed == 6 else 1
     finally:
         shutil.rmtree(sb, ignore_errors=True)
 

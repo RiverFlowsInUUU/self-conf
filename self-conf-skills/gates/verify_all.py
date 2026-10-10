@@ -589,6 +589,23 @@ def build_gates():
     # 骗后来的 AI。本闸门重算一遍并与落盘的 intent.json 对账，不一致则判负。
     add('路由意图 IR 新鲜', [PY, 'self-conf-skills/run/build_ir.py', '--check'])
 
+    # ── 1b. 「靠人话/靠自觉」缺口的补位（2026-10-10）─────────────────────
+    # 这三道补的都是「文档里写清了规矩、但没有机器守」的格子 —— 项目自己的
+    # 原则是「不是『记得去检查』，而是把它变成一道会定期跑的闸门」。
+    # 每条的存在理由见各自 docstring。
+    #
+    # 两版 AD 组口径：分流版可放行（REJECT+DIRECT）、懒人版单成员（REJECT）。
+    # 此前**只有注释与文档** —— 是本仓唯一一条「有意差异」没有机器判据的
+    # （pitfalls.md 坑 10）。判据按版本分表断言，不搞一刀切。
+    add('AD 组口径', [PY, 'self-conf-skills/gates/check_ad_caliber.py'])
+    # 豁免用量：profile 里声明的 `# audit-waive:` 必须**确实被用到**。
+    # 漏声明方向会叫（变 HIGH）；**陈述旧了不会叫** —— 它在静默削弱判据，
+    # 将来该项真出问题会被陈旧豁免降级。本闸门补的就是不会叫的那个方向。
+    add('豁免用量', [PY, 'self-conf-skills/gates/check_waiver_usage.py'])
+    # 一天一版：同一天同一产品线只升一次号（ops.md §2）。改革删掉归档快照后
+    # 原本守它的 V7 一并删除 ⇒ 此后没有机器在守（gates.md §16.4 第 4 条）。
+    add('一天一版', [PY, 'self-conf-skills/gates/check_version_cadence.py'])
+
     # ── ② 三内核审计（每内核按现役文件各一道；脚本支持多文件）────────
     # 每项 = (闸门名, 脚本相对路径模板, 参数模板)
     #   {k}=内核  {files}=该内核全部现役 profile

@@ -105,6 +105,9 @@ python self-conf-skills/gates/verify_all.py
 | AI 入口唯一性 | 重建 `GEMINI.md` / `CLAUDE.md` / `.cursorrules`（工具专属入口会被优先读取、屏蔽真源）|
 | 可移植性 P1（生成物平台无关） | 给 `references/intent.json` 的 paths 注入反斜杠 `clash\\profiles\\…` |
 | Release 断言 R6（防漏发版） | 造一个 HEAD 日期无对应 Release 的提交（R6a）；或同一天先发版、之后再提交（R6b） |
+| AD 组口径 | 给懒人版任一内核的 `AD` 加 `DIRECT`（懒人版不该放行）；或删分流版 surge 的 `DIRECT` |
+| 豁免用量 | 造一条不会触发的 `# audit-waive: 7 …`（陈旧豁免）|
+| 一天一版 | 同一天把头注从 `v1.0.1` 再升到 `v1.0.2` |
 
 > 🔁 **2026-10-09 起部分自动化**：闸门「负样例回归」（`check_negative_fixtures.py`）把上表中
 > `clash 结构`、`min-pair 一致`、`clash 脚本/静态对拍`、`.min 漂移`（build_rules --check）
@@ -851,17 +854,17 @@ d = diff(a, b)
 
 改完完整版，**同步 `.min`**：
 
-⚠️ **mihomo 侧没有 `.min` 生成脚本。** `make_min.py --family` 的合法取值只有
-`routing` / `lazy` / `all`，而它的 `FAMILIES` 表**只含 surge 与 egern 两族**
-（`surge/profiles/*.conf`、`egern/profiles/*.yaml`）——
-**`clash/profiles/*.min.yaml` 不在里面**。
+⚠️ **mihomo 侧已有 `.min` 生成脚本（2026-10-09 起）。** `make_min.py` 的 `PAIRS`
+表含 **clash 两族**（`clash/profiles/*.yaml`）—— 和 surge / egern 一起，一条命令同步六份。
+clash 走的是「剔掉整行注释、其余原样保留」的**纯函数**分支（**不**压空行，这点与 egern
+不同），因为 `build_profiles.py` 就是这么产出 `.min.yaml` 的，且 clash 侧没有任何必须
+留在下载文件里的语义注释。
 
-⇒ 所以 `.min.yaml` 目前只能**手工同步**（去掉注释与空行）。
-`check_min_pair.py` 就是用来兜住这件事的：它比 YAML 对象，注释不进比对，
-所以手工同步只要保证**配置本体一致**即可。
-
-> 📌 **这是已知的自动化缺口**（见 §16.4）：mihomo 侧的 `.min` 靠人工 + 对拍，
-> 不靠生成器。要补的话是给 `make_min.py` 的 `FAMILIES` 加一族 clash。
+⇒ 改完 clash 完整版后：`python self-conf-skills/run/make_min.py --family lazy --apply`。
+⚠️ 但 `clash/profiles/*.yaml` 本身**是生成物**（真源是 `clash/override/my_clash*.js`），
+所以常规动线是 **改 JS → `build_profiles.py`**，那一步已经把 `.min.yaml` 一并写好了；
+`make_min.py` 是**对拍/兜底**（`--check` 抓「有人手工编辑了 `.min.yaml`」）。
+`check_min_pair.py` 继续比 YAML 对象兜住配置本体。
 
 ⚠️ 与 surge 侧的另一个差异值得记：Surge 的 `routing.min.conf` 由脚本生成，
 生成脚本会**丢掉注释** ⇒ `# audit-waive:` 行必须手动补回 min 版，否则豁免失效、
@@ -874,7 +877,7 @@ d = diff(a, b)
 看到 `NG profiles/lazy.yaml vs profiles/lazy.min.yaml —— N 处差异`：
 
 1. 确认哪一侧是"对"的（通常是刚改过的完整版）；
-2. 按差异清单**同步 `.min`**（本仓没有生成器，只能手工，见 §5.1）；
+2. 按差异清单**同步 `.min`**（2026-10-09 起 clash 也有生成器了，见 §5.1）：
    最省事的做法是用 `yaml.safe_load` + `yaml.safe_dump` 重出一份纯配置，
    再比对 —— 别逐行手改；
 3. 再跑一次 `check_min_pair.py` 确认归零。
@@ -1209,13 +1212,18 @@ python self-conf-skills/gates/clash/check_script_sync.py "$SB"   # 期望 0
 | `build_rules.py --check` | ✅ 1 个 | ✅ 有（负样例回归 · 1 例）|
 | `check_remote_urls.py` | ⚠️ 联网依赖，未逐个固定 | ❌ 无 |
 | `check_region_filters.py`（跨内核）| ✅ | ✅ **有**（独立 fixture，逐例断言退出码+标记）|
+| `check_ad_caliber.py`（2026-10-10）| ✅ 3 个（三内核各一）| ✅ 有（负样例回归 · 1 例）|
+| `check_waiver_usage.py`（2026-10-10）| ✅ 2 个 | ✅ 有（负样例回归 · 1 例）|
+| `check_version_cadence.py`（2026-10-10）| ✅ 2 个 | ⚠️ 样例需带 git 提交（沙箱无 `.git`），**未做常驻回归** —— 如实登记 |
 
-> 📌 闸门「负样例回归」（`check_negative_fixtures.py`）把上面 4 道（structure / min_pair /
-> script_sync / build_rules --check）做进了**常驻 CI**：临时副本注错 → 断言「退出码 = 1 且输出
-> 含预期标记」两条，覆盖「闸门改坏了还能全绿」这个盲区。地区组判别力则有**自己独立**的 fixture 回归。
+> 📌 闸门「负样例回归」（`check_negative_fixtures.py`）把上面 **6 道**（structure / min_pair /
+> script_sync / build_rules --check / ad_caliber / waiver_usage）做进了**常驻 CI**：临时副本注错 →
+> 断言「退出码 = 1 且输出含预期标记」两条，覆盖「闸门改坏了还能全绿」这个盲区。
+> 地区组判别力有**自己独立**的 fixture 回归。
 >
-> **仍缺**：`check_remote_urls.py` 靠联网、判据未逐个固定；其余审计类闸门（DNS / 分流覆盖等）
-> 的判别力仍靠人记得跑（见 §16.4）。
+> **仍缺**：`check_remote_urls.py` 靠联网、判据未逐个固定；`check_version_cadence.py` 的样例
+> 要真 git 提交才能造（沙箱是拷贝、无 `.git`）；其余**审计类**闸门（DNS / 分流覆盖 / 刷新周期）
+> 需要真 profile 的语义破坏才判负，比结构类难造 —— 仍靠人记得跑（见 §16.4）。
 > 一旦出现「门禁逻辑改坏、判据不再判负、现役配置仍全绿」，负样例回归这道会先发现。
 
 #### 10 · 已知豁免项（豁免 ≠ 通过）
@@ -1466,8 +1474,11 @@ mihomo 版（`self-conf-skills/gates/clash/check_secrets.py`）覆盖 `.js`、�
 
 **Q：`.min.yaml` 怎么同步？能手工改吗？**
 
-**mihomo 侧只能手工 —— 没有生成器**（`make_min.py` 的 `FAMILIES` 只含 surge / egern，
-见 §5.1）。推荐做法是 `yaml.safe_load` + `yaml.safe_dump` 重出一份纯配置再比对，
+**跑生成器，别手工改。** mihomo 侧自 2026-10-09 起已纳入 `make_min.py`（`PAIRS` 含
+clash 两族，见 §5.1）：`python self-conf-skills/run/make_min.py --family lazy --apply`。
+⚠️ 但 clash 完整版本身是生成物 —— 常规动线是改 `clash/override/my_clash*.js` 再跑
+`build_profiles.py`（那一步已同时写好 `.min.yaml`）；`make_min.py` 用于对拍/兜底。
+若确实要手工核一份纯配置，用 `yaml.safe_load` + `yaml.safe_dump` 重出再比对，
 **别逐行手改**（容易漏、也容易改错本体）。
 `check_min_pair.py` 比的是 YAML 对象（注释不参与），所以只要配置本体一致就过。
 
@@ -1545,10 +1556,18 @@ python self-conf-skills/gates/clash/check_remote_urls.py
 
 | # | 缺口 | 触发修补的条件 |
 |:-:|:-----|:---------------|
-| 1 | **其余**审计类门禁（DNS / 分流覆盖 / 刷新周期 等）没有常驻的判负 fixture 回归（判别力靠人记得跑）| 出现「判据改坏、不再判负、现役仍全绿」时。注：structure / min_pair / script_sync / build_rules 已由闸门「负样例回归」守住，地区组那块已有独立 fixture |
-| 2 | **clash 侧没有 `.min` 生成器**（`make_min.py` 只有 surge / egern 两族）⇒ `.min.yaml` 靠手工同步 + 对拍兜底 | 出现第一次「手工同步漏改、对拍才发现」时；修法是给 `make_min.py` 加一族 clash |
+| ~~1~~ | ~~**其余**审计类门禁（DNS / 分流覆盖 / 刷新周期 等）没有常驻的判负 fixture 回归（判别力靠人记得跑）~~ | ⚠️ **部分已消（2026-10-10）** —— 新增的三道闸门（`check_ad_caliber` / `check_waiver_usage` / `check_version_cadence`）已**自带**判负 fixture，进「负样例回归」（4 → 6 条）。**仍需人工跑**的是三内核的 DNS / 分流覆盖 / 地区组 / 刷新周期四类**审计器**的判负样例（它们需要真 profile 的语义破坏，比结构类难造 —— 未做，如实登记）|
+| ~~2~~ | ~~**clash 侧没有 `.min` 生成器**（`make_min.py` 只有 surge / egern 两族）⇒ `.min.yaml` 靠手工同步 + 对拍兜底~~ | ✅ **已消（2026-10-09）** —— `make_min.py` 的 `PAIRS` 补上 clash 两族（六份），clash 走「剔注释、**保留空行落位**」的纯函数分支（与 Egern 的压空行规则分岔，见该脚本文件头「三侧的规则」）。生成结果与仓内四份文件实测**逐字节一致**（`--apply` 后 git 零改动）|
 | ~~3~~ | ~~`_default_root()` 有 6 份拷贝~~ | ✅ **已消（2026-10-08）** —— 收敛为 `lib/_clash_common.py` 的**唯一实现** `default_root()`；6 处改为调用它。原来 3 份是**退化变体**（无 CWD 优先），在 CI 上会算错目录 |
-| 4 | **「一天一版」无机器判据** —— 改革删掉归档后，V7 一并删除。现在它靠 §6.1 的纪律，**没有闸门守** | 出现真的「同一天升了两个号」且造成困扰时 |
+| ~~4~~ | ~~**「一天一版」无机器判据** —— 改革删掉归档后，V7 一并删除。现在它靠 §6.1 的纪律，**没有闸门守**~~ | ✅ **已消（2026-10-10）** —— 新增闸门「一天一版」（`check_version_cadence.py`）：扫 `git log` 的头注版本号变更，按（产品线, 提交日期）分组，要求同日不同版本号 ≤ 1。**刻意不判反方向**（「同一天必须升号」）—— 只改注释/文档的日子不该升号（§2 表格）|
+
+**2026-10-10 同批补的三道闸门**（都是「把靠自觉的格子变成机器守」）：
+
+| 闸门 | 补的是什么 | 此前为什么没守 |
+|:--|:--|:--|
+| `check_ad_caliber.py` | 两版 `AD` 组口径（分流版 `REJECT+DIRECT` / 懒人版仅 `REJECT`）| 是本仓**唯一一条「有意差异」没有机器判据**的（`pitfalls.md` 坑 10，项目自己给出了 `AD_CALIBER` 分表写法）|
+| `check_waiver_usage.py` | `# audit-waive:` 声明必须**确实被触发** | 漏声明方向会叫（变 HIGH）；**陈述旧了不会叫** —— 它在静默削弱判据 |
+| `check_version_cadence.py` | 同一天同一产品线只升一次号 | 见上表 #4 |
 
 #### 16.5 退出码速查
 

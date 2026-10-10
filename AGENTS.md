@@ -68,7 +68,7 @@ python self-conf-skills/run/repo_state.py                    # 一屏现状：�
 **五个生成链**（改左边，跑右边重生成）：
 
 ```
-surge|egern/profiles/*.conf|yaml   ──make_min.py──▶        *.min.*
+三内核 profiles/*.yaml|conf        ──make_min.py──▶        *.min.*（六份，clash 侧 2026-10-09 起）
 clash/override/my_clash*.js        ──build_profiles.py──▶  clash/profiles/*.yaml + *.min.yaml
 rules/*.list                       ──build_rules.py──▶     rules/*.yaml
 self-conf-skills/run/ai_sources/*  ──ai_domains_build.py──▶ rules/AI.list
@@ -84,8 +84,8 @@ self-conf-skills/run/ai_sources/*  ──ai_domains_build.py──▶ rules/AI.l
 但头注 `#! version=` **是脚本保留而非生成的** ⇒ **升版时要手改 clash 的 profile**
 （只改 JS 不会改版本号）。升版共 **12 处**头注：
 三内核 × 两产品线 × （完整版 + `.min`）。
-Surge / Egern 改完整版后跑 `make_min.py --apply` 会同步 `.min`；
-clash 的 `.min` 跑 `build_profiles.py` 时保留。
+Surge / Egern / clash 改完整版后跑 `make_min.py --apply` 都会同步对应的 `.min`（2026-10-09 起六份）；
+clash 的 `.min` 跑 `build_profiles.py` 时也会保留头注、重写正文。
 
 **三内核机制差异**（看起来不一致 ≠ 漂移）：地区组 Surge/Egern 用 `smart`、mihomo 用
 `url-test`；订阅源前者是 external 组、后者是 `proxy-provider`；倍率分档 mihomo 的

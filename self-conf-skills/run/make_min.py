@@ -13,7 +13,25 @@
 本脚本把"同步"这一步收进命令，规则只有一条来源：判据在 `check_min_pair.py`，
 本脚本 import 它的 `normalize` / `TRAIL` / `WHOLE`，**不复制第二份规则**（改一处漏两处是这仓的老病）。
 
-两侧的规则（2026-09-24 实测钉下来的）：
+三侧的规则（2026-09-24 钉 Egern/Surge，2026-10-09 补 clash）：
+    clash  精简版 == 完整版**剔掉整行注释**（行尾注释、行尾空白一并去），
+           **保留其余每一行原样**（含内部空行与缩进）⇒ 也是纯函数。
+           依据（三条，都实测过，缺一不可）：
+           ① `build_profiles.py` 正是这么产出 `.min.yaml` 的（`yaml.dump` 同一份
+              `final`，YAML dumper 不写注释）——所以「删注释」是与上游生成器
+              同构的规则，不是我们发明的；
+           ② clash 侧**没有**任何必须留在下载文件里的语义注释：`check_min_pair.py`
+              比的是 YAML 对象，注释根本不进比对（gates.md §5.1 明写「别把 Surge
+              侧的注意事项搬过来」）；clash 的审计口径也不认 `# audit-waive:`。
+           ③ 实测：对仓内四份 clash 文件跑「剔注释」得到的结果与现存
+              `*.min.yaml` 正文**逐字节相同** ⇒ 规则被现状背书，不是推测。
+           ⚠️ 与 Egern 的差别**只在空行的处理口径**：Egern 压掉全部空行（`normalize`），
+              clash 只压**首尾**空行、正文里的空行原样保留。
+              实测：现役 clash 完整版里唯一的内部空行在注释块尾部（lazy 第 15 行），
+              它在 `.min` 里也不存在（上游是 `_ver + yaml.dump()`，头注紧挨正文）
+              ⇒ 两条规则在**现役文件上输出相同**，但规则本身不同、不可互换：
+              一旦完整版正文里出现段落空行，clash 必须保留（YAML 里那是排版意图）、
+              Egern 必须删掉。S7 用人工样本把这条分岔钉住。
     Egern  精简版 == 完整版去注释去空行去行尾空白，逐字节可复现 ⇒ 纯函数，直接生成。
     Surge  精简版里**留着几条注释**：一条 `# audit-waive:`（审计豁免，必须留在下载文件里，
            否则第 2 项的 `--strict` 会把它当未豁免判负）+ `[Proxy Group]` 前那两行"怎么加节点"。
@@ -55,12 +73,18 @@ NL = chr(10)
 CRLF = chr(13) + NL
 WAIVE_OK = "# audit-waive"            # 必须留在下载文件里的指令行（对拍器按整行注释忽略它）
 
-# 家族 ⇒ 四份形态（完整版在前，精简版在后）
+# 家族 ⇒ 六份形态（完整版在前，精简版在后）
+# ⚠️ clash 两族是 2026-10-09 补的，补之前 `clash/profiles/*.min.yaml` **靠手工同步**
+#    + `check_min_pair.py` 对拍兜底 —— 那是 gates.md §16.4 登记的第 2 条已知缺口
+#    （触发条件写的就是「出现第一次手工同步漏改」）。缺口现在消掉，那条登记也该删。
+# ⚠️ 顺序有意义：同一族内完整版必须排在它的 `.min` 前面（下面按对读取）。
 PAIRS = {
     "routing": [("surge/profiles/routing.conf", "surge/profiles/routing.min.conf"),
-                ("egern/profiles/routing.yaml", "egern/profiles/routing.min.yaml")],
+                ("egern/profiles/routing.yaml", "egern/profiles/routing.min.yaml"),
+                ("clash/profiles/routing.yaml", "clash/profiles/routing.min.yaml")],
     "lazy": [("surge/profiles/lazy.conf", "surge/profiles/lazy.min.conf"),
-             ("egern/profiles/lazy.yaml", "egern/profiles/lazy.min.yaml")],
+             ("egern/profiles/lazy.yaml", "egern/profiles/lazy.min.yaml"),
+             ("clash/profiles/lazy.yaml", "clash/profiles/lazy.min.yaml")],
 }
 
 
@@ -106,9 +130,25 @@ def keeps_of(min_text):
 
 
 def make_min(full_text, min_text, side):
-    """⇒ (生成的精简版全文, 没能落位的注释列表)。Egern 侧没有注释可留，是纯函数。"""
+    """⇒ (生成的精简版全文, 没能落位的注释列表)。Egern / clash 侧没有注释可留，是纯函数。"""
     if side == "egern":
         return NL.join(normalize(full_text)) + NL, []
+    if side == "clash":
+        # clash：剔注释，正文**原样保留**（唯一与 Egern 分岔之处，见文件头「三侧的规则」）。
+        # 首尾空行要压掉：完整版首行是 `#! version=` 头注（被 WHOLE 当注释剔掉），
+        # 而它后面就是注释块尾部那行空行 —— 不压就会出现「头注 + 空行 + 正文」，
+        # 与上游 `build_profiles.py` 写的 `.min.yaml`（`_ver` 紧挨 `yaml.dump(...)`）不符。
+        rows = []
+        for l in full_text.split(NL):
+            l = TRAIL.sub("", l)
+            if WHOLE.match(l):
+                continue
+            rows.append(l.rstrip())
+        while rows and not rows[0].strip():
+            rows.pop(0)
+        while rows and not rows[-1].strip():
+            rows.pop()
+        return NL.join(rows) + NL, []
     body = body_of(full_text)
     by_anchor = {}
     for comment, anchor in keeps_of(min_text):
@@ -186,9 +226,17 @@ def selftest(root):
         print(("   ✅ " if cond else "   ❌ ") + name + ("  " + extra if extra else ""))
 
     rows = run_once(root, "all")
-    chk("S1 四份都能生成且 normalize 自查通过", len(rows) == 4)
+    # ⚠️ 判内核一律用**路径首段**（`surge/` · `egern/` · `clash/`），
+    #    **不要**用扩展名 —— clash 与 Egern 都是 `.yaml`，按扩展名筛会把 clash
+    #    混进 Egern 的判据里（S2「逐字节相同」恰好都想成立，但 S6 的 side 会传错）。
+    def kern_of(p):
+        return p.split(os.sep)[-3] if os.sep in p else p
+
+    chk("S1 六份都能生成且 normalize 自查通过", len(rows) == 6)
     chk("S2 Egern 两份是纯函数（与仓内现状逐字节相同）",
-        all(c == "same" for f, a, b, c, m, g, l in rows if b.endswith(".yaml")))
+        all(c == "same" for f, a, b, c, m, g, l in rows if kern_of(a) == "egern"))
+    chk("S2b clash 两份也是纯函数（剔注释不改空行，与仓内现状逐字节相同）",
+        all(c == "same" for f, a, b, c, m, g, l in rows if kern_of(a) == "clash"))
     chk("S3 Surge 两份的差异不含正文（只有空白/注释落位）",
         all(c in ("same", "blank") for f, a, b, c, m, g, l in rows if b.endswith(".conf")))
     chk("S4 豁免指令留在下载文件里（对拍器不认它，审计认）",
@@ -202,10 +250,36 @@ def selftest(root):
     chk("S5 锚点被删时不猜位置，改为上报", len(lost) == 2,
         "报出 %d 条（钉在 [Proxy Group] 上的那两条「怎么加节点」）" % len(lost))
     # S6：空白钉死之后再拿生成结果当"现有精简版"重跑一遍 ⇒ 必须逐字节幂等
-    idem = all(make_min(read(fp), gen, "egern" if mp.endswith(".yaml") else "surge")[0] == gen
+    # ⚠️ side 取路径首段，与 run_once 同源 —— 用扩展名判会把 clash 当成 egern（都 .yaml），
+    #    而 clash 恰恰**不许**压空行，传错 side 这条幂等判据就名存实亡。
+    idem = all(make_min(read(fp), gen, kern_of(fp))[0] == gen
                for f, fp, mp, c, mt, gen, l in rows)
     chk("S6 生成一次后再钉一次 ⇒ 逐字节幂等", idem)
-    print(("ALL GREEN" if ok else "有判负") + " · 自带回归 6 条")
+    # S7：clash 与 Egern 规则必须真的分岔 —— 若哪天有人把 clash 也塞进 normalize，
+    #    这条会红。这不是重复 S6：S6 只证明「幂等」，把三种规则全换成同一个同样幂等。
+    cfp = os.path.join(root, "clash", "profiles", "lazy.yaml")
+    cft = read(cfp)
+    c_keep, _ = make_min(cft, "", "clash")
+    c_flat = NL.join(normalize(cft)) + NL
+    # 实测事实（2026-10-09 拿仓内 clash 四份实测）：clash **完整版**里唯一的内部空行是
+    # 注释块之后那一行（lazy 第 15 行），而它属于注释块的尾巴 —— 上游 `_ver + yaml.dump()`
+    # 写的 `.min` 里没有它 ⇒ 两条规则在**现役文件**上输出相同，S7 不能拿它分岔。
+    # 所以判别力改为：**人工构造**一份含内部空行的样本，两条规则必须给出不同结果。
+    # 这才是「clash 不压空行」这条规则的真判据 —— 现役文件恰好不触发它。
+    probe = NL.join(["# 注释", "", "a: 1", "", "b: 2"]) + NL
+    p_clash = make_min(probe, "", "clash")[0]
+    p_egern = make_min(probe, "", "egern")[0]
+    chk("S7 clash 与 Egern 规则真的分岔：内部空行 clash 留存、Egern 压掉",
+        p_clash != p_egern
+        and p_clash == NL.join(["a: 1", "", "b: 2"]) + NL
+        and p_egern == NL.join(["a: 1", "b: 2"]) + NL,
+        "clash=%r · Egern=%r" % (p_clash, p_egern))
+    # S8：clash 侧**不许**出现 lost —— 它没有需要继承的语义注释（gates.md §5.1：
+    # 「别把 Surge 侧的注意事项搬过来」）。若哪天 clash 规则误走了 Surge 分支，
+    # 这里会红（Surge 分支会去读 .min 的注释并可能报 lost）。
+    chk("S8 clash 走纯函数分支，不继承注释、不报 lost",
+        all(l == [] for f, a, b, c, m, g, l in rows if kern_of(a) == "clash"))
+    print(("ALL GREEN" if ok else "有判负") + " · 自带回归 8 条")
     return 0 if ok else 1
 
 
@@ -238,7 +312,7 @@ def main():
                 print("❌ " + mp + "：" + ("注释锚点丢失 %d 条" % n if n else kinds[c]))
             print("闸门判定：.min 与生成器输出不一致 —— 跑 make_min.py --apply 同步后一并提交")
             return 1
-        print("✅ 四份 .min 与生成器输出逐字一致（--check）")
+        print("✅ 六份 .min 与生成器输出逐字一致（--check）")
         return 0
     if not a.apply:
         print("（计划模式：一个字都不写。加 --apply 才落盘）" + NL)
