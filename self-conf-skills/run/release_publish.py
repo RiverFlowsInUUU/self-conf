@@ -200,6 +200,10 @@ def notes_problems(text, versions):
             bad.append("正文未出现当前版本号 %s" % v)
     if "由 commit 自动汇总" in text:
         bad.append("正文含自动汇总的降级标记 —— 那是内部语言，不应发布")
+    # title 行的占位符必须是**填过的**（草稿里是 `← …` 的提示语）
+    mt = re.search(r"<!--\s*title:\s*(.*?)\s*-->", text)
+    if mt and ("←" in mt.group(1) or not mt.group(1).strip()):
+        bad.append("`<!-- title: -->` 还是草稿占位符 —— 请填成当日主题")
     return bad
 
 
@@ -217,6 +221,8 @@ def notes_draft(root, p):
                          "（不是改了什么代码）" % p["versions"][fam])
         fam_lines.append("")
     return "\n".join([
+        "<!-- title: ← 当日主题（一句话，会显示在 Release 标题里，可带 emoji） -->",
+        "",
         "# %s 更新日志" % " → ".join(
             "%s %s" % (FAM_CN[f], p["versions"][f]) for f in FAMS),
         "",
@@ -264,7 +270,22 @@ def release_body(p, human=None):
     raise SystemExit("❌ 无发布说明 —— 不应走到这里（main 应先拦下）。")
 
 
-def release_title(p):
+def release_title(p, human=None):
+    """Release 标题。
+
+    ⚠️ 为什么标题也要从**说明文件**派生（2026-10-10 第二次事故）：
+        原先标题由本函数按 `日期 · 版本号` 拼死，而 `apply()` 每次都会 PATCH
+        `name` ⇒ **手工在 GitHub 上改过的标题会被下一次 --apply 覆盖回模板**。
+        实测：把标题手改成「📱 2026-10-10 · 修复 Google Play 无法更新与下载」后，
+        跑一次 `--apply` 就被打回 `2026-10-10 · 懒人版 v1.0.1 / 分流版 v1.0.0`。
+        ⇒ 任何「手工改远端」的做法都是靠人话；正确做法是**让标题也有仓库内的真源**。
+        约定：说明文件里写一行 HTML 注释 `<!-- title: … -->`，
+        有则用它（去掉 `title:` 前缀），没有则退回 `日期 · 版本号`。
+    """
+    if human:
+        m = re.search(r"<!--\s*title:\s*(.+?)\s*-->", human)
+        if m:
+            return "%s · %s" % (p["tag"][1:], m.group(1))
     return "%s · %s" % (p["tag"][1:], " / ".join(
         "%s %s" % (FAM_CN[f], p["versions"][f]) for f in FAMS))
 
@@ -315,7 +336,7 @@ def _asset_stale(asset, path):
 def apply(p, token, human=None):
     body = release_body(p, human if human is not None
                         else _human_notes(repo_root(), p["tag"]))
-    title = release_title(p)
+    title = release_title(p, body)
     ex = {r["tag_name"]: r for r in existing_releases(token)}
     rel = ex.get(p["tag"])
     if rel:
