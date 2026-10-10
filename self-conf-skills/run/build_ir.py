@@ -224,7 +224,12 @@ def build(root):
            "products": {}}
     for product in PRODUCTS:
         paths = _kernel_paths(root, product)
-        entry = {"paths": {k: str(v.relative_to(root)) for k, v in paths.items()},
+        # ⚠️ 必须 as_posix()，不能 str()：str(Path) 用**平台分隔符** —— Windows 得
+        # `clash\profiles\x.yaml`、Linux 得 `clash/profiles/x.yaml`。而本闸门的判据是
+        # 「重算结果与落盘 intent.json **逐字相等**」⇒ 在 Windows 生成、Linux 校验时
+        # 必然不等 ⇒ CI 假红「intent.json 已过期」（本仓真实踩过：两次 push 连续判负）。
+        # 统一成正斜杠后，两侧任何平台算出的 IR 都相同。
+        entry = {"paths": {k: v.relative_to(root).as_posix() for k, v in paths.items()},
                  "kernels": {}, "cross": {}}
         rules_by_kernel = {}
         for kernel in KERNELS:

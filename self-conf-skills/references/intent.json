@@ -545,9 +545,9 @@
     }
    },
    "paths": {
-    "clash": "clash\\profiles\\lazy.yaml",
-    "egern": "egern\\profiles\\lazy.yaml",
-    "surge": "surge\\profiles\\lazy.conf"
+    "clash": "clash/profiles/lazy.yaml",
+    "egern": "egern/profiles/lazy.yaml",
+    "surge": "surge/profiles/lazy.conf"
    }
   },
   "routing": {
@@ -2201,9 +2201,9 @@
     }
    },
    "paths": {
-    "clash": "clash\\profiles\\routing.yaml",
-    "egern": "egern\\profiles\\routing.yaml",
-    "surge": "surge\\profiles\\routing.conf"
+    "clash": "clash/profiles/routing.yaml",
+    "egern": "egern/profiles/routing.yaml",
+    "surge": "surge/profiles/routing.conf"
    }
   }
  },
