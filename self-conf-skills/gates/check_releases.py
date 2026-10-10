@@ -14,7 +14,7 @@ R4 最新那张 Release 的正文含当前三内核版本号
 R5 仓库级 Latest 指针指向最新那张 Release
 R6 HEAD 的改动必须已被某张 Release 覆盖（防「改了配置没发版」整类漏发）
    R6a 期望 tag（= HEAD 提交日）存在于远端 Release
-   R6b 该 tag **指向 HEAD 本身**（tag 建完之后不得再有未发布的提交）
+   R6b 自该 tag 以来 **profile 资产没有未发布的变动**
 
 ⚠️ R6 的存在理由（2026-10-10 实测事故）：
     R1–R5 全部是「对着**已有** Release 判」。`newest = max(releases)` 取的是
@@ -168,24 +168,32 @@ def main():
     #
     #   ⚠️ 为什么必须有 ②（2026-10-10 注错实测发现）：
     #      只判 ① 会漏掉本仓**最常见的**漏发形态 —— 「一天一版」模型下，
-    #      当天先发了版、之后又提交了新改动，HEAD 日期仍是当天、tag 已存在
-    #      ⇒ ① 通过，可新改动其实没进任何 Release。实测该场景 ① 判绿（漏判）。
+    #      当天先发了版、之后又改了配置，HEAD 日期仍是当天、tag 已存在
+    #      ⇒ ① 通过，可**改了配置却没重发资产**。实测该场景 ① 判绿（漏判）。
     #
-    #   ⚠️ ② 的口径是「tag **指向 HEAD 本身**」，不是「tag 是 HEAD 的祖先」——
-    #      这两者方向相反，2026-10-10 第一版实现就写反了（实测判绿放过）。
-    #      正确语义：若 tag 的提交是 HEAD 的**祖先**，含义正是「tag 建完之后
-    #      HEAD 又往前走了」= 新改动未发布 ⇒ 应判负。
-    #      配套依据（ops.md §2）：本仓「一天一版，当天后续改动并入同号 Release」，
-    #      处置办法是重跑 `release_publish.py --apply` 幂等回写同一张 ——
-    #      回写会把该 tag 重新指到新 HEAD，于是 ② 重新成立。
-    #      实证：四个现存 Release 的 tag 都精确指向当时的 HEAD
-    #      （v2026-10-10 → 95dbb7f = 现 HEAD）。
+    #   ⚠️ ② 的判据对象是「**profile 资产是否已随最新 Release 发出**」，
+    #      而不是「tag 是否指向 HEAD」—— 这一点本次设计**来回错了两次**，
+    #      两次都实测过，把结论钉在这里：
     #
-    #   ⚠️ 只认**远端 Release 的 tag**，不查本地 `git tag`：本地可能没 fetch 到 tag
-    #      （实测 2026-10-10：远端 Release 已在、本地 `git tag --list` 却是空的），
-    #      用本地 tag 判会假红。真值在远端。
-    #   ⚠️ 与 R3/R4 的分工：R3/R4 判「最新那张对不对」，R6 判「HEAD 有没有被覆盖」。
-    #      没有 R6 时，一张新 Release 都没建的场景下 R3/R4 会全绿（见头注）。
+    #      · 错法一 `tag_sha == head_sha`：tag 一经创建即固定，而
+    #        `release_publish.apply()` 只 PATCH body/name、**从不移动 tag**
+    #        （见该函数 patch 分支）。「一天一版」下当天任何后续提交都会让
+    #        `tag != HEAD` ⇒ 门禁**永远红**。实测：`f8f70e1` 提交后判负，
+    #        `--apply` 回写后**依然判负**（tag 未动）。
+    #      · 错法二 `is_ancestor(tag_sha, head_sha)` 取真：它判的是「HEAD 是否
+    #        超出 tag」，同样把「当天改文档/判据」误判成漏发。实测：只改
+    #        `check_releases.py` + `gates.md` 的提交也会被判负 —— 而本仓
+    #        显式规定「只改注释/文档 ⇒ 不必升号」（ops.md §2），更不该因此判负。
+    #
+    #      ⇒ 真正该问的是：**profile（12 件资产）变了没有？变了就必须发出去。**
+    #        所以 ② 判「自 `tag_sha..HEAD` 之间，本地 profile 是否与已发布资产一致」。
+    #        只改脚本/文档时该区间不含 profile ⇒ 天然放行，不会误伤。
+    #
+    #   ⚠️ 只认**远端 Release**，不查本地 `git tag`：本地可能没 fetch 到 tag
+    #      （实测 2026-10-10：远端 Release 已在、本地 `git tag --list` 却是空的）。
+    #   ⚠️ 与 R3/R4 的分工：R3/R4 判「最新那张**自身**对不对」，R6 判「HEAD 的
+    #      改动**有没有**被发出去」。没有 R6 时，一张新 Release 都没建的场景下
+    #      R3/R4 会全绿（见头注）。
     head_tag = rp.plan(root)["tag"]
     head_sha = git("rev-parse", "HEAD")
     have_tag = any(r["tag_name"] == head_tag for r in releases)
@@ -195,19 +203,49 @@ def main():
           "跑 release_publish.py（预览）→ --apply（真发）；"
           "若本次是功能变动，先按 ops.md §2 升号再发" % head_tag)
     if have_tag:
-        # ② tag 必须指向 HEAD 本身（见上文「② 的口径」）
+        # ② profile 是否已随该 Release 发出（见上文「② 的判据对象」）
         try:
             ref = _api_json("/git/ref/tags/%s" % head_tag, os.environ.get("GITHUB_TOKEN"))
             tag_sha = (ref.get("object") or {}).get("sha")
         except Skip as e:
-            skipped.append("R6b tag %s 指向：%s —— 未能核对是否指向 HEAD" % (head_tag, e))
+            skipped.append("R6b tag %s 指向：%s —— 未能核对 profile 是否已发布" % (head_tag, e))
         else:
-            judge(tag_sha == head_sha,
-                  "R6b %s 精确指向 HEAD(%s)" % (head_tag, head_sha[:8]),
-                  "R6b %s 指向 %s，**不是 HEAD(%s)** —— 该 tag 建完之后又提交了"
-                  "未发布的改动。按 ops.md §2「一天一版」重跑 "
-                  "release_publish.py --apply 幂等回写同一张（会把 tag 重指到新 HEAD）"
-                  % (head_tag, (tag_sha or "?")[:8], head_sha[:8]))
+            if not tag_sha:
+                skipped.append("R6b tag %s 读不到指向的 commit —— 未验证" % head_tag)
+            else:
+                # tag_sha..HEAD 之间变动过的 profile —— 这些必须已随该 Release 发出
+                # ⚠️ 匹配用**仓库内相对路径**，不能用 basename：
+                #    `rp.ASSET_NAMES` 是「内核前缀 + 产品线 + 形态」的**组合全集**
+                #    （24 个，含 `clash-lazy.conf` 这类并不存在的混搭名），而实际
+                #    文件名是 `clash/profiles/lazy.yaml` —— 两者 basename 永不相等。
+                #    实测踩过：第一版用 basename 判，对任何 profile 改动都判绿（假闸门）。
+                #    这里改为把资产名还原成目录形态再比对。
+                asset_paths = set()
+                for nm in rp.ASSET_NAMES:
+                    for kern in ("surge", "egern", "clash"):
+                        pre = kern + "-"
+                        if not nm.startswith(pre):
+                            continue
+                        rest = nm[len(pre):]          # 如 lazy.min.yaml
+                        fam, _, tail = rest.partition(".")
+                        # tail 形如 min.yaml / yaml / min.conf / conf
+                        ext = "." + tail.split(".")[-1]
+                        mid = ".min" if tail.startswith("min.") else ""
+                        asset_paths.add("%s/profiles/%s%s%s"
+                                        % (kern, fam, mid, ext))
+                        break
+                try:
+                    changed = [f for f in git("diff", "--name-only",
+                                              "%s..%s" % (tag_sha, head_sha)).splitlines()
+                               if f in asset_paths]
+                except subprocess.CalledProcessError:
+                    changed = []
+                unpub = sorted(set(changed))
+                judge(not unpub,
+                      "R6b %s 之后无未发布的 profile 变动" % head_tag,
+                      "R6b %s 之后这些 profile 变了但没发版：%s —— "
+                      "跑 release_publish.py --apply 重发资产（幂等回写同一张）"
+                      % (head_tag, unpub))
 
     for m in ok:
         print("   ✅ %s" % m)

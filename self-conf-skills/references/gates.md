@@ -1276,11 +1276,24 @@ _skip_v7 = {'SKIP_V7': '1'}
 | 判据 | 内容 |
 |:--|:--|
 | R6a | 期望 tag（= **HEAD 提交日**，与 `release_publish.plan` 的 `today` 同口径）存在于远端 Release |
-| R6b | 该 tag **精确指向 HEAD**（tag 建完之后不得再有未发布的提交） |
+| R6b | 自该 tag 指向的提交以来，**profile（12 件资产）没有未发布的变动** |
 
-⚠️ **R6b 的方向极易写反**（第一版实现就写反了，实测判绿放过）：
-「tag 的提交是 HEAD 的**祖先**」含义是「tag 建完后 HEAD 又前进了」= **未发布** ⇒ 应判负。
-所以判据是 **`tag_sha == head_sha`**，不是 `merge-base --is-ancestor`。
+⚠️ **R6b 的判据对象是「profile 是否已发出」，不是「tag 是否指向 HEAD」** ——
+这一点设计时**来回错了两次**，两次都实测过，结论钉在这里：
+
+| 错法 | 为什么错 |
+|:--|:--|
+| `tag_sha == head_sha` | tag 一经创建即固定，而 `release_publish.apply()` 只 PATCH body/name、**从不移动 tag**。「一天一版」下当天任何后续提交都会让 `tag != HEAD` ⇒ 门禁**永远红**。实测：提交后判负，`--apply` 回写后**依然判负**（tag 未动） |
+| `is_ancestor(tag_sha, head_sha)` 取真 | 判的是「HEAD 是否超出 tag」，会把「当天只改文档/判据」误判成漏发 —— 而 ops.md §2 明说「只改注释 ⇒ 不必升号」，更不该判负。实测：只改 `check_releases.py` + `gates.md` 的提交被判负 |
+
+⇒ 正解：**看 profile 有没有变**。变了就必须发出去；只改脚本/文档时该区间不含
+profile ⇒ 天然放行。
+
+⚠️ **还有一个「假闸门」坑**：`rp.ASSET_NAMES` 是「内核前缀 × 产品线 × 形态」的
+**组合全集**（24 个，含 `clash-lazy.conf` 这类并不存在的混搭名），而实际文件名是
+`clash/profiles/lazy.yaml` —— 两者 **basename 永不相等**。
+第一版用 basename 判，对任何 profile 改动都判绿（永不判负）。
+⇒ 必须把资产名还原成 `clash/profiles/lazy.yaml` 这种目录形态再比对。
 
 ⚠️ **只认远端 Release 的 tag，不查本地 `git tag`**：实测 2026-10-10 远端 Release 已在、
 本地 `git tag --list v2026-10-10` 却是**空的** —— 用本地 tag 判会假红。真值在远端。
@@ -1290,11 +1303,13 @@ _skip_v7 = {'SKIP_V7': '1'}
 | 注错 | 结果 |
 |:--|:--|
 | 造一个 HEAD 日期无对应 Release 的提交 | R6a 判负 exit=1 ✅ |
-| 同一天先发版、之后又提交新改动（tag 已存在但指向旧提交） | R6b 判负 exit=1 ✅ |
-| 还原（真实仓当前状态：`v2026-10-10` 精确指向 HEAD `95dbb7f`） | 全绿 exit=0 ✅ |
+| 改 `surge/profiles/lazy.conf` 后不发版 | R6b 判负并**点名该文件** exit=1 ✅ |
+| 改 `egern/profiles/lazy.min.yaml`（`.min` 变体）后不发版 | R6b 判负 exit=1 ✅ |
+| 只改 `check_releases.py` + `gates.md`（非 profile） | 全绿 exit=0 ✅（不误伤） |
+| 还原后 | 全绿 exit=0 ✅ |
+| 远端限流（403） | 返回 **3 未验证**，不计判负 ✅（遵退出码纪律） |
 
-> 第二条注错是关键：**只判 R6a 会漏掉它**（那是本仓最常见的漏发形态，
-> 因为「一天一版」下当天日期不变、tag 已存在）。加 R6b 才守住。
+> 关键是第 2、3、4 条的组合：**既抓住「改了配置没发版」，又不误伤「改文档没发版」**。
 
 #### 10.3 豁免的三条纪律
 
