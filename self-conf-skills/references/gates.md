@@ -1284,18 +1284,24 @@ _skip_v7 = {'SKIP_V7': '1'}
 | 判据 | 内容 |
 |:--|:--|
 | R6a | 期望 tag（= **HEAD 提交日**，与 `release_publish.plan` 的 `today` 同口径）存在于远端 Release |
-| R6b | 自该 tag 指向的提交以来，**profile（12 件资产）没有未发布的变动** |
+| R6b | 该 tag 那张 Release 的资产与**本地 profile 逐件一致**（digest 优先，零下载） |
 
-⚠️ **R6b 的判据对象是「profile 是否已发出」，不是「tag 是否指向 HEAD」** ——
-这一点设计时**来回错了两次**，两次都实测过，结论钉在这里：
+⚠️ **R6b 的判据对象是「本地 profile 与已发布资产是否一致」，不是「tag 是否指向 HEAD」** ——
+这一点设计时**来回错了三次**，三次都实测过，结论钉在这里：
 
 | 错法 | 为什么错 |
 |:--|:--|
 | `tag_sha == head_sha` | tag 一经创建即固定，而 `release_publish.apply()` 只 PATCH body/name、**从不移动 tag**。「一天一版」下当天任何后续提交都会让 `tag != HEAD` ⇒ 门禁**永远红**。实测：提交后判负，`--apply` 回写后**依然判负**（tag 未动） |
 | `is_ancestor(tag_sha, head_sha)` 取真 | 判的是「HEAD 是否超出 tag」，会把「当天只改文档/判据」误判成漏发 —— 而 ops.md §2 明说「只改注释 ⇒ 不必升号」，更不该判负。实测：只改 `check_releases.py` + `gates.md` 的提交被判负 |
+| `git diff tag_sha..HEAD` 找变动过的 profile（**2026-10-10 实测撞上**） | **与错法一同病**：tag 不动 ⇒ 当天改过 profile 并重发过，该 diff 恒非空 ⇒ 永远红，且提示的补救（再跑 `--apply`）**治不了它**。更糟的是**浅克隆**下 `git diff` 抛 `Invalid revision range`，被 `except CalledProcessError` 吞成空列表 ⇒ **静默判绿（假阴性）**。实测：同一提交**本地绿、CI（`fetch-depth: 0`）红** |
 
-⇒ 正解：**看 profile 有没有变**。变了就必须发出去；只改脚本/文档时该区间不含
-profile ⇒ 天然放行。
+⇒ 正解：**看 profile 内容有没有变**。直接比资产（`digest` 优先，无 digest 退回大小 + 全文），
+既不因 tag 不动而假红，也不依赖本地有完整 git 历史（浅克隆同样能判）。
+只改脚本/文档时 profile 内容没变 ⇒ 天然放行。
+
+⚠️ **判据「读不到」不得静默放过**：无法比对（本地文件缺失 / 远端没给 digest 且下载失败）
+必须记入 `skipped` ⇒ 退出码 3（未验证），不能当成通过。上面「错法三」的假阴性
+正是「异常被吞成空结果」造成的 —— 同类形态在本仓还有别的实例，见 §16.4。
 
 ⚠️ **还有一个「假闸门」坑**：`rp.ASSET_NAMES` 是「内核前缀 × 产品线 × 形态」的
 **组合全集**（24 个，含 `clash-lazy.conf` 这类并不存在的混搭名），而实际文件名是
@@ -1306,18 +1312,21 @@ profile ⇒ 天然放行。
 ⚠️ **只认远端 Release 的 tag，不查本地 `git tag`**：实测 2026-10-10 远端 Release 已在、
 本地 `git tag --list v2026-10-10` 却是**空的** —— 用本地 tag 判会假红。真值在远端。
 
-**判别力（已按 §5 自查清单验证）**：
+**判别力（已按 §5 自查清单验证；2026-10-10 重写后复验）**：
 
 | 注错 | 结果 |
 |:--|:--|
 | 造一个 HEAD 日期无对应 Release 的提交 | R6a 判负 exit=1 ✅ |
-| 改 `surge/profiles/lazy.conf` 后不发版 | R6b 判负并**点名该文件** exit=1 ✅ |
+| 改 `surge/profiles/lazy.conf` 后不发版 | R6b 判负并**点名该资产** exit=1 ✅ |
 | 改 `egern/profiles/lazy.min.yaml`（`.min` 变体）后不发版 | R6b 判负 exit=1 ✅ |
 | 只改 `check_releases.py` + `gates.md`（非 profile） | 全绿 exit=0 ✅（不误伤） |
 | 还原后 | 全绿 exit=0 ✅ |
 | 远端限流（403） | 返回 **3 未验证**，不计判负 ✅（遵退出码纪律） |
+| **浅克隆**（`rev-parse --is-shallow-repository` = true）+ 改 profile 不发版 | 判负 exit=1 ✅（旧实现此处**静默判绿**） |
+| **当天已发版、之后又改 profile 并重发** | 全绿 exit=0 ✅（旧实现此处**恒判负**） |
 
-> 关键是第 2、3、4 条的组合：**既抓住「改了配置没发版」，又不误伤「改文档没发版」**。
+> 关键是第 2–4 条的组合：**既抓住「改了配置没发版」，又不误伤「改文档没发版」**；
+> 最后两条是 2026-10-10 重写补上的 —— 旧实现一个方向**永远红**、另一个方向**静默绿**。
 
 #### 10.3 豁免的三条纪律
 

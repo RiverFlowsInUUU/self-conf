@@ -14,7 +14,7 @@ R4 最新那张 Release 的正文含当前三内核版本号
 R5 仓库级 Latest 指针指向最新那张 Release
 R6 HEAD 的改动必须已被某张 Release 覆盖（防「改了配置没发版」整类漏发）
    R6a 期望 tag（= HEAD 提交日）存在于远端 Release
-   R6b 自该 tag 以来 **profile 资产没有未发布的变动**
+   R6b 该 tag 那张 Release 的资产与**本地 profile 逐件一致**（改了没重发即判负）
 
 ⚠️ R6 的存在理由（2026-10-10 实测事故）：
     R1–R5 全部是「对着**已有** Release 判」。`newest = max(releases)` 取的是
@@ -32,6 +32,7 @@ R6 HEAD 的改动必须已被某张 Release 覆盖（防「改了配置没发版
 分界线只有一条：**没读到远端真值 = 3；读到了但断言不过 = 1。**
 （环境类码先修环境，别去逐条读判据。）
 """
+import hashlib
 import json
 import os
 import re
@@ -92,6 +93,81 @@ def fetch_releases(token):
         if len(batch) < 100:
             return out
         page += 1
+
+
+def asset_relpath(name):
+    """资产固定名 → 仓库内相对路径。`surge-lazy.min.conf` → `surge/profiles/lazy.min.conf`。
+
+    ⚠️ 必须做这层还原：资产名是「内核前缀 + 产品线 + 形态」，而实际文件在
+        `<kern>/profiles/<fam><.min><ext>` —— 两者 basename 永不相等。
+        （历史教训见 gates.md §10.2.1：第一版用 basename 判，对任何 profile
+        改动都判绿，是个假闸门。）
+    """
+    for kern in ("surge", "egern", "clash"):
+        pre = kern + "-"
+        if not name.startswith(pre):
+            continue
+        rest = name[len(pre):]                    # 如 lazy.min.yaml
+        fam, _, tail = rest.partition(".")
+        ext = "." + tail.split(".")[-1]           # .yaml / .conf
+        mid = ".min" if tail.startswith("min.") else ""
+        return "%s/profiles/%s%s%s" % (kern, fam, mid, ext)
+    return None
+
+
+def local_sha256(path):
+    with open(path, "rb") as fh:
+        return "sha256:" + hashlib.sha256(fh.read()).hexdigest()
+
+
+def mismatched_assets(rel, root, assets):
+    """远端资产 ↔ 本地 profile 的逐件比对。
+
+    返回 (unpub, unverified)：
+      unpub      —— 本地已改但远端资产还是旧的（**真漏发**，判负）
+      unverified —— 无法比对（本地文件缺失 / 远端没给 digest），未验证，不判负
+
+    为什么优先用 digest：GitHub 在 assets 上返回 `digest`（`sha256:...`），
+    可直接与本地哈希比，**零下载**。无 digest 时退回「大小 + 下载全文比对」，
+    两者都拿不到则记 unverified —— 不能默默放过（那正是本判据上一版栽的地方）。
+    """
+    unpub, unverified = [], []
+    for name, rpath in sorted(rel.items()):
+        a = assets.get(name)
+        if a is None:
+            unpub.append("%s（该 Release 没有这件资产）" % name)
+            continue
+        lp = os.path.join(root, rpath)
+        if not os.path.isfile(lp):
+            unverified.append("%s（本地缺 %s）" % (name, rpath))
+            continue
+        digest = (a.get("digest") or "").strip().lower()
+        if digest.startswith("sha256:"):
+            if digest != local_sha256(lp):
+                unpub.append(name)
+            continue
+        try:
+            want = open(lp, "rb").read()
+        except OSError as e:
+            unverified.append("%s（读不到本地文件：%s）" % (name, e))
+            continue
+        url = a.get("browser_download_url")
+        if not url:
+            unverified.append("%s（远端未给下载地址）" % name)
+            continue
+        if a.get("size") != len(want):
+            unpub.append(name)
+            continue
+        try:
+            req = urllib.request.Request(url, headers={"User-Agent": "self-conf-release"})
+            with urllib.request.urlopen(req) as r:
+                got = r.read()
+        except Exception as e:                        # noqa: BLE001
+            unverified.append("%s（下载失败：%s）" % (name, e))
+            continue
+        if got != want:
+            unpub.append(name)
+    return unpub, unverified
 
 
 def main():
@@ -171,9 +247,9 @@ def main():
     #      当天先发了版、之后又改了配置，HEAD 日期仍是当天、tag 已存在
     #      ⇒ ① 通过，可**改了配置却没重发资产**。实测该场景 ① 判绿（漏判）。
     #
-    #   ⚠️ ② 的判据对象是「**profile 资产是否已随最新 Release 发出**」，
-    #      而不是「tag 是否指向 HEAD」—— 这一点本次设计**来回错了两次**，
-    #      两次都实测过，把结论钉在这里：
+    #   ⚠️ ② 的判据对象是「**profile 资产是否与已发布的一致**」，
+    #      不是「tag 是否指向 HEAD」—— 这一点设计时**来回错了三次**，
+    #      三次都实测过，把结论钉在这里：
     #
     #      · 错法一 `tag_sha == head_sha`：tag 一经创建即固定，而
     #        `release_publish.apply()` 只 PATCH body/name、**从不移动 tag**
@@ -184,10 +260,17 @@ def main():
     #        超出 tag」，同样把「当天改文档/判据」误判成漏发。实测：只改
     #        `check_releases.py` + `gates.md` 的提交也会被判负 —— 而本仓
     #        显式规定「只改注释/文档 ⇒ 不必升号」（ops.md §2），更不该因此判负。
+    #      · 错法三 `git diff tag_sha..HEAD` 找变动过的 profile（2026-10-10
+    #        实测撞上）：**与错法一同病**。tag 不动 ⇒ 当天改过 profile 并重发过，
+    #        该 diff 恒非空 ⇒ 永远红，且提示的补救（再跑 --apply）治不了它。
+    #        更糟的是浅克隆下 `git diff` 抛 Invalid revision range，被
+    #        `except CalledProcessError` 吞成空列表 ⇒ **静默判绿**（假阴性）。
+    #        实测：同一提交本地绿、CI（fetch-depth: 0）红。
     #
-    #      ⇒ 真正该问的是：**profile（12 件资产）变了没有？变了就必须发出去。**
-    #        所以 ② 判「自 `tag_sha..HEAD` 之间，本地 profile 是否与已发布资产一致」。
-    #        只改脚本/文档时该区间不含 profile ⇒ 天然放行，不会误伤。
+    #      ⇒ 真正该问的是：**本地 profile 与已发布资产一致吗？**
+    #        直接比资产内容（digest 优先，零下载）：既不因 tag 不动而假红，
+    #        也不依赖本地有完整 git 历史（浅克隆同样能判）。
+    #        只改脚本/文档时 profile 内容没变 ⇒ 天然放行，不会误伤。
     #
     #   ⚠️ 只认**远端 Release**，不查本地 `git tag`：本地可能没 fetch 到 tag
     #      （实测 2026-10-10：远端 Release 已在、本地 `git tag --list` 却是空的）。
@@ -196,56 +279,50 @@ def main():
     #      R3/R4 会全绿（见头注）。
     head_tag = rp.plan(root)["tag"]
     head_sha = git("rev-parse", "HEAD")
-    have_tag = any(r["tag_name"] == head_tag for r in releases)
+    target_release = next((r for r in releases if r["tag_name"] == head_tag), None)
+    have_tag = target_release is not None
     judge(have_tag,
           "R6a HEAD(%s) 的 Release 已发布" % head_tag,
           "R6a HEAD 该有的 Release %s **不存在** —— 当前 main 的改动还没发版。"
           "跑 release_publish.py（预览）→ --apply（真发）；"
           "若本次是功能变动，先按 ops.md §2 升号再发" % head_tag)
     if have_tag:
-        # ② profile 是否已随该 Release 发出（见上文「② 的判据对象」）
-        try:
-            ref = _api_json("/git/ref/tags/%s" % head_tag, os.environ.get("GITHUB_TOKEN"))
-            tag_sha = (ref.get("object") or {}).get("sha")
-        except Skip as e:
-            skipped.append("R6b tag %s 指向：%s —— 未能核对 profile 是否已发布" % (head_tag, e))
-        else:
-            if not tag_sha:
-                skipped.append("R6b tag %s 读不到指向的 commit —— 未验证" % head_tag)
-            else:
-                # tag_sha..HEAD 之间变动过的 profile —— 这些必须已随该 Release 发出
-                # ⚠️ 匹配用**仓库内相对路径**，不能用 basename：
-                #    `rp.ASSET_NAMES` 是「内核前缀 + 产品线 + 形态」的**组合全集**
-                #    （24 个，含 `clash-lazy.conf` 这类并不存在的混搭名），而实际
-                #    文件名是 `clash/profiles/lazy.yaml` —— 两者 basename 永不相等。
-                #    实测踩过：第一版用 basename 判，对任何 profile 改动都判绿（假闸门）。
-                #    这里改为把资产名还原成目录形态再比对。
-                asset_paths = set()
-                for nm in rp.ASSET_NAMES:
-                    for kern in ("surge", "egern", "clash"):
-                        pre = kern + "-"
-                        if not nm.startswith(pre):
-                            continue
-                        rest = nm[len(pre):]          # 如 lazy.min.yaml
-                        fam, _, tail = rest.partition(".")
-                        # tail 形如 min.yaml / yaml / min.conf / conf
-                        ext = "." + tail.split(".")[-1]
-                        mid = ".min" if tail.startswith("min.") else ""
-                        asset_paths.add("%s/profiles/%s%s%s"
-                                        % (kern, fam, mid, ext))
-                        break
-                try:
-                    changed = [f for f in git("diff", "--name-only",
-                                              "%s..%s" % (tag_sha, head_sha)).splitlines()
-                               if f in asset_paths]
-                except subprocess.CalledProcessError:
-                    changed = []
-                unpub = sorted(set(changed))
-                judge(not unpub,
-                      "R6b %s 之后无未发布的 profile 变动" % head_tag,
-                      "R6b %s 之后这些 profile 变了但没发版：%s —— "
-                      "跑 release_publish.py --apply 重发资产（幂等回写同一张）"
-                      % (head_tag, unpub))
+        # ② 该 Release 的资产与**本地 profile 逐件一致**（见上文「② 的判据对象」）
+        #
+        # ⚠️ 2026-10-10 重写（原实现有两个实测缺陷，见 gates.md §10.2.1）：
+        #
+        #   缺陷一 · 当天重发后**永远判负**（假阳性）
+        #     原实现用 `git diff <tag_sha>..HEAD` 找变动过的 profile。但 tag 固定在
+        #     「当天首次发布」的提交上，而 `release_publish.apply()` **从不移动 tag**
+        #     （该函数 PATCH 分支只回写 body/name + 重传资产）。「一天一版」模型下，
+        #     只要当天改过 profile 并重发过，`tag_sha..HEAD` 就恒非空 ⇒ **永远红**，
+        #     且提示的补救办法（再跑 --apply）**治不了它**（实测：重发后依旧判负）。
+        #     这与作者记为「错法一」的 `tag_sha == head_sha` 是**同一个病**，
+        #     只是触发了另一条路径 —— 当时以为避开了，其实没有。
+        #
+        #   缺陷二 · 浅克隆下**静默判绿**（假阴性，更危险）
+        #     本地是浅克隆时 tag 指向的 commit 对象不存在，`git diff` 抛
+        #     `Invalid revision range`，而原实现 `except CalledProcessError: changed = []`
+        #     把异常吞成「无变动」⇒ 判绿。实测：同一提交在本地绿、在 CI（fetch-depth: 0）红。
+        #
+        #   ⇒ 正解是**回到文档早已写明的判据对象**（gates.md §10.2.1 末段）：
+        #     「**profile 是否已发出** —— 本地 profile 与已发布资产一致吗？」
+        #     直接比资产内容，不猜 git 历史：既不会因 tag 不移动而假红，
+        #     也不依赖本地是否有完整历史（浅克隆同样能判）。
+        rel = {}
+        for nm in want_assets:
+            rp_ = asset_relpath(nm)
+            if rp_:
+                rel[nm] = rp_
+        rel_assets = {a["name"]: a for a in target_release.get("assets", [])}
+        unpub, unverified = mismatched_assets(rel, root, rel_assets)
+        judge(not unpub,
+              "R6b %s 的 %d 件资产与本地 profile 逐件一致" % (head_tag, len(rel)),
+              "R6b %s 的资产与本地 profile 不一致（本地已改但没重发）：%s —— "
+              "跑 release_publish.py --apply 重发资产（幂等回写同一张，tag 不动）"
+              % (head_tag, ", ".join(unpub)))
+        if unverified:
+            skipped.append("R6b 部分资产未能比对：%s" % ", ".join(unverified))
 
     for m in ok:
         print("   ✅ %s" % m)
