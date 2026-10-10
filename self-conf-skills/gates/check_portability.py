@@ -6,7 +6,7 @@
 双端一致」。会悄悄破坏这件事的只有两类东西——**同一份 commit 在不同机器上落盘成不同字节**，
 以及**换个机器就打不开/打错名字的路径**。两类都能在纯静态下判死，所以固化成检查。
 
-规则清单（每条 = 1 个断言，**共 20 条、不随文件数增长**）：
+规则清单（每条 = 1 个断言，**共 21 条、不随文件数增长**）：
     E1 .gitattributes 在场，且把 `*` 钉成 `text=auto eol=lf`   —— 系统级 autocrlf=true 会被它覆盖
     E2 工作树文本文件零 CRLF                                   —— 磁盘字节 == 提交字节 == raw 字节的前提
     E2b 工作树文本文件零孤立 CR（老 Mac 行尾，同样破坏按 `\n` 写的正则）
@@ -29,6 +29,7 @@
     S1 每个 .sh 的首行是 `#!/` shebang                            —— 换机器后行首多了空格/BOM 就跑不起来了
     M1 以 `---` 开头的 .md 其 frontmatter 用第二条 `---` 闭合      —— 未闭合会让整份头部解析崩
     E4 脚本 print 非 GBK 字符者必有输出编码保护                    —— Windows cp936 管道路径下会崩成退出码 1（假绿）
+    P1 机器消费的生成物内嵌路径用正斜杠                            —— 反斜杠随平台变，会让「重算=落盘」类判据在 Linux 假红
 
 退出码：0 全绿 · 1 有判负 · 2 前置环境不达标（不在 git 仓库里 / 拿不到 tracked 清单）
 """
@@ -81,6 +82,10 @@ MACHINE_PREFIXES = ("self-conf-skills/", "icons/", "surge/profiles/", "egern/pro
 GARBAGE_DIRS = ("__pycache__", ".pytest_cache", ".mypy_cache", ".ruff_cache")
 GARBAGE_NAMES = (".DS_Store", "Thumbs.db", "desktop.ini")
 GARBAGE_SUFFIX = (".pyc", ".pyo", ".orig", ".bak", ".tmp", ".log", ".swp", "~")
+# P1 的扫描面：**由脚本生成、且会被脚本读回路径**的机器消费产物。
+# 刻意用显式白名单而非扩展名泛扫 —— 分隔符只在「被程序当路径读回的字符串」上才是缺陷；
+# .md 正文讲 Windows 路径、.conf/.yaml 里正则转义里的反斜杠，都是合法内容（见 P1 注释）。
+P1_TARGETS = ("self-conf-skills/references/intent.json",)
 
 
 def is_garbage(p):
@@ -478,6 +483,45 @@ def main():
         if out and not (protects_stdout(tree) or imports_common(tree)):
             enc_bad.append("%s（print 输出 %s，且无编码保护）" % (p, " ".join(sorted(out))))
     checks.append(("E4", "脚本 print 非 GBK 字符时必有编码保护", enc_bad))
+
+    # ── P1 生成物平台无关 ───────────────────────────────────────────
+    #    2026-10-10 实测事故：`build_ir.py` 用 `str(Path.relative_to())` 把路径写进
+    #    `references/intent.json` ⇒ Windows 落盘 `clash\profiles\x.yaml`、Linux 得
+    #    `clash/profiles/x.yaml`。而「路由意图 IR 新鲜」闸门的判据是
+    #    **重算结果与落盘逐字相等** ⇒ Windows 生成、Linux 校验必然不等 ⇒
+    #    连续两次 push 假红「intent.json 已过期」，配置其实毫无问题。
+    #
+    #    为什么 E2/E2b/E3 + N1~N6 都拦不住：那几条守的是**字节层与文件名层**
+    #    （CRLF / BOM / 非法字符 / 大小写冲突），而本处的文件是纯 LF、名字合法、
+    #    无 BOM —— 20 条全过，坏的是**内容里内嵌的平台分隔符**。
+    #    即：本仓的「换设备一致」此前只覆盖「文件怎么存」，漏了「文件里写了什么」。
+    #
+    #    扫描面刻意收窄到**机器消费的生成物**（见 P1_TARGETS）：分隔符是路径语义，
+    #    只在「被程序读回的路径字符串」上才有意义。.md 正文里写 `a\b` 是散文而非
+    #    路径（本仓 references/ 大量讲解 Windows 路径，误判会逼人改写文档）；
+    #    .conf/.yaml/.list 是内核直接消费的配置，其反斜杠另有语义（正则转义等），
+    #    都不是本判据的域。故用**显式白名单**，不按扩展名泛扫。
+    #
+    #    判别力（已按铁律一/二验证）：给该文件注入一个 `\\` 即判负 exit=1；
+    #    还原后 exit=0。注错落在扫描面内（它就是本判据唯一扫描的文件）。
+    sep_bad = []
+    for p in P1_TARGETS:
+        if p not in files:
+            sep_bad.append("%s（缺文件 —— 生成物不在场，本判据无从生效）" % p)
+            continue
+        text = read(p).decode("utf-8", "replace")
+        # 只认 Windows 分隔符形态：JSON 源码里的一处路径分隔符写作**两个**反斜杠
+        # （`"clash\\profiles\\lazy.yaml"`，JSON 转义），故正则要写 `\\\\` 才命中。
+        # ⚠️ 别写裸 `"\\" in text` —— JSON 里 `\\` 还会出现在正则/转义场景
+        # （如 rules 的 pattern `\\.example\\.com`），那类不是平台分隔符，泛判会误报。
+        # ⚠️ 也别给反斜杠**前面**套字符类（`[A-Za-z0-9_./-]*\\\\`）：该字符类不含反斜杠，
+        #    贪婪部分会越过引号与键名去回溯，实测对 `"clash\\profiles` 漏判（0 命中）。
+        #    改用 `[^"]*` —— 限定在同一个 JSON 字符串内，既准又不会跨键。
+        hits = re.findall(r'"[^"]*\\\\[^"]*"', text)
+        if hits:
+            sep_bad.append("%s（%d 处内嵌反斜杠路径，如 %s）"
+                           % (p, len(hits), hits[0]))
+    checks.append(("P1", "生成物内嵌的路径用正斜杠（平台无关）", sep_bad))
 
     bad = 0
     for cid, desc, viol in checks:

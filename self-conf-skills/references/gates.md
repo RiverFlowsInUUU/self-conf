@@ -103,6 +103,7 @@ python self-conf-skills/gates/verify_all.py
 | Egern / mihomo DNS 双份 | 改 DNS 段键名 |
 | clash 结构 / 分流覆盖 | 改组名 / 改 MATCH |
 | AI 入口唯一性 | 重建 `GEMINI.md` / `CLAUDE.md` / `.cursorrules`（工具专属入口会被优先读取、屏蔽真源）|
+| 可移植性 P1（生成物平台无关） | 给 `references/intent.json` 的 paths 注入反斜杠 `clash\\profiles\\…` |
 
 > 🔁 **2026-10-09 起部分自动化**：闸门「负样例回归」（`check_negative_fixtures.py`）把上表中
 > `clash 结构`、`min-pair 一致`、`clash 脚本/静态对拍`、`.min 漂移`（build_rules --check）
@@ -1314,6 +1315,31 @@ env.setdefault('PYTHONIOENCODING', 'utf-8')
 
 **不可写成硬赋值** `env['PYTHONIOENCODING'] = 'utf-8'` —— 那会把 CI 从父进程传下来的
 `cp936` 抹成 `utf-8` ⇒ 编码门**永远绿（空操作）**。这是 2026-10-02 实测推翻过的错误写法。
+
+**③ `check_portability.py` 的 P1：生成物里不许内嵌平台分隔符**
+
+2026-10-10 线上事故：`build_ir.py` 用 `str(Path.relative_to())` 把路径写进
+`references/intent.json` ⇒ Windows 落盘 `clash\profiles\x.yaml`、Linux 得
+`clash/profiles/x.yaml`。而「路由意图 IR 新鲜」的判据是**重算结果与落盘逐字相等**
+⇒ Windows 生成、Linux 校验必然不等 ⇒ **连续两次 push 假红「intent.json 已过期」**，
+配置其实毫无问题。改用 `as_posix()` 修复。
+
+它此前能溜过全部 20 条，是因为既有的判据只守**两个层面**：
+
+| 层 | 既有判据 | 为什么拦不住本次 |
+|:--|:--|:--|
+| 文件**怎么存** | E1/E2/E2b/E3（LF、无 BOM）| 该文件是纯 LF、无 BOM、名字合法 |
+| 文件**叫什么** | N1–N6（NFC、非法字符、大小写）| 文件名完全正常 |
+| 文件**写了什么** | ← 此前是空的 | **缺口正在这里** |
+
+与 E4 是同构的坑：都是「描述符层看不出、换个平台才炸」。
+E4 守脚本的**输出编码**，P1 守生成物的**内嵌路径**。
+
+⚠️ P1 的扫描面**刻意只列显式白名单**（`P1_TARGETS`），不按扩展名泛扫 ——
+实测全仓有 **15 个文件**含 JSON 风格的反斜杠字符串，绝大多数是**合法**的
+（如 `egern/profiles/*.yaml` 的延迟正则 `0\.\d*[1-9]`、三份
+`audit_region_filters.py` 里的 `Hong\\s*Kong`、`gates.md` 正文讲 Windows 路径）。
+泛扫会把这 15 处判负 ⇒ 逼人改坏正则与文档。**分隔符只在「被程序当路径读回的字符串」上才是缺陷。**
 
 **② Step 7 的 PR 宽容**
 
