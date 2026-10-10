@@ -172,10 +172,18 @@ def notes_file_path(root, tag):
 #    2026-10-10 事故：发布器原先从 commit subject 汇总正文，产出的全是
 #    「Release 断言新增 R6」这类内部语言，与往日用户向更新日志形态不符。
 REQUIRED_H2 = "## 适用版本"
+# 变更分列段：至少要有其一（两版都有变更时用「共同变更」，单边时用对应产品线）
+CHANGE_H2 = ("## 共同变更", "## 懒人版变更", "## 分流版变更")
 
 
 def notes_problems(text, versions):
-    """返回说明文件的问题清单；空列表 = 合格。"""
+    """返回说明文件的问题清单；空列表 = 合格。
+
+    ⚠️ 判据要写**具体**，不能写 `if "## " not in text` 这种粗判 ——
+       实测漏判过：正文只要含 `## 适用版本` 就满足了「有 ##」，
+       「缺变更分列段」的情况整类溜过（复核脚本抓到的第 8 个用例）。
+       所以这里逐个检查**具体的段名**。
+    """
     bad = []
     lines = text.splitlines()
     h1 = [l for l in lines if l.startswith("# ")]
@@ -185,8 +193,8 @@ def notes_problems(text, versions):
         bad.append("一级标题缺「更新日志」字样：%s" % h1[0])
     if REQUIRED_H2 not in text:
         bad.append("缺 `%s` 段" % REQUIRED_H2)
-    if "## " not in text:
-        bad.append("缺变更分列段（`## 懒人版变更` / `## 分流版变更` / `## 共同变更` 至少一个）")
+    if not any(h in text for h in CHANGE_H2):
+        bad.append("缺变更分列段(需其一：%s)" % " / ".join(CHANGE_H2))
     for v in sorted(versions):
         if v not in text:
             bad.append("正文未出现当前版本号 %s" % v)
