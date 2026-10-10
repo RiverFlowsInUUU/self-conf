@@ -113,6 +113,8 @@ rules:
   - RULE-SET,private,DIRECT
   - RULE-SET,category-ai-chat-!cn,AI
   - RULE-SET,AI_Domains,AI
+  - DOMAIN-SUFFIX,xn--ngstr-lra8j.com,AI
+  - DOMAIN-SUFFIX,services.googleapis.cn,AI
   - RULE-SET,cn,DIRECT
   - RULE-SET,geoip-cn,DIRECT,no-resolve
   - MATCH,Proxy

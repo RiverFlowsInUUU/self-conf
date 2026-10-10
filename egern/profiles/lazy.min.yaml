@@ -110,6 +110,12 @@ rules:
     match: https://raw.githubusercontent.com/RiverFlowsInUUU/self-conf/main/rules/AI.list
     policy: AI
     update_interval: 604800
+- domain_suffix:
+    match: xn--ngstr-lra8j.com
+    policy: AI
+- domain_suffix:
+    match: services.googleapis.cn
+    policy: AI
 - rule_set:
     name: CN-Domains
     match: https://raw.githubusercontent.com/Loyalsoldier/surge-rules/release/ruleset/direct.txt

@@ -5,7 +5,7 @@
 #  ⚠️ 本文件由 self-conf-skills/run/clash/build_profiles.py **自动生成**，请勿手工编辑。
 #     改配置请改 override/my_clash_lazy.js 后重跑本脚本。
 #
-#  规模：3 个策略组 / 10 份规则集 / 11 条规则
+#  规模：3 个策略组 / 10 份规则集 / 13 条规则
 #
 # ⚠️ 导入前要改一处：
 #    `proxy-providers.Airport.url` —— 换成你自己的订阅地址。
@@ -127,6 +127,8 @@ rules:
   - RULE-SET,private,DIRECT
   - RULE-SET,category-ai-chat-!cn,AI
   - RULE-SET,AI_Domains,AI
+  - DOMAIN-SUFFIX,xn--ngstr-lra8j.com,AI
+  - DOMAIN-SUFFIX,services.googleapis.cn,AI
   - RULE-SET,cn,DIRECT
   - RULE-SET,geoip-cn,DIRECT,no-resolve
   - MATCH,Proxy

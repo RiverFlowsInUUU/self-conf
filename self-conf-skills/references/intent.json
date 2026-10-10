@@ -67,6 +67,24 @@
       "source": "lan"
      },
      {
+      "detail": "仅出现在 ['clash', 'surge'] —— 多为内核机制差异（如 mihomo 拆分/内置），AGENTS.md 明示刻意不对齐",
+      "kind": "partial",
+      "present_in": [
+       "clash",
+       "surge"
+      ],
+      "source": "xn--ngstr-lra8j.com"
+     },
+     {
+      "detail": "仅出现在 ['clash', 'surge'] —— 多为内核机制差异（如 mihomo 拆分/内置），AGENTS.md 明示刻意不对齐",
+      "kind": "partial",
+      "present_in": [
+       "clash",
+       "surge"
+      ],
+      "source": "services.googleapis.cn"
+     },
+     {
       "detail": "仅出现在 ['egern', 'surge'] —— 多为内核机制差异（如 mihomo 拆分/内置），AGENTS.md 明示刻意不对齐",
       "kind": "partial",
       "present_in": [
@@ -183,6 +201,10 @@
       "egern": "DIRECT",
       "surge": "DIRECT"
      },
+     "services.googleapis.cn": {
+      "clash": "AI",
+      "surge": "AI"
+     },
      "surge-ads": {
       "egern": "AD",
       "surge": "REJECT"
@@ -193,6 +215,10 @@
      },
      "system": {
       "surge": "DIRECT"
+     },
+     "xn--ngstr-lra8j.com": {
+      "clash": "AI",
+      "surge": "AI"
      }
     }
    },
@@ -276,6 +302,20 @@
        "options": [],
        "source": "AI_Domains",
        "source_norm": "ai-domains",
+       "target": "AI"
+      },
+      {
+       "kind": "DOMAIN-SUFFIX",
+       "options": [],
+       "source": "xn--ngstr-lra8j.com",
+       "source_norm": "xn--ngstr-lra8j.com",
+       "target": "AI"
+      },
+      {
+       "kind": "DOMAIN-SUFFIX",
+       "options": [],
+       "source": "services.googleapis.cn",
+       "source_norm": "services.googleapis.cn",
        "target": "AI"
       },
       {
@@ -387,6 +427,20 @@
        "options": [],
        "source": "https://raw.githubusercontent.com/RiverFlowsInUUU/self-conf/main/rules/AI.list",
        "source_norm": "ai-domains",
+       "target": "AI"
+      },
+      {
+       "kind": "domain_suffix",
+       "options": [],
+       "source": null,
+       "source_norm": null,
+       "target": "AI"
+      },
+      {
+       "kind": "domain_suffix",
+       "options": [],
+       "source": null,
+       "source_norm": null,
        "target": "AI"
       },
       {
@@ -512,6 +566,20 @@
        ],
        "source": "https://raw.githubusercontent.com/RiverFlowsInUUU/self-conf/main/rules/AI.list",
        "source_norm": "ai-domains",
+       "target": "AI"
+      },
+      {
+       "kind": "DOMAIN-SUFFIX",
+       "options": [],
+       "source": "xn--ngstr-lra8j.com",
+       "source_norm": "xn--ngstr-lra8j.com",
+       "target": "AI"
+      },
+      {
+       "kind": "DOMAIN-SUFFIX",
+       "options": [],
+       "source": "services.googleapis.cn",
+       "source_norm": "services.googleapis.cn",
        "target": "AI"
       },
       {

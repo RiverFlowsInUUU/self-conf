@@ -5,7 +5,7 @@
 //  作用
 //    对任意 mihomo 订阅配置做整体覆写，使其与本仓库 profiles/lazy.yaml 一致：
 //      · 3 个策略组（Proxy / AI / AD）
-//      · 10 份规则集（6 份 MRS + 4 份 yaml）+ 11 条规则
+//      · 10 份规则集（6 份 MRS + 4 份 yaml）+ 13 条规则
 //      · DNS 双层广告拦截（fake-ip-filter + nameserver-policy rcode://success）
 //      · 订阅内的节点直接成为组内成员 —— 不再需要 Airport 订阅槽位
 //
@@ -193,6 +193,26 @@ function main(config) {
     // ⑤ AI 分流：通用 AI 类目兜底在前，伴生域/宽后缀随后整域收编
     "RULE-SET,category-ai-chat-!cn,AI",
     "RULE-SET,AI_Domains,AI",
+    // ⑤b Google Play 下载 CDN / GMS 网关 —— 补国内直连集的反向误杀（2026-10-10 实测）
+    //     Android 上 Play 无法更新/下载，根因是这两个域名被 `cn` 规则集接成 DIRECT
+    //     （不是被下面那条 geoip-cn 抓走：它带 no-resolve，在 fake-ip 下已不再匹配域名）：
+    //       · `redirector.xn--ngstr-lra8j.com` —— Loyalsoldier direct.txt **显式**收录
+    //         （`DOMAIN,redirector.xn--ngstr-lra8j.com`），上游把 Play 重定向器判为国内直连。
+    //         ⚠️ `cn`（geosite:cn）**不含**裸 `.cn` 后缀，故该域在 mihomo 侧不被直连集接住；
+    //            它在此处显式补齐，三内核行为才对得齐。
+    //       · `services.googleapis.cn`        —— 两套直连集（direct.txt 的 `DOMAIN-SUFFIX,cn`
+    //         与 geosite:cn 的 `.cn`）**都会**用泛后缀接走（它是 `.cn` 域名，非显式收录）。
+    //     `xn--ngstr-lra8j.com` 是 Play 下载 CDN 的 punycode 域（ångströ.com），其子域
+    //     `rr1---sn-*` 实测解析到国内 GGC 缓存节点（58.254.149.194 / 中国电信）。
+    //     分流版无此问题：它引用 `google`（geosite:google，已含 `xn--ngstr-lra8j.com`
+    //     与 `googleapis.cn`，且排在 cn 之前）。懒人版不引用该集，故在此补齐。
+    //     ⚠️ 落点依据：实测「AI 段之前」与「此处」结果完全相同（与前置各集零交集），
+    //        按 ③ 段立的口径「顺序对结果无影响时不占用更靠前的语义位置」，故落在应用分流末尾。
+    //        **不可**下移到 `cn` / `geoip-cn` 之后 —— first-match-wins，落到直连集后面就永远轮不到。
+    //     ⚠️ 挂 `AI` 组（懒人版只有 Proxy / AI / AD 三个组）：Play 走境外 CDN，
+    //        `AI` 组是 select 手动钉死出口的组，出口稳定对 Google 账号风控有利。
+    "DOMAIN-SUFFIX,xn--ngstr-lra8j.com,AI",
+    "DOMAIN-SUFFIX,services.googleapis.cn,AI",
     // ⑥ 国内：域名集在前、IP 集在后，都直连
     "RULE-SET,cn,DIRECT",
     "RULE-SET,geoip-cn,DIRECT,no-resolve",

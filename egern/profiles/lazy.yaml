@@ -232,6 +232,29 @@ rules:
     match: https://raw.githubusercontent.com/RiverFlowsInUUU/self-conf/main/rules/AI.list
     policy: AI
     update_interval: 604800
+# ⑤b Google Play 下载 CDN / GMS 网关 —— 补国内直连集的反向误杀（2026-10-10 实测）
+#     Android 上 Play 无法更新/下载，根因是这两个域名被 `direct.txt` 接成 DIRECT
+#     （不是被下面那条 geoip CN 抓走：它带 no_resolve，在 fake-IP 下已不再匹配域名）：
+#       · `redirector.xn--ngstr-lra8j.com` —— `direct.txt` **显式**收录
+#         （`DOMAIN,redirector.xn--ngstr-lra8j.com`），上游把 Play 重定向器判为国内直连。
+#       · `services.googleapis.cn`        —— 被 `direct.txt` 的 `DOMAIN-SUFFIX,cn`
+#         **泛后缀**接走（它是 `.cn` 域名，并非被显式收录）。
+#     `xn--ngstr-lra8j.com` 是 Play 下载 CDN 的 punycode 域（ångströ.com），其子域
+#     `rr1---sn-*` 实测解析到国内 GGC 缓存节点（58.254.149.194 / 中国电信）。
+#     分流版无此问题：它引用 `Google.list`（已含 `DOMAIN-SUFFIX,xn--ngstr-lra8j.com`
+#     与 `DOMAIN-SUFFIX,googleapis.cn`，且排在直连集之前）。懒人版不引用该集，故在此补齐。
+#     ⚠️ 落点依据：实测「AI 段之前」与「此处」结果完全相同（与前置各集零交集），
+#        按 ③ 段立的准则「顺序对结果无影响时不占用更靠前的语义位置」，故落在应用分流末尾。
+#        **不可**下移到 `CN-Domains` 之后 —— first-match-wins，落到直连集后面就永远轮不到。
+#     ⚠️ 挂 `AI` 组（懒人版只有 Proxy / AI / AD 三个组）：Play 走境外 CDN，
+#        `AI` 组是 select 手动钉死出口的组，出口稳定对 Google 账号风控有利。
+- domain_suffix:
+    match: xn--ngstr-lra8j.com
+    policy: AI
+- domain_suffix:
+    match: services.googleapis.cn
+    policy: AI
+
 # ⑥ 直连集合 —— 以下 2 条共同承担「国内流量直连」。
 #    Loyalsoldier direct.txt：国内域名主承重墙（纯域名集、零 IP 条目；条数随上游更新，不写死）。
 - rule_set:
